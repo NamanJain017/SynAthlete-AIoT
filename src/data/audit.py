@@ -968,7 +968,10 @@ def run_audit(only: str | None = None, workers: int | None = None) -> Path:
         runtime[name] = {"seconds": r(time.time() - t0, 1), "workers": res.pop("_workers", 1)}
         res["files"] = sorted(hashes)
         res["size_mb"] = r(sum(p.stat().st_size for p in files) / 1e6, 1)
-        res["fingerprint"] = fingerprints[name] = fingerprint(hashes) if hashes else None
+        # Paths relative to the dataset's own folder: identical data gets an identical
+        # fingerprint wherever it is stored (e.g. Lövdal original vs its Kaggle copy).
+        inside = {p.relative_to(RAW / cfg["folder"]).as_posix(): sha for p, sha in by_path.items()}
+        res["fingerprint"] = fingerprints[name] = fingerprint(inside) if inside else None
         manifest_rows[name] = [
             {"dataset": name, "file": f, "source_url": cfg.get("source_url", ""),
              "licence": cfg.get("licence", ""), "access_date": str(cfg.get("access_date") or ""),

@@ -213,6 +213,12 @@ def test_pick_workers_respects_task_count_cap_and_memory():
     assert parallel.pick_workers(100, bytes_per_task=10**18) == 1
 
 
+def test_fingerprint_depends_on_contents_not_order():
+    a = {"day.csv": "1" * 64, "week.csv": "2" * 64}
+    assert audit.fingerprint(a) == audit.fingerprint(dict(reversed(a.items())))
+    assert audit.fingerprint(a) != audit.fingerprint({**a, "week.csv": "3" * 64})
+
+
 def test_update_manifest_replaces_only_audited_datasets(tmp_path):
     path = tmp_path / "MANIFEST.csv"
 
