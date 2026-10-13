@@ -17,7 +17,8 @@ Put each dataset in its own folder under `data/raw/` (git-ignored). Record each 
 
 Not a download: b2find.eudat.eu only mirrors the metadata of #1.
 
-## Audit table (fill from scripts in src/data/audit.py)
+## Audit table (written by `python tasks.py audit`; do not edit by hand between the markers)
+<!-- AUDIT:START -->
 | # | Real / simulated / unknown | Subjects | Rows or hours | Channels / features | Labels | Injury labels? | Time series? | Licence | Role decided |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | | | | | | | | | |
@@ -28,6 +29,7 @@ Not a download: b2find.eudat.eu only mirrors the metadata of #1.
 | 6 | | | | | | | | | |
 | 7 | | | | | | | | | |
 | 8 | | | | | | | | | |
+<!-- AUDIT:END -->
 
 ## Rules
 - Never merge channels from different datasets into one person (different people, devices, protocols).

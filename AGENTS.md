@@ -56,7 +56,7 @@ read state -> plan -> implement in small steps -> `python tasks.py check` -> run
 - configs/ YAML; tests/ pytest; paper/; slides/; backups/
 
 ## Commands
-`python tasks.py check | snapshot | data | baselines | gen | pipeline | train | explain | demo | paper-figures`
+`python tasks.py check | snapshot | audit | data | baselines | gen | pipeline | train | explain | demo | paper-figures`
 A task that prints "not implemented" is a gap to fill, not something to stub green.
 
 ## Style

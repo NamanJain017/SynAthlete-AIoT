@@ -45,6 +45,11 @@ def snapshot() -> int:
     return 0
 
 
+def audit() -> int:
+    """Dataset audit (piece 1); extra arguments pass through, e.g. --only lovdal."""
+    return run([sys.executable, "-m", "src.data.audit", *sys.argv[2:]])
+
+
 def not_implemented(piece: str):
     def _f() -> int:
         print(f"not implemented yet ({piece}, see docs/PLAN.md)")
@@ -56,6 +61,7 @@ def not_implemented(piece: str):
 TASKS = {
     "check": check,
     "snapshot": snapshot,
+    "audit": audit,
     "data": not_implemented("pieces 1-2"),
     "baselines": not_implemented("piece 3"),
     "gen": not_implemented("piece 5"),
