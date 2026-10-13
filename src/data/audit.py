@@ -617,11 +617,14 @@ def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
     no_folder = [x["recording"] for x in records if not x["has_subject_folder"]]
     # One demographics row per person: per subject folder, or per recording when there is none.
     people: dict[str, dict] = {}
-    inconsistent = set()
+    differing: dict[str, set[str]] = {}  # subject -> Dem.txt fields that change between sessions
     for x in records:
         key = x["subject"] if x["has_subject_folder"] else x["recording"]
-        if key in people and people[key] != x["dem"]:
-            inconsistent.add(key)
+        if key in people:
+            changed = {f for f in people[key].keys() | x["dem"].keys()
+                       if people[key].get(f) != x["dem"].get(f)}
+            if changed:
+                differing.setdefault(key, set()).update(changed)
         people.setdefault(key, x["dem"])
     dem = pd.DataFrame(list(people.values()))
     for col in ("Sex", "Age", "Height", "Weight"):
@@ -638,7 +641,8 @@ def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
     res["subjects"] = {"subject_folders": len(subject_folders),
                        "recordings_without_subject_folder": no_folder,
                        "people_upper_bound": len(people),
-                       "subjects_with_differing_dem_across_recordings": sorted(inconsistent)}
+                       "dem_fields_changing_between_sessions": {
+                           k: sorted(v) for k, v in sorted(differing.items())}}
     res["rows"] = {"recordings": len(records), "continuous": len(cont), "short_clips": len(clips)}
     res["hours"] = {
         "continuous_recorded": hours,
@@ -728,8 +732,16 @@ def audit_sirp(folder: Path, workers: int | None = None) -> dict:
     if {"Height_cm", "Weight_kg"} <= set(df.columns):
         plaus["height_weight_correlation"] = correlation(df["Height_cm"], df["Weight_kg"])
     if {"BMI", "Height_cm", "Weight_kg"} <= set(df.columns):
-        bmi = df["Weight_kg"] / (df["Height_cm"] / 100) ** 2
-        plaus["bmi_equals_weight_over_height2_share"] = r(((df["BMI"] - bmi).abs() <= 0.011).mean())
+        h, w = df["Height_cm"], df["Weight_kg"]
+        bmi = w / (h / 100) ** 2
+        gap = (df["BMI"] - bmi).abs()
+        # Height and weight are stored to 0.1 and BMI to 0.01, so each row's BMI can differ from
+        # weight/height^2 by up to this much from rounding alone.
+        bound = bmi * (0.05 / w + 2 * 0.05 / h) + 0.005
+        plaus["bmi_vs_weight_over_height2"] = {
+            "max_abs_gap": r(gap.max(), 4),
+            "share_within_rounding_bound": r((gap <= bound).mean()),
+        }
     res["plausibility"] = plaus
     res["details"] = {"file": path.name, "file_metadata": meta,
                       "describe": numeric.describe().round(2).to_dict()}
