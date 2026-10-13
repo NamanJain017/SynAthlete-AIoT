@@ -11,7 +11,7 @@ datasets:
     reader: runners
     source_url: https://doi.org/10.34894/UWU9PV
     licence: CC0 (per docs/PROJECT_BRIEF.md)
-    access_date: null  # DataverseNL returned HTTP 500 on 2026-10-13; retry 2026-10-14
+    access_date: 2026-10-14  # DataverseNL zip doi-10.34894-uwu9pv.zip (HTTP 500 on 2026-10-13)
     origin: real
     origin_evidence: published dataset of a peer-reviewed paper (Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518)
     role: pending
