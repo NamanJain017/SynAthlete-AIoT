@@ -10,3 +10,5 @@ Format: ID | date | decision | reason | alternatives rejected | who
 - D-007 | 2026-10-13 | Code on GitHub (main); data stays local; development with Claude Code on the Windows RTX 4050 laptop | single source of truth, backups, GPU access | local-only git with zip snapshots | Naman
 - D-008 | 2026-10-13 | Tiers run as plain Python processes, not Docker | less setup, same measurable latency/bandwidth claim | Docker Compose + MQTT | Naman + Claude
 - D-009 | 2026-10-13 | Paper target: IEEE-style conference draft for Review 2; journal later | Review 2 rubric asks for communication to a conference | journal first | Naman
+- D-010 | 2026-10-13 | Project goal confirmed: software-only, portfolio-quality (CV, GitHub) | guide accepted software-only at Review 1; repo must be clean and reproducible | hardware build | Naman
+- D-011 | 2026-10-13 | Download list extended to 8 candidates (adds ziya07 wearable as optional demo data and SoccerMon as a candidate real-injury dataset); roles decided after the audit | SoccerMon may weaken the gap sentence and may also be the strongest real data; must be checked before Review 2 | ignore SoccerMon | Naman + Claude

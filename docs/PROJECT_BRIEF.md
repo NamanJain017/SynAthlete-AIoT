@@ -23,6 +23,10 @@ Lövdal, den Hartigh and Azzopardi (2021) published 7 years of daily training lo
 > No public dataset pairs **high-frequency physiological streams** with real injury outcomes.
 The Kaggle "Injury Prediction for Competitive Runners" set shown in Review 1 is reported to be a re-upload of this same data; confirm in the dataset audit.
 
+**Second check needed (open):** SoccerMon (Midoglu et al., Scientific Data 2024) pairs GPS + heart-rate wearables with self-reported injuries from two elite women's soccer teams, and SoccerGuard (arXiv 2411.08901) already runs injury-prediction ML on it. So even the corrected sentence may be too strong. Safer wording until the audit is done:
+> Few public datasets pair high-frequency physiological streams with real injury outcomes; the closest (SoccerMon) relies on sparse, self-reported injuries from two teams.
+Also: SIRP-600 (and other Kaggle sets) are likely synthetic, so the Review 1 dataset slide title "Two real, verified halves" must change in Review 2.
+
 ## 4. How every Review 1 item is included (as part of the bigger system)
 | Review 1 item | Role in the build |
 |---|---|
