@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.data import audit, readers
+from src.data import audit, parallel, readers
 
 
 class _RunsCode:
@@ -158,6 +158,59 @@ def test_replace_table_block_only_touches_the_marked_block():
     )
     with pytest.raises(ValueError):
         audit.replace_table_block("no markers here", "new")
+
+
+# ---------------------------------------------------------------- speed changes keep results equal
+
+
+def _write_pamap2(path, timestamps):
+    rows = [" ".join([str(t), "1", "70" if i % 2 else "NaN"] + [f"{i}.5"] * 51)
+            for i, t in enumerate(timestamps)]
+    path.write_text("\n".join(rows) + "\n")
+
+
+def test_pamap2_pyarrow_parser_matches_classic_parser(tmp_path):
+    path = tmp_path / "subject101.dat"
+    _write_pamap2(path, [0.01, 0.02, 0.03, 0.04])
+    pd.testing.assert_frame_equal(
+        readers.read_pamap2_dat(path, engine="c"),
+        readers.read_pamap2_dat(path, engine="pyarrow"),
+        check_exact=True,
+    )
+
+
+def test_pamap2_file_facts_hashes_the_parsed_bytes_and_flags_bad_timestamps(tmp_path):
+    path = tmp_path / "Protocol" / "subject101.dat"
+    path.parent.mkdir()
+    _write_pamap2(path, [0.01, 0.02, 0.02, 0.01])
+    out = audit.pamap2_file_facts(path)
+    assert out["sha256"] == audit.sha256_file(path)
+    assert out["facts"]["duplicate_timestamps"] == 2
+    assert out["facts"]["backward_time_steps"] == 1
+
+
+def test_hashing_reader_gives_the_file_sha_while_unpickling(tmp_path):
+    path = tmp_path / "S99.pkl"
+    data = {"subject": "S99", "label": np.arange(10, dtype=np.int32),
+            "signal": {"chest": {}, "wrist": {}}}
+    path.write_bytes(pickle.dumps(data, protocol=4) + b"trailing bytes")
+    with open(path, "rb") as f:
+        reader = audit.HashingReader(f)
+        out = readers.read_wesad_pickle(reader)
+        sha = reader.finish()
+    assert sha == audit.sha256_file(path)
+    np.testing.assert_array_equal(out["label"], data["label"])
+
+
+def test_parallel_map_runs_in_processes_and_keeps_input_order():
+    items = ["01:00:00", "00:00:03", "00:01:00"]
+    assert parallel.parallel_map(readers.hms_to_seconds, items, workers=2) == [3600.0, 3.0, 60.0]
+
+
+def test_pick_workers_respects_task_count_cap_and_memory():
+    assert parallel.pick_workers(3) <= 3
+    assert parallel.pick_workers(100, max_workers=2) <= 2
+    assert parallel.pick_workers(100, bytes_per_task=10**18) == 1
 
 
 def test_update_manifest_replaces_only_audited_datasets(tmp_path):

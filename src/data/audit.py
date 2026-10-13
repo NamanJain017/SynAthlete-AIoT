@@ -1,6 +1,9 @@
 """Dataset audit (piece 1): facts about every raw dataset, computed from the files themselves.
 
-    python -m src.data.audit [--only NAME]        (same as: python tasks.py audit [--only NAME])
+    python -m src.data.audit [--only NAME] [--workers N]     (same as: python tasks.py audit ...)
+
+Heavy datasets are processed file by file in parallel processes (src/data/parallel.py), and
+each big file is read once: the sha256 in MANIFEST.csv is of exactly the bytes that were parsed.
 
 Reads data/raw/ (never writes there) and configs/datasets.yaml. Writes:
 - experiments/audit/<run_id>/: audit.json, audit_table.md, config.yaml, run_info.json
@@ -23,9 +26,12 @@ import subprocess
 import sys
 import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
+from functools import partial
 from importlib.metadata import version
 from pathlib import Path
+from typing import BinaryIO
 
 import numpy as np
 import pandas as pd
@@ -35,6 +41,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 
 from src.data import readers
+from src.data.parallel import parallel_map, pick_workers
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
@@ -72,6 +79,12 @@ def sha256_file(path: Path, chunk: int = 1 << 20) -> str:
         while block := f.read(chunk):
             h.update(block)
     return h.hexdigest()
+
+
+def sha256_files(paths: list[Path]) -> dict[Path, str]:
+    """Hash many files at once; threads suffice because hashlib and file reads release the GIL."""
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 1) as pool:
+        return dict(zip(paths, pool.map(sha256_file, paths), strict=True))
 
 
 def fingerprint(hashes: dict[str, str]) -> str:
@@ -187,7 +200,7 @@ def runner_facts(df: pd.DataFrame) -> dict:
     }
 
 
-def audit_runners(folder: Path) -> dict:
+def audit_runners(folder: Path, workers: int | None = None) -> dict:
     files = readers.find_runner_files(folder)
     if not files:
         found = [p.name for p in folder.rglob("*") if p.is_file()]
@@ -288,7 +301,52 @@ def mirror_check(original: Path, mirror: Path) -> dict:
 # ---------------------------------------------------------------- PAMAP2 (#3)
 
 
-def audit_pamap2(folder: Path) -> dict:
+PAMAP2_HR_CONTRAST = (1, 5)  # lying, running (readme II.2)
+PAMAP2_BYTES_PER_FILE_BYTE = 4  # raw bytes + parsed table + parser buffers (estimate, per worker)
+
+
+def pamap2_file_facts(path: Path) -> dict:
+    """One subject file, read once: the checksum is of exactly the bytes that were parsed."""
+    data = path.read_bytes()
+    sha = hashlib.sha256(data).hexdigest()
+    df = readers.read_pamap2_dat(data, name=path.name)
+    del data
+    ts = df["timestamp"].to_numpy()
+    steps = np.diff(ts)
+    step = float(np.median(steps))
+    covered_s = len(df) * step
+    act = df["activity_id"]
+    facts = {
+        "file": f"{path.parent.name}/{path.name}",
+        "subject": path.stem.removeprefix("subject"),
+        "session": path.parent.name,
+        "rows": int(len(df)),
+        "median_step_s": r(step, 4),
+        "hours": r(covered_s / 3600),
+        "timestamp_span_hours": r((ts[-1] - ts[0]) / 3600),
+        "labelled_hours": r((act != 0).sum() * step / 3600),
+        "hr_samples_per_s": (r(df["heart_rate"].notna().sum() / covered_s, 2)
+                             if covered_s > 0 else None),  # None = timestamps unusable
+        "imu_missing_pct": {p: r(df[f"{p}_acc16_x"].isna().mean() * 100, 2)
+                            for p in readers.PAMAP2_IMU_POSITIONS},
+        "activities": sorted(int(a) for a in act.unique() if a != 0),
+        # A repeated row always repeats its timestamp, so this catches every duplicate row
+        # (and more), at a fraction of the cost of comparing all 54 columns.
+        "duplicate_timestamps": int(df["timestamp"].duplicated().sum()),
+        "backward_time_steps": int((steps < 0).sum()),
+    }
+    return {
+        "path": path,
+        "sha256": sha,
+        "facts": facts,
+        "act_seconds": {int(a): n * step for a, n in act.value_counts().items()},
+        "hr": {a: df.loc[act == a, "heart_rate"].dropna().to_numpy() for a in PAMAP2_HR_CONTRAST},
+        "nan_counts": df.isna().sum().to_dict(),
+        "rows": int(len(df)),
+    }
+
+
+def audit_pamap2(folder: Path, workers: int | None = None) -> dict:
     files = sorted(folder.rglob("subject*.dat"))
     if not files:
         return {"status": "no subject*.dat files found", "table": {}}
@@ -296,36 +354,19 @@ def audit_pamap2(folder: Path) -> dict:
     res["_files"] = files
     sensor_cols = [c for c in readers.PAMAP2_COLUMNS
                    if c not in ("timestamp", "activity_id") and "orient" not in c]
-    per_file, act_seconds = [], Counter()
-    hr_by_act: dict[int, list[np.ndarray]] = {1: [], 5: []}  # lying, running (readme II.2)
-    nan_totals, total_rows = pd.Series(0.0, index=readers.PAMAP2_COLUMNS), 0
-    for path in files:
-        df = readers.read_pamap2_dat(path)
-        step = float(np.median(np.diff(df["timestamp"].to_numpy())))
-        covered_s = len(df) * step
-        hr_valid = int(df["heart_rate"].notna().sum())
-        for act, n in df["activity_id"].value_counts().items():
-            act_seconds[int(act)] += n * step
-        for act, chunks in hr_by_act.items():
-            chunks.append(df.loc[df["activity_id"] == act, "heart_rate"].dropna().to_numpy())
-        nan_totals += df.isna().sum()
-        total_rows += len(df)
-        per_file.append({
-            "file": f"{path.parent.name}/{path.name}",
-            "subject": path.stem.removeprefix("subject"),
-            "session": path.parent.name,
-            "rows": int(len(df)),
-            "median_step_s": r(step, 4),
-            "hours": r(covered_s / 3600),
-            "timestamp_span_hours": r((df["timestamp"].iloc[-1] - df["timestamp"].iloc[0]) / 3600),
-            "labelled_hours": r((df["activity_id"] != 0).sum() * step / 3600),
-            "hr_samples_per_s": r(hr_valid / covered_s, 2),
-            "imu_missing_pct": {p: r(df[f"{p}_acc16_x"].isna().mean() * 100, 2)
-                                for p in readers.PAMAP2_IMU_POSITIONS},
-            "activities": sorted(int(a) for a in df["activity_id"].unique() if a != 0),
-            "duplicate_rows": int(df.duplicated().sum()),
-        })
-        del df
+    biggest = max(p.stat().st_size for p in files)
+    n_workers = pick_workers(len(files), PAMAP2_BYTES_PER_FILE_BYTE * biggest, workers)
+    outs = parallel_map(pamap2_file_facts, files, n_workers, label="PAMAP2 files")
+    res["_hashes"] = {o["path"]: o["sha256"] for o in outs}
+    res["_workers"] = n_workers
+    per_file = [o["facts"] for o in outs]
+    act_seconds: Counter = Counter()
+    nan_totals: Counter = Counter()
+    for o in outs:
+        act_seconds.update(o["act_seconds"])
+        nan_totals.update(o["nan_counts"])
+    total_rows = sum(o["rows"] for o in outs)
+    hr_by_act = {a: np.concatenate([o["hr"][a] for o in outs]) for a in PAMAP2_HR_CONTRAST}
     sessions: dict[str, list[dict]] = {}
     for f in per_file:
         sessions.setdefault(f["session"], []).append(f)
@@ -333,7 +374,9 @@ def audit_pamap2(folder: Path) -> dict:
     all_subjects = sorted({f["subject"] for f in per_file})
     hours = {s: r(sum(f["hours"] for f in fs), 2) for s, fs in sessions.items()}
     labelled = r(sum(f["labelled_hours"] for f in per_file), 2)
-    hr_rates = [f["hr_samples_per_s"] for f in per_file]
+    hr_rates = [f["hr_samples_per_s"] for f in per_file if f["hr_samples_per_s"] is not None]
+    hr_summary = ({"min": min(hr_rates), "max": max(hr_rates),
+                   "median": r(float(np.median(hr_rates)), 2)} if hr_rates else None)
     steps = sorted({f["median_step_s"] for f in per_file})
     activities = {readers.PAMAP2_ACTIVITIES.get(a, str(a)): r(s / 60, 1)
                   for a, s in sorted(act_seconds.items())}
@@ -345,16 +388,16 @@ def audit_pamap2(folder: Path) -> dict:
     res["channels"] = {"count": len(sensor_cols), "names": sensor_cols,
                        "note": "orientation columns excluded (readme: invalid)"}
     res["labels"] = {"activity_minutes": activities, "n_activities": n_acts}
-    res["time_series"] = {"value": True, "median_step_s": steps,
-                          "hr_samples_per_s": {"min": min(hr_rates), "max": max(hr_rates),
-                                               "median": r(float(np.median(hr_rates)), 2)}}
-    res["missingness"] = {c: r(v / total_rows * 100, 2) for c, v in nan_totals.items() if v > 0}
-    res["duplicates"] = sum(f["duplicate_rows"] for f in per_file)
+    res["time_series"] = {"value": True, "median_step_s": steps, "hr_samples_per_s": hr_summary}
+    if len(hr_rates) < len(per_file):
+        res["notes"].append("some files have unusable timestamps (median step <= 0); "
+                            "see details.files")
+    res["missingness"] = {c: r(nan_totals[c] / total_rows * 100, 2)
+                          for c in readers.PAMAP2_COLUMNS if nan_totals[c] > 0}
+    res["duplicates"] = {"duplicate_timestamps": sum(f["duplicate_timestamps"] for f in per_file),
+                         "backward_time_steps": sum(f["backward_time_steps"] for f in per_file)}
     res["details"] = {"files": per_file}
-    res["plausibility"] = {
-        "hr_running_vs_lying": mean_contrast(np.concatenate(hr_by_act[5]),
-                                             np.concatenate(hr_by_act[1])),
-    }
+    res["plausibility"] = {"hr_running_vs_lying": mean_contrast(hr_by_act[5], hr_by_act[1])}
     opt = subjects.get("Optional", [])
     res["table"] = {
         "subjects": f"{len(all_subjects)} ({len(opt)} also in Optional)",
@@ -362,8 +405,8 @@ def audit_pamap2(folder: Path) -> dict:
         "channels": f"HR + 3 IMUs: {len(sensor_cols)} sensor channels",
         "labels": f"{n_acts} activities (+ id 0 transient)",
         "injury": "no",
-        "time_series": f"yes: one row per {steps[0]} s; HR median "
-                       f"{res['time_series']['hr_samples_per_s']['median']} samples/s",
+        "time_series": f"yes: one row per {'/'.join(str(s) for s in steps)} s; HR median "
+                       f"{hr_summary['median'] if hr_summary else 'n/a'} samples/s",
     }
     return res
 
@@ -375,44 +418,94 @@ def _width(a: np.ndarray) -> int:
     return int(a.shape[1]) if a.ndim == 2 else 1
 
 
-def audit_wesad(folder: Path) -> dict:
-    pkls = sorted(folder.rglob("S*.pkl"), key=lambda p: int(p.stem[1:]))
-    if not pkls:
-        return {"status": "no S*.pkl files found", "table": {}}
-    res = new_result()
-    per_subject, label_seconds, demographics = [], Counter(), []
-    channels: dict[str, int] = {}
-    for pkl in pkls:
-        print(f"    {pkl.stem} ...", flush=True)
-        readme = pkl.parent / f"{pkl.stem}_readme.txt"
-        res["_files"] += [pkl] + ([readme] if readme.exists() else [])
-        d = readers.read_wesad_pickle(pkl)
-        label = np.asarray(d["label"])
-        chest, wrist = d["signal"]["chest"], d["signal"]["wrist"]
-        chest_s = len(label) / readers.WESAD_CHEST_HZ
-        codes, counts = np.unique(label, return_counts=True)
-        for code, n in zip(codes.tolist(), counts.tolist(), strict=True):
-            label_seconds[int(code)] += n / readers.WESAD_CHEST_HZ
-        wrist_s = {k: v.shape[0] / readers.WESAD_WRIST_HZ[k]
-                   for k, v in wrist.items() if k in readers.WESAD_WRIST_HZ}
-        channels = {"chest": sum(_width(v) for v in chest.values()),
-                    "wrist": sum(_width(v) for v in wrist.values())}
-        signals = list(chest.values()) + list(wrist.values())
-        info = readers.read_wesad_readme(readme) if readme.exists() else {}
-        demographics.append(info)
-        per_subject.append({
+class HashingReader:
+    """File wrapper that hashes every byte it hands out: one read gives data and checksum."""
+
+    def __init__(self, f: BinaryIO):
+        self._f = f
+        self._sha = hashlib.sha256()
+
+    def read(self, n: int = -1) -> bytes:
+        data = self._f.read(n)
+        self._sha.update(data)
+        return data
+
+    def readline(self, limit: int = -1) -> bytes:
+        data = self._f.readline(limit)
+        self._sha.update(data)
+        return data
+
+    def readinto(self, buffer) -> int:
+        n = self._f.readinto(buffer)
+        self._sha.update(memoryview(buffer)[:n])
+        return n
+
+    def finish(self) -> str:
+        """Hash whatever the parser did not read (e.g. trailing bytes), return the file's sha256."""
+        while block := self._f.read(1 << 20):
+            self._sha.update(block)
+        return self._sha.hexdigest()
+
+
+WESAD_BYTES_PER_FILE_BYTE = 1.3  # unpickled arrays ~ file size, plus one array in flight (estimate)
+
+
+def wesad_subject_facts(pkl: Path) -> dict:
+    """One subject pickle, read once: unpickled and hashed from the same bytes."""
+    with open(pkl, "rb") as f:
+        reader = HashingReader(f)
+        d = readers.read_wesad_pickle(reader)
+        sha = reader.finish()
+    label = np.asarray(d["label"])
+    chest, wrist = d["signal"]["chest"], d["signal"]["wrist"]
+    chest_s = len(label) / readers.WESAD_CHEST_HZ
+    codes, counts = np.unique(label, return_counts=True)
+    wrist_s = {k: v.shape[0] / readers.WESAD_WRIST_HZ[k]
+               for k, v in wrist.items() if k in readers.WESAD_WRIST_HZ}
+    signals = list(chest.values()) + list(wrist.values())
+    readme = pkl.parent / f"{pkl.stem}_readme.txt"
+    info = readers.read_wesad_readme(readme) if readme.exists() else {}
+    pairs = list(zip(codes.tolist(), counts.tolist(), strict=True))
+    return {
+        "path": pkl,
+        "sha256": sha,
+        "readme": readme if readme.exists() else None,
+        "label_seconds": {int(c): n / readers.WESAD_CHEST_HZ for c, n in pairs},
+        "channels": {"chest": sum(_width(v) for v in chest.values()),
+                     "wrist": sum(_width(v) for v in wrist.values())},
+        "facts": {
             "subject": str(d.get("subject", pkl.stem)),
             "hours": r(chest_s / 3600),
             "chest_lengths_match_label": all(v.shape[0] == len(label) for v in chest.values()),
             "wrist_minus_chest_s": {k: r(s - chest_s, 1) for k, s in wrist_s.items()},
-            "label_minutes": {str(c): r(n / readers.WESAD_CHEST_HZ / 60, 1)
-                              for c, n in zip(codes.tolist(), counts.tolist(), strict=True)},
+            "label_minutes": {str(c): r(n / readers.WESAD_CHEST_HZ / 60, 1) for c, n in pairs},
             "nan_values": int(sum(np.isnan(v).sum() for v in signals if v.dtype.kind == "f")),
             "chest_signals": {k: list(v.shape) for k, v in chest.items()},
             "wrist_signals": {k: list(v.shape) for k, v in wrist.items()},
             "readme": info,
-        })
-        del d, chest, wrist, signals, label
+        },
+    }
+
+
+def audit_wesad(folder: Path, workers: int | None = None) -> dict:
+    pkls = sorted(folder.rglob("S*.pkl"), key=lambda p: int(p.stem[1:]))
+    if not pkls:
+        return {"status": "no S*.pkl files found", "table": {}}
+    res = new_result()
+    biggest = max(p.stat().st_size for p in pkls)
+    n_workers = pick_workers(len(pkls), int(WESAD_BYTES_PER_FILE_BYTE * biggest), workers)
+    outs = parallel_map(wesad_subject_facts, pkls, n_workers, label="WESAD subjects")
+    res["_workers"] = n_workers
+    res["_hashes"] = {o["path"]: o["sha256"] for o in outs}
+    res["_files"] = [p for o in outs for p in (o["path"], o["readme"]) if p is not None]
+    per_subject = [o["facts"] for o in outs]
+    demographics = [s["readme"] for s in per_subject]
+    channels = outs[-1]["channels"]
+    label_seconds: Counter = Counter()
+    for o in outs:
+        label_seconds.update(o["label_seconds"])
+    if any(o["channels"] != channels for o in outs):
+        res["notes"].append("channel counts differ between subjects; see details.subjects")
     ids = [int(s["subject"].lstrip("S")) for s in per_subject if s["subject"].lstrip("S").isdigit()]
     absent = sorted(set(range(1, max(ids) + 1)) - set(ids)) if ids else []
     hours = r(sum(s["hours"] for s in per_subject), 2)
@@ -462,7 +555,41 @@ def _is_hr(key: str) -> bool:
     return re.search(r"(^|\.)HR(_|$)", key) is not None
 
 
-def audit_sportdb(folder: Path) -> dict:
+SPORTDB_BYTES_PER_FILE_BYTE = 6  # loadmat copies + uint16 -> float NaN check (estimate)
+
+
+def sportdb_record_facts(crd: Path, root: Path) -> dict:
+    """One recording folder (.../CRDn). Files are small; run_audit hashes them separately."""
+    parts = crd.relative_to(root).parts  # e.g. AMF/S1/CRD1, BAS/BAS1/S1/CRD1, SKA/CRD1
+    rec = readers.read_sportdb_record(crd)
+    sig = rec["signals"]
+    lengths = {k: int(max(v.shape)) if v.ndim else 1 for k, v in sig.items()}
+    span = (max(e for _, _, e in rec["phases"]) - min(s for _, s, _ in rec["phases"])
+            if rec["phases"] else None)
+    ecg_per_hr = [lengths["ECG" + k[2:]] / lengths[k] for k in sig
+                  if k.startswith("HR") and "ECG" + k[2:] in sig]
+    hr_keys = [k for k in sig if _is_hr(k)]
+    return {
+        "files": [p for p in (crd / "Data.mat", crd / "Dem.txt", crd / "TrNote.txt") if p.exists()],
+        "schema": tuple(sorted(sig)),
+        "phase_names": [name for name, _, _ in rec["phases"]],
+        "record": {
+            "recording": "/".join(parts),
+            "sport": parts[0],
+            "subject": "/".join(parts[:-1]),
+            "has_subject_folder": len(parts) >= 3,
+            "continuous": bool(hr_keys),
+            "signals": {k: list(v.shape) for k, v in sig.items()},
+            "timed_span_s": r(span, 1),
+            "implied_hr_hz": r(lengths[hr_keys[0]] / span) if len(hr_keys) == 1 and span else None,
+            "ecg_samples_per_hr_sample": [r(x, 2) for x in ecg_per_hr],
+            "nan_values": int(sum(np.isnan(v).sum() for v in sig.values() if v.dtype.kind == "f")),
+            "dem": rec["dem"],
+        },
+    }
+
+
+def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
     mats = sorted(folder.rglob("Data.mat"))
     if not mats:
         return {"status": "no Data.mat files found", "table": {}}
@@ -470,35 +597,15 @@ def audit_sportdb(folder: Path) -> dict:
     root = Path(os.path.commonpath([m.parent for m in mats]))
     if len(mats) == 1:
         root = root.parent
-    records, schemas, phase_names = [], Counter(), Counter()
-    for mat in mats:
-        crd = mat.parent
-        parts = crd.relative_to(root).parts  # e.g. AMF/S1/CRD1, BAS/BAS1/S1/CRD1, SKA/CRD1
-        res["_files"] += [p for p in (mat, crd / "Dem.txt", crd / "TrNote.txt") if p.exists()]
-        rec = readers.read_sportdb_record(crd)
-        sig = rec["signals"]
-        lengths = {k: int(max(v.shape)) if v.ndim else 1 for k, v in sig.items()}
-        continuous = any(_is_hr(k) for k in sig)
-        span = (max(e for _, _, e in rec["phases"]) - min(s for _, s, _ in rec["phases"])
-                if rec["phases"] else None)
-        ecg_per_hr = [lengths["ECG" + k[2:]] / lengths[k] for k in sig
-                      if k.startswith("HR") and "ECG" + k[2:] in sig]
-        hr_keys = [k for k in sig if _is_hr(k)]
-        schemas[tuple(sorted(sig))] += 1
-        phase_names.update(name for name, _, _ in rec["phases"])
-        records.append({
-            "recording": "/".join(parts),
-            "sport": parts[0],
-            "subject": "/".join(parts[:-1]),
-            "has_subject_folder": len(parts) >= 3,
-            "continuous": continuous,
-            "signals": {k: list(v.shape) for k, v in sig.items()},
-            "timed_span_s": r(span, 1),
-            "implied_hr_hz": r(lengths[hr_keys[0]] / span) if len(hr_keys) == 1 and span else None,
-            "ecg_samples_per_hr_sample": [r(x, 2) for x in ecg_per_hr],
-            "nan_values": int(sum(np.isnan(v).sum() for v in sig.values() if v.dtype.kind == "f")),
-            "dem": rec["dem"],
-        })
+    biggest = max(m.stat().st_size for m in mats)
+    n_workers = pick_workers(len(mats), SPORTDB_BYTES_PER_FILE_BYTE * biggest, workers)
+    outs = parallel_map(partial(sportdb_record_facts, root=root), [m.parent for m in mats],
+                        n_workers, label="Sport DB recordings")
+    res["_workers"] = n_workers
+    res["_files"] = [p for o in outs for p in o["files"]]
+    records = [o["record"] for o in outs]
+    schemas = Counter(o["schema"] for o in outs)
+    phase_names = Counter(name for o in outs for name in o["phase_names"])
     cont = [x for x in records if x["continuous"]]
     clips = [x for x in records if not x["continuous"]]
     timed = [x for x in records if x["timed_span_s"]]
@@ -576,7 +683,7 @@ def audit_sportdb(folder: Path) -> dict:
 # ---------------------------------------------------------------- Kaggle tabular (#6, #7)
 
 
-def audit_sirp(folder: Path) -> dict:
+def audit_sirp(folder: Path, workers: int | None = None) -> dict:
     files = sorted(folder.rglob("*.xlsx"))
     if not files:
         return {"status": "no .xlsx file found", "table": {}}
@@ -625,7 +732,7 @@ def audit_sirp(folder: Path) -> dict:
     return res
 
 
-def audit_ziya(folder: Path) -> dict:
+def audit_ziya(folder: Path, workers: int | None = None) -> dict:
     files = sorted(folder.rglob("*.csv"))
     if not files:
         return {"status": "no .csv file found", "table": {}}
@@ -699,12 +806,13 @@ def has_files(folder: Path) -> bool:
     return folder.is_dir() and any(p.is_file() for p in folder.rglob("*"))
 
 
-def audit_dataset(folder: Path, reader: str) -> dict:
+def audit_dataset(folder: Path, reader: str, workers: int | None = None) -> dict:
+    """workers caps the number of processes (None = as many as cores and free RAM allow)."""
     if not has_files(folder):
         return {"status": "not downloaded", "table": {}}
     if reader not in AUDITORS:
         return {"status": f"no auditor for reader '{reader}'", "table": {}}
-    return AUDITORS[reader](folder)
+    return AUDITORS[reader](folder, workers)
 
 
 # ---------------------------------------------------------------- outputs
@@ -759,7 +867,7 @@ def update_manifest(rows_by_dataset: dict[str, list[dict]], path: Path = MANIFES
 
 
 def clean(obj):
-    """Make results JSON-safe: numpy types to Python, NaN to None, paths and dates to text."""
+    """Make results JSON-safe: numpy types to Python, NaN/inf to None, paths and dates to text."""
     if isinstance(obj, dict):
         return {str(k): clean(v) for k, v in obj.items()}
     if isinstance(obj, (list, tuple)):
@@ -768,7 +876,7 @@ def clean(obj):
         return clean(obj.tolist())
     if isinstance(obj, np.generic):
         return clean(obj.item())
-    if isinstance(obj, float) and math.isnan(obj):
+    if isinstance(obj, float) and not math.isfinite(obj):
         return None
     if isinstance(obj, Path):
         return obj.as_posix()
@@ -785,8 +893,9 @@ def _git(*args: str) -> str:
         return "unavailable"
 
 
-def run_info(run_id: str, only: str | None, fingerprints: dict[str, str | None]) -> dict:
-    packages = ("numpy", "pandas", "scipy", "scikit-learn", "openpyxl", "PyYAML")
+def run_info(run_id: str, only: str | None, fingerprints: dict[str, str | None],
+             runtime: dict[str, dict]) -> dict:
+    packages = ("numpy", "pandas", "pyarrow", "scipy", "scikit-learn", "openpyxl", "PyYAML")
     return {
         "run_id": run_id,
         "command": " ".join(sys.argv),
@@ -796,6 +905,8 @@ def run_info(run_id: str, only: str | None, fingerprints: dict[str, str | None])
         "python": platform.python_version(),
         "packages": {p: version(p) for p in packages},
         "seed": SEED,
+        "cpu_count": os.cpu_count(),
+        "runtime": runtime,
         "data_fingerprints": fingerprints,
     }
 
@@ -805,19 +916,24 @@ def write_json(path: Path, obj) -> None:
                     encoding="utf-8")
 
 
-def run_audit(only: str | None = None) -> Path:
+def run_audit(only: str | None = None, workers: int | None = None) -> Path:
     cfgs = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))["datasets"]
     if only and only not in cfgs:
         raise SystemExit(f"unknown dataset {only!r}; choose from: {', '.join(cfgs)}")
     names = [only] if only else sorted(cfgs, key=lambda n: cfgs[n]["number"])
-    results, manifest_rows, fingerprints = {}, {}, {}
+    results, manifest_rows, fingerprints, runtime = {}, {}, {}, {}
+    start = time.time()
     for name in names:
         cfg = cfgs[name]
         print(f"[{cfg['number']}] {name}", flush=True)
         t0 = time.time()
-        res = audit_dataset(RAW / cfg["folder"], cfg["reader"])
+        res = audit_dataset(RAW / cfg["folder"], cfg["reader"], workers)
         files = res.pop("_files", [])
-        hashes = {p.relative_to(RAW).as_posix(): sha256_file(p) for p in files}
+        # Big files were hashed from the same bytes the auditor parsed; hash the rest now.
+        known = res.pop("_hashes", {})
+        by_path = {**sha256_files([p for p in files if p not in known]), **known}
+        hashes = {p.relative_to(RAW).as_posix(): sha for p, sha in by_path.items()}
+        runtime[name] = {"seconds": r(time.time() - t0, 1), "workers": res.pop("_workers", 1)}
         res["files"] = sorted(hashes)
         res["size_mb"] = r(sum(p.stat().st_size for p in files) / 1e6, 1)
         res["fingerprint"] = fingerprints[name] = fingerprint(hashes) if hashes else None
@@ -828,7 +944,8 @@ def run_audit(only: str | None = None) -> Path:
         results[name] = res
         cells = res.get("table", {})
         print(f"    {res['status']} | {len(files)} files | subjects: {cells.get('subjects', '-')} "
-              f"| {cells.get('size', '-')} | {time.time() - t0:.0f} s", flush=True)
+              f"| {cells.get('size', '-')} | {runtime[name]['seconds']} s with "
+              f"{runtime[name]['workers']} worker(s)", flush=True)
 
     mirrors = {}
     for name in names:
@@ -840,6 +957,7 @@ def run_audit(only: str | None = None) -> Path:
             if ready:
                 mirrors[name] = mirror_check(src_folder, RAW / cfgs[name]["folder"])
                 results[name]["mirror"] = {"of": source, **mirrors[name]}
+    runtime["total_seconds"] = r(time.time() - start, 1)
 
     run_id = datetime.now().strftime("%Y-%m-%d_%H%M")
     run_dir = RUNS / run_id
@@ -848,7 +966,7 @@ def run_audit(only: str | None = None) -> Path:
     write_json(run_dir / "audit.json", {"run_id": run_id, "datasets": results})
     (run_dir / "audit_table.md").write_text(table + "\n", encoding="utf-8")
     shutil.copyfile(CONFIG, run_dir / "config.yaml")
-    write_json(run_dir / "run_info.json", run_info(run_id, only, fingerprints))
+    write_json(run_dir / "run_info.json", run_info(run_id, only, fingerprints, runtime))
     update_manifest(manifest_rows)
     if not only:
         text = DATASETS_MD.read_text(encoding="utf-8")
@@ -861,10 +979,14 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.reconfigure(encoding="utf-8")  # Windows console defaults to cp1252
     parser = argparse.ArgumentParser(description="Audit the raw datasets in data/raw/.")
     parser.add_argument("--only", help="audit one dataset (name from configs/datasets.yaml)")
+    parser.add_argument("--workers", type=int, default=None,
+                        help="max parallel processes (default: all cores, limited by free RAM)")
     args = parser.parse_args(argv)
-    run_dir = run_audit(args.only)
+    start = time.time()
+    run_dir = run_audit(args.only, args.workers)
     print("wrote", run_dir.relative_to(ROOT).as_posix(), "and data/MANIFEST.csv"
-          + ("" if args.only else " and the table in docs/DATASETS.md"))
+          + ("" if args.only else " and the table in docs/DATASETS.md")
+          + f" ({time.time() - start:.0f} s in total)")
     return 0
 
 

@@ -6,10 +6,12 @@ build on these readers, so each raw format is parsed in exactly one place.
 
 from __future__ import annotations
 
+import io
 import pickle
 import re
 import zipfile
 from pathlib import Path
+from typing import BinaryIO
 
 import numpy as np
 import pandas as pd
@@ -63,10 +65,19 @@ PAMAP2_ACTIVITIES = {
 }
 
 
-def read_pamap2_dat(path: Path) -> pd.DataFrame:
-    df = pd.read_csv(path, sep=" ", header=None)
+def read_pamap2_dat(
+    source: Path | bytes, engine: str = "pyarrow", name: str | None = None
+) -> pd.DataFrame:
+    """One subject file. `source` may be the file's bytes, so the caller can hash what it parsed.
+
+    The multi-threaded pyarrow parser is the default; engine="c" gives pandas' classic parser
+    (both must produce the same table; see tests/test_audit.py).
+    """
+    name = name or (source.name if isinstance(source, Path) else "PAMAP2 file")
+    data = io.BytesIO(source) if isinstance(source, bytes) else source
+    df = pd.read_csv(data, sep=" ", header=None, engine=engine)
     if df.shape[1] != len(PAMAP2_COLUMNS):
-        raise ValueError(f"{path.name}: expected {len(PAMAP2_COLUMNS)} columns, got {df.shape[1]}")
+        raise ValueError(f"{name}: expected {len(PAMAP2_COLUMNS)} columns, got {df.shape[1]}")
     df.columns = PAMAP2_COLUMNS
     return df
 
@@ -99,11 +110,16 @@ class NumpyOnlyUnpickler(pickle.Unpickler):
         return super().find_class(module.replace("numpy.core.", "numpy._core."), name)
 
 
-def read_wesad_pickle(path: Path) -> dict:
-    """Keys: 'subject', 'signal' {'chest': {...}, 'wrist': {...}}, 'label' (700 Hz)."""
-    with open(path, "rb") as f:
-        # The pickles were written by Python 2; latin1 keeps numpy byte buffers intact.
-        return NumpyOnlyUnpickler(f, encoding="latin1").load()
+def read_wesad_pickle(source: Path | BinaryIO) -> dict:
+    """Keys: 'subject', 'signal' {'chest': {...}, 'wrist': {...}}, 'label' (700 Hz).
+
+    `source` may be an open binary file (e.g. one that hashes the bytes as they are read).
+    """
+    if isinstance(source, Path):
+        with open(source, "rb") as f:
+            return read_wesad_pickle(f)
+    # The pickles were written by Python 2; latin1 keeps numpy byte buffers intact.
+    return NumpyOnlyUnpickler(source, encoding="latin1").load()
 
 
 def read_wesad_readme(path: Path) -> dict[str, str]:
