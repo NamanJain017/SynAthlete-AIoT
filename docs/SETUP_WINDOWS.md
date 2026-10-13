@@ -10,7 +10,7 @@ git clone https://github.com/NamanJain017/SynAthlete-AIoT.git .
 
 ## 2. Python environment
 ```powershell
-py -3.11 -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 ```

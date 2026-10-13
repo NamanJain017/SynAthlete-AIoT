@@ -44,7 +44,7 @@ Build in small pieces. Do not start the next piece until Naman says the current 
 read state -> plan -> implement in small steps -> `python tasks.py check` -> run it on real data -> explain to Naman + update docs/VIVA_NOTES.md -> update docs/STATE.md -> commit and push with the evidence in the message.
 
 ## Environment
-- Windows laptop, PowerShell, Python 3.11, NVIDIA RTX 4050 (about 6 GB VRAM): small models, batch size 128 or less, checkpoint long runs, keep one run under about 2 hours, always set seeds.
+- Windows laptop, PowerShell, Python 3.12, NVIDIA RTX 4050 (about 6 GB VRAM): small models, batch size 128 or less, checkpoint long runs, keep one run under about 2 hours, always set seeds.
 - Teammates have no GPU: everything except generator and model training must also run on CPU.
 - Code lives on GitHub (NamanJain017/SynAthlete-AIoT). Data stays local in data/raw/.
 
@@ -60,4 +60,4 @@ read state -> plan -> implement in small steps -> `python tasks.py check` -> run
 A task that prints "not implemented" is a gap to fill, not something to stub green.
 
 ## Style
-Python 3.11, type hints, ruff, pytest, small pure functions, short comments that explain why, config in YAML. Notebooks for exploration only; every number in the paper comes from a script.
+Python 3.12 (code stays 3.11-compatible), type hints, ruff, pytest, small pure functions, short comments that explain why, config in YAML. Notebooks for exploration only; every number in the paper comes from a script.
