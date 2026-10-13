@@ -9,10 +9,9 @@ Last updated: 2026-10-13 by Claude Code (cloud session)
 
 ## In progress
 - Naman: clone repo, create venv, install CUDA PyTorch + requirements, run `python tasks.py check`.
-- Naman: download the datasets listed in docs/DATASETS.md into data/raw/.
+- Naman: datasets 2-7 downloaded as zips into data/raw/<name>/ (not yet unzipped). Lövdal original (#1): retry DataverseNL on 2026-10-14. SoccerMon (#8): download page unavailable.
 
 ## Blocked / needs human decision
-- SIRP-600 source link (not found by web search).
 - Review 2 date and target conference (ask the guide).
 
 ## Next three actions
