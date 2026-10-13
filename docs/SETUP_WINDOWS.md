@@ -23,6 +23,8 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available(), tor
 ```
 It must print `True` and your RTX 4050.
 
+**No NVIDIA GPU (teammates):** install the CPU build from the same selector (Compute Platform: CPU), then run `pip install -r requirements.txt` in step 4. Do not install from `requirements.lock.txt`: it pins Naman's CUDA build (`torch==...+cu132`), which a CPU-only machine cannot use. Everything except generator and model training runs on CPU.
+
 ## 4. Everything else
 ```powershell
 pip install -r requirements.txt
