@@ -1,0 +1,16 @@
+# Install PyTorch FIRST with the CUDA command from pytorch.org (see docs/SETUP_WINDOWS.md).
+# Plain `pip install torch` on Windows installs the CPU-only build.
+# Then: pip install -r requirements.txt ; pip freeze > requirements.lock.txt
+numpy
+pandas
+scipy
+scikit-learn
+catboost
+shap
+captum
+matplotlib
+pyyaml
+streamlit
+pytest
+ruff
+# Added when the generator piece starts: synthcity (TimeGAN, TimeVAE)

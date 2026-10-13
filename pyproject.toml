@@ -1,0 +1,10 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Pinned on purpose: default rule sets change between ruff versions and would break `check` for no good reason.
+select = ["E", "F", "I", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

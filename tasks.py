@@ -1,0 +1,74 @@
+"""Windows-friendly task runner (replaces make). Usage: python tasks.py <task>"""
+
+import subprocess
+import sys
+import zipfile
+from datetime import datetime
+from pathlib import Path
+
+ROOT = Path(__file__).parent
+
+# Never put these into a snapshot zip: raw data, caches, old snapshots, secrets.
+SNAPSHOT_SKIP_DIRS = {
+    "backups", "raw", ".git", "__pycache__", ".venv", ".ruff_cache", ".pytest_cache",
+}
+SNAPSHOT_MAX_BYTES = 50_000_000
+
+
+def run(cmd: list[str]) -> int:
+    print("+", " ".join(cmd))
+    return subprocess.call(cmd, cwd=ROOT)
+
+
+def check() -> int:
+    lint = run([sys.executable, "-m", "ruff", "check", "."])
+    return lint or run([sys.executable, "-m", "pytest", "-q"])
+
+
+def snapshot_includes(rel: Path) -> bool:
+    if set(rel.parts) & SNAPSHOT_SKIP_DIRS:
+        return False
+    return not rel.name.startswith(".env")
+
+
+def snapshot() -> int:
+    """Zip the project (no raw data, backups, caches or secrets) into backups/."""
+    out_dir = ROOT / "backups"
+    out_dir.mkdir(exist_ok=True)
+    out = out_dir / f"snapshot_{datetime.now():%Y-%m-%d_%H%M}.zip"
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in ROOT.rglob("*"):
+            rel = p.relative_to(ROOT)
+            if p.is_file() and snapshot_includes(rel) and p.stat().st_size < SNAPSHOT_MAX_BYTES:
+                z.write(p, rel)
+    print("wrote", out)
+    return 0
+
+
+def not_implemented(piece: str):
+    def _f() -> int:
+        print(f"not implemented yet ({piece}, see docs/PLAN.md)")
+        return 1
+
+    return _f
+
+
+TASKS = {
+    "check": check,
+    "snapshot": snapshot,
+    "data": not_implemented("pieces 1-2"),
+    "baselines": not_implemented("piece 3"),
+    "gen": not_implemented("piece 5"),
+    "pipeline": not_implemented("piece 6"),
+    "train": not_implemented("piece 7"),
+    "explain": not_implemented("piece 8"),
+    "demo": not_implemented("piece 9"),
+    "paper-figures": not_implemented("piece 10"),
+}
+
+if __name__ == "__main__":
+    name = sys.argv[1] if len(sys.argv) > 1 else ""
+    if name not in TASKS:
+        print("tasks:", ", ".join(TASKS))
+        sys.exit(2)
+    sys.exit(TASKS[name]())
