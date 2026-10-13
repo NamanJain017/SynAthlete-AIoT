@@ -1,0 +1,64 @@
+{
+  "run_id": "2026-10-14_0433",
+  "command": "python -m src.data.audit ",
+  "only": null,
+  "git_commit": "da3e0deaede81d9b3ea32a8976bdd30b5e504f91",
+  "git_dirty": false,
+  "python": "3.12.2",
+  "packages": {
+    "numpy": "2.5.2",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "openpyxl": "3.1.5",
+    "PyYAML": "6.0.3"
+  },
+  "seed": 0,
+  "cpu_count": 12,
+  "runtime": {
+    "lovdal": {
+      "seconds": 0.0,
+      "workers": 1
+    },
+    "kaggle_runners": {
+      "seconds": 0.5,
+      "workers": 1
+    },
+    "pamap2": {
+      "seconds": 16.7,
+      "workers": 3
+    },
+    "wesad": {
+      "seconds": 92.0,
+      "workers": 2
+    },
+    "sportdb2": {
+      "seconds": 10.3,
+      "workers": 12
+    },
+    "sirp600": {
+      "seconds": 1.4,
+      "workers": 1
+    },
+    "ziya07_wearable": {
+      "seconds": 0.2,
+      "workers": 1
+    },
+    "soccermon": {
+      "seconds": 0.0,
+      "workers": 1
+    },
+    "total_seconds": 121.1
+  },
+  "data_fingerprints": {
+    "lovdal": null,
+    "kaggle_runners": "dec3dc4eeaf84cb493d09cf5668e6b9894d187baa64ba2dfc1058c4eb455701f",
+    "pamap2": "5bf73ddbf2e654303cc360dea33bd9f2bd1d6e0916dd2df22496334b44cf3639",
+    "wesad": "997e08b1455db55b7f23851e9fc39389fc7555157c27fb1bfa9ba7e10a6953c8",
+    "sportdb2": "f077024a9f50f0a93a2f542a138434f49fd781efcb81a04ec02915db874d4267",
+    "sirp600": "396d3a8cc687f2bcc37aadcefadb972445d711728f4287b4f8cf93b2370cdb4b",
+    "ziya07_wearable": "404df40c7b817031433002698b0535e0a36eeeb00bf9d597aed6687cf7b8451a",
+    "soccermon": null
+  }
+}

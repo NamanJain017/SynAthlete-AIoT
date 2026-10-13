@@ -34,3 +34,29 @@ A: Yes. They install the CPU build of PyTorch and requirements.txt. Only generat
 
 **Q: Why check `torch.cuda.is_available()`?**
 A: On Windows a plain `pip install torch` silently installs the CPU-only build. Training would still run, just many times slower, so we check explicitly that PyTorch sees the GPU.
+
+## Piece 1: dataset audit (in progress: roles not decided yet)
+**What it does.** `python tasks.py audit` opens every downloaded dataset and writes down facts about it: how many people, how much data, which signals, which labels, whether there are injury labels, missing values, duplicates. It also runs "is this real?" checks, records a fingerprint (sha256) of every file in `data/MANIFEST.csv`, and fills the table in docs/DATASETS.md. Run used here: `experiments/audit/2026-10-14_0433/` (code commit da3e0de, 121 s).
+
+**Why it is needed.** Every number in the paper must come from code, not from a web page or memory. The audit also tells us which dataset can play which role, and which ones must never be used as evidence.
+
+**What the numbers mean (from audit.json).**
+- Kaggle runners (#2): 74 athletes. Day file: 42,766 rows, each = one athlete's last 7 days; only 583 rows (1.36 %) are followed by an injury, so the data is very imbalanced (a model that always says "no injury" is already 98.6 % "accurate", which is why accuracy is a bad metric here). `-0.01` appears in the three "perceived" columns on days without a value: a code for "no answer", not a real number.
+- PAMAP2 (#3): 9 people, 10.7 h, 18 activities. The file has 100 rows per second, but heart rate has a value in only about 9 of them (median 9.13 values per second), which matches the ~9 Hz monitor in the readme. Check that works: heart rate while running is 156.6 bpm vs 75.5 lying.
+- WESAD (#4): 15 people (S1 and S12 were removed by the authors), 24.13 h; stress 166 min vs baseline 294 min.
+- Sport DB 2.0 (#5): 168 recordings, but only 55 are continuous (~127.6 h of heart-rate data); 113 are short ECG clips taken at rest or after exercise. Sampling rates are not stored in the files; the code works them out (heart rate ~1 sample per second) and they are marked [VERIFY].
+- SIRP-600 (#6) and ziya07 (#7): no proof they are real. In ziya07, heart rate is the same when "Resting" (120.6) and "Running" (118.0); in real PAMAP2 data the same check gives +81 bpm. In SIRP-600 a tiny decision tree with 2 questions predicts the "injury risk" label 89.7 % of the time, and the file was created and last saved 4 seconds apart.
+
+**Q: How can you say SIRP-600 or ziya07 might not be real?**
+A: We do not claim proof. We run checks that real body data passes: heart rate rises with running, taller people weigh more, values are bell-shaped rather than evenly spread. We run the same checks on data we know is real (a "positive control") to show the checks work. ziya07 fails the heart-rate check that real PAMAP2 passes, so it is labelled "unknown" and used only for demos, never as evidence.
+
+**Q: What is the sha256 fingerprint for?**
+A: It is a unique code computed from a file's bytes. If even one byte changes, the code changes. Recording it in MANIFEST.csv proves exactly which version of each dataset our results came from, so anyone can check they have the same files.
+
+**Q: Why did the audit not use the GPU?**
+A: The audit reads files, turns text into numbers and computes fingerprints. That work is limited by the disk and CPU, and a GPU does not speed it up. Instead the audit runs files in parallel on all CPU cores, as many at once as free memory allows. The GPU is used later for training the generators and models.
+
+**Q: Is the Kaggle runner file the same data as Lövdal et al.?**
+A: Not proven yet. The audit has a "mirror check" that compares the two cell by cell; it runs automatically once the original DataverseNL files are downloaded.
+
+<!-- piece 1 Q&A on roles is added after the role decisions -->
