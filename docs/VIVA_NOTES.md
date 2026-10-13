@@ -57,6 +57,9 @@ A: It is a unique code computed from a file's bytes. If even one byte changes, t
 A: The audit reads files, turns text into numbers and computes fingerprints. That work is limited by the disk and CPU, and a GPU does not speed it up. Instead the audit runs files in parallel on all CPU cores, as many at once as free memory allows. The GPU is used later for training the generators and models.
 
 **Q: Is the Kaggle runner file the same data as Lövdal et al.?**
-A: Not proven yet. The audit has a "mirror check" that compares the two cell by cell; it runs automatically once the original DataverseNL files are downloaded.
+A: Yes, proven by code. We downloaded the original from DataverseNL and the audit's mirror check found both CSV files byte-for-byte identical (same sha256 fingerprint; run `experiments/audit/2026-10-14_0502/`). So the Kaggle file shown in Review 1 is real data, but we cite and use the original source.
+
+**Q: In the runner data, which column is the most recent day?**
+A: It depends on the file, which is a classic trap. The authors' README says: in the day file, suffix `.6` is the day before the event and the unsuffixed column is seven days before (their paper first stated this the wrong way round); in the week file, the unsuffixed columns are the week before the event. Our loader puts both into oldest-to-newest order, otherwise a sequence model would read time backwards.
 
 <!-- piece 1 Q&A on roles is added after the role decisions -->
