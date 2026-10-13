@@ -448,7 +448,9 @@ class HashingReader:
         return self._sha.hexdigest()
 
 
-WESAD_BYTES_PER_FILE_BYTE = 1.3  # unpickled arrays ~ file size, plus one array in flight (estimate)
+# Measured 2026-10-14 on S6 (largest, 1123 MB): worker peak 1229 MB incl. ~164 MB of imports,
+# i.e. 1.09 x file size; 1.15 keeps a small margin.
+WESAD_BYTES_PER_FILE_BYTE = 1.15
 
 
 def wesad_subject_facts(pkl: Path) -> dict:
