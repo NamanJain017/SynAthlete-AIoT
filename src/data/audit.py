@@ -401,7 +401,8 @@ def audit_pamap2(folder: Path, workers: int | None = None) -> dict:
     opt = subjects.get("Optional", [])
     res["table"] = {
         "subjects": f"{len(all_subjects)} ({len(opt)} also in Optional)",
-        "size": "; ".join(f"{s}: {h} h" for s, h in hours.items()) + f" ({labelled} h labelled)",
+        "size": "; ".join(f"{s}: {h} h" for s, h in hours.items())
+                + f" (total labelled: {labelled} h)",
         "channels": f"HR + 3 IMUs: {len(sensor_cols)} sensor channels",
         "labels": f"{n_acts} activities (+ id 0 transient)",
         "injury": "no",
@@ -581,6 +582,7 @@ def sportdb_record_facts(crd: Path, root: Path) -> dict:
             "continuous": bool(hr_keys),
             "signals": {k: list(v.shape) for k, v in sig.items()},
             "timed_span_s": r(span, 1),
+            "hr_samples": sum(lengths[k] for k in hr_keys),
             "implied_hr_hz": r(lengths[hr_keys[0]] / span) if len(hr_keys) == 1 and span else None,
             "ecg_samples_per_hr_sample": [r(x, 2) for x in ecg_per_hr],
             "nan_values": int(sum(np.isnan(v).sum() for v in sig.values() if v.dtype.kind == "f")),
@@ -608,8 +610,7 @@ def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
     phase_names = Counter(name for o in outs for name in o["phase_names"])
     cont = [x for x in records if x["continuous"]]
     clips = [x for x in records if not x["continuous"]]
-    timed = [x for x in records if x["timed_span_s"]]
-    hours = r(sum(x["timed_span_s"] for x in timed) / 3600, 2)
+    timed_cont = [x for x in records if x["continuous"] and x["timed_span_s"]]
     subject_folders = sorted({x["subject"] for x in records if x["has_subject_folder"]})
     no_folder = [x["recording"] for x in records if not x["has_subject_folder"]]
     # One demographics row per person: per subject folder, or per recording when there is none.
@@ -625,6 +626,10 @@ def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
         if col in dem:
             dem[col] = pd.to_numeric(dem[col], errors="coerce")
     hr_hz = [x["implied_hr_hz"] for x in records if x["implied_hr_hz"]]
+    hz = r(float(np.median(hr_hz))) if hr_hz else None
+    # Hours of data actually recorded: HR samples / implied HR rate. Note spans would overcount:
+    # clip-only recordings note the whole session, and some notes include breaks.
+    hours = r(sum(x["hr_samples"] for x in cont) / hz / 3600, 2) if hz else None
     ratios = [v for x in records for v in x["ecg_samples_per_hr_sample"]]
     cont_names = sorted({re.sub(r"(_.*|\..*)$", "", k) for x in cont for k in x["signals"]})
 
@@ -633,13 +638,19 @@ def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
                        "people_upper_bound": len(people),
                        "subjects_with_differing_dem_across_recordings": sorted(inconsistent)}
     res["rows"] = {"recordings": len(records), "continuous": len(cont), "short_clips": len(clips)}
-    res["hours"] = {"with_timed_notes": hours, "recordings_with_timed_notes": len(timed)}
+    res["hours"] = {
+        "continuous_recorded": hours,
+        "method": "sum of HR samples in continuous recordings / implied HR rate [VERIFY rate]",
+        "timed_note_span_continuous": r(sum(x["timed_span_s"] for x in timed_cont) / 3600, 2),
+        "recordings_with_timed_notes": len([x for x in records if x["timed_span_s"]]),
+    }
     res["channels"] = {"schemas": {" ".join(k): n for k, n in schemas.most_common()}}
     res["labels"] = {"type": "free-text phase notes, no class labels",
                      "top_phase_names": dict(phase_names.most_common(15))}
     res["time_series"] = {
         "value": True, "continuous_recordings": len(cont),
-        "implied_hr_hz_median": r(float(np.median(hr_hz))) if hr_hz else None,
+        "implied_hr_hz_median": hz,
+        "implied_hr_hz_from_recordings": len(hr_hz),
         "implied_hr_hz_range": [r(min(hr_hz)), r(max(hr_hz))] if hr_hz else None,
         "ecg_samples_per_hr_sample": sorted(set(ratios)),
         "note": "sampling rates are not stored in the files; implied rates [VERIFY] against the "
@@ -666,11 +677,10 @@ def audit_sportdb(folder: Path, workers: int | None = None) -> dict:
                             f"behind them is unknown: {', '.join(no_folder)}")
     res["notes"].append("subject folders restart per sport/team: the same person in two sports "
                         "cannot be detected")
-    hz = res["time_series"]["implied_hr_hz_median"]
     res["table"] = {
         "subjects": f"{len(subject_folders)} subject folders + {len(no_folder)} recordings "
                     "without one",
-        "size": f"{len(records)} recordings; {hours} h in {len(timed)} with timed notes",
+        "size": f"{len(records)} recordings; ~{hours} h of continuous HR data [VERIFY rate]",
         "channels": f"continuous {'/'.join(cont_names)} in {len(cont)}; short ECG clips only "
                     f"in {len(clips)}",
         "labels": "none (free-text phase notes)",
@@ -893,15 +903,22 @@ def _git(*args: str) -> str:
         return "unavailable"
 
 
+def code_state() -> dict:
+    """Taken before the audit writes anything, so its own outputs never count as 'dirty'."""
+    return {
+        "git_commit": _git("rev-parse", "HEAD"),
+        "git_dirty": _git("status", "--porcelain") not in ("", "unavailable"),
+    }
+
+
 def run_info(run_id: str, only: str | None, fingerprints: dict[str, str | None],
-             runtime: dict[str, dict]) -> dict:
+             runtime: dict[str, dict], code: dict) -> dict:
     packages = ("numpy", "pandas", "pyarrow", "scipy", "scikit-learn", "openpyxl", "PyYAML")
     return {
         "run_id": run_id,
-        "command": " ".join(sys.argv),
+        "command": "python -m src.data.audit " + " ".join(sys.argv[1:]),
         "only": only,
-        "git_commit": _git("rev-parse", "HEAD"),
-        "git_dirty": _git("status", "--porcelain") not in ("", "unavailable"),
+        **code,
         "python": platform.python_version(),
         "packages": {p: version(p) for p in packages},
         "seed": SEED,
@@ -922,6 +939,7 @@ def run_audit(only: str | None = None, workers: int | None = None) -> Path:
         raise SystemExit(f"unknown dataset {only!r}; choose from: {', '.join(cfgs)}")
     names = [only] if only else sorted(cfgs, key=lambda n: cfgs[n]["number"])
     results, manifest_rows, fingerprints, runtime = {}, {}, {}, {}
+    code = code_state()
     start = time.time()
     for name in names:
         cfg = cfgs[name]
@@ -966,7 +984,7 @@ def run_audit(only: str | None = None, workers: int | None = None) -> Path:
     write_json(run_dir / "audit.json", {"run_id": run_id, "datasets": results})
     (run_dir / "audit_table.md").write_text(table + "\n", encoding="utf-8")
     shutil.copyfile(CONFIG, run_dir / "config.yaml")
-    write_json(run_dir / "run_info.json", run_info(run_id, only, fingerprints, runtime))
+    write_json(run_dir / "run_info.json", run_info(run_id, only, fingerprints, runtime, code))
     update_manifest(manifest_rows)
     if not only:
         text = DATASETS_MD.read_text(encoding="utf-8")
