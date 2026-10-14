@@ -1,6 +1,6 @@
 # Candidate datasets (docs/DATASETS.md). Human-recorded facts only: source, licence, origin, role.
 # Every count or statistic comes from src/data/audit.py, never from this file.
-# origin: real | simulated | unknown (AGENTS.md invariant 8). role: pending until a DECISIONS entry.
+# origin: real | simulated | unknown (AGENTS.md invariant 8). role: set by a DECISIONS entry.
 # licence: as stated by the source; [VERIFY] = not yet checked on the download page.
 
 datasets:
@@ -14,7 +14,7 @@ datasets:
     access_date: 2026-10-14  # DataverseNL zip doi-10.34894-uwu9pv.zip (HTTP 500 on 2026-10-13)
     origin: real
     origin_evidence: published dataset of a peer-reviewed paper (Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518)
-    role: pending
+    role: "sole injury evidence: sequence + snapshot arms, explanations, dashboard replay (D-012, D-013)"
 
   kaggle_runners:
     number: 2
@@ -25,9 +25,9 @@ datasets:
     source_url: https://www.kaggle.com/datasets/shashwatwork/injury-prediction-for-competitive-runners
     licence: "[VERIFY]"
     access_date: 2026-10-13
-    origin: unknown
-    origin_evidence: reported third-party re-upload of #1; becomes real only if the mirror check shows it equals #1
-    role: pending
+    origin: real
+    origin_evidence: byte-identical copy of #1 (same sha256 for both CSVs; audit run 2026-10-14_0502)
+    role: "none separate; cite #1 (D-012)"
 
   pamap2:
     number: 3
@@ -39,7 +39,7 @@ datasets:
     access_date: 2026-10-13
     origin: real
     origin_evidence: readme.pdf describes 9 consenting subjects, hardware and protocol; papers Reiss and Stricker, ISWC 2012
-    role: pending
+    role: "wearable stream for edge/fog tiers + generator training and fidelity (D-012)"
 
   wesad:
     number: 4
@@ -51,7 +51,7 @@ datasets:
     access_date: 2026-10-13
     origin: real
     origin_evidence: wesad_readme.pdf describes 17 subjects (2 discarded), devices and protocol; paper Schmidt et al., ICMI 2018, doi 10.1145/3242969.3242985
-    role: pending
+    role: "second wearable dataset: generator generalisation (D-012)"
 
   sportdb2:
     number: 5
@@ -63,7 +63,7 @@ datasets:
     access_date: 2026-10-13
     origin: real
     origin_evidence: Mendeley Data deposit (doi 10.17632/kzkjkt7mx2.2) with an ethics committee document (EthicalComm-SPortDB.pdf)
-    role: pending
+    role: "realism check for synthetic heart rate + extra edge stream (D-012)"
 
   sirp600:
     number: 6
@@ -75,7 +75,7 @@ datasets:
     access_date: 2026-10-13
     origin: unknown
     origin_evidence: no documented collection method; see audit plausibility checks and file metadata
-    role: pending
+    role: "demo / sanity check only, never evidence (D-012, D-013)"
 
   ziya07_wearable:
     number: 7
@@ -86,8 +86,8 @@ datasets:
     licence: "[VERIFY]"
     access_date: 2026-10-13
     origin: unknown
-    origin_evidence: reported simulated (docs/DATASETS.md); see audit plausibility checks
-    role: pending
+    origin_evidence: reported simulated (docs/DATASETS.md); fails the heart-rate-vs-activity check that PAMAP2 passes
+    role: "dashboard demo only, never evidence (D-012)"
 
   soccermon:
     number: 8
@@ -99,4 +99,4 @@ datasets:
     access_date: null
     origin: real
     origin_evidence: peer-reviewed data descriptor, Scientific Data 11:553 (2024), doi 10.1038/s41597-024-03386-x
-    role: pending
+    role: "related work only (not downloadable) (D-012)"
