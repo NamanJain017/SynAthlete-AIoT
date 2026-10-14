@@ -24,7 +24,8 @@ Last updated: 2026-10-15 by Claude Code (Naman's laptop)
 ## Blocked / needs human decision
 - Review 2 date and target conference (ask the guide). Scope risk: pieces 2-10 remain; follow the PLAN cut order if time is short.
 - Licences marked [VERIFY] in configs/datasets.yaml: Kaggle runners, SIRP-600, ziya07, Sport DB 2.0, SoccerMon (check each download page).
-- Read the Lövdal paper's evaluation section: its AUC 0.724 / 0.678 [VERIFY] is only a fair comparison if it also tested on unseen athletes.
+- Lövdal paper read 2026-10-15 (details in docs/DATASETS.md Rules): AUC 0.724/0.678 verified; test = the 10 most recently joined athletes; healthy events exclude the 3 weeks around injuries (limitation for any score on this data). Plan: add their 10-athlete split in piece 2 and rebuild their method (with and without their test-athlete scaling) in piece 3.
+- Optional second real dataset: SoccerMon on Zenodo (doi 10.5281/zenodo.10033832, CC BY 4.0). subjective.zip is 705.8 kB (training load, wellness, self-reported injuries: 162 reports / 306 injuries, Team A 291 vs Team B 15); GPS zips total about 99 GB. Not downloaded; decide after piece 3.
 
 ## Next three actions
 1. Piece 2: loaders for every dataset (reuse src/data/readers.py) + person-level splits saved once in data/splits/ + leakage tests + data cards.
