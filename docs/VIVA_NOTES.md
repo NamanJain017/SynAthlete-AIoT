@@ -35,7 +35,7 @@ A: Yes. They install the CPU build of PyTorch and requirements.txt. Only generat
 **Q: Why check `torch.cuda.is_available()`?**
 A: On Windows a plain `pip install torch` silently installs the CPU-only build. Training would still run, just many times slower, so we check explicitly that PyTorch sees the GPU.
 
-## Piece 1: dataset audit (in progress: roles not decided yet)
+## Piece 1: dataset audit (done 2026-10-14)
 **What it does.** `python tasks.py audit` opens every downloaded dataset and writes down facts about it: how many people, how much data, which signals, which labels, whether there are injury labels, missing values, duplicates. It also runs "is this real?" checks, records a fingerprint (sha256) of every file in `data/MANIFEST.csv`, and fills the table in docs/DATASETS.md. Run used here: `experiments/audit/2026-10-14_0433/` (code commit da3e0de, 121 s).
 
 **Why it is needed.** Every number in the paper must come from code, not from a web page or memory. The audit also tells us which dataset can play which role, and which ones must never be used as evidence.
@@ -62,4 +62,13 @@ A: Yes, proven by code. We downloaded the original from DataverseNL and the audi
 **Q: In the runner data, which column is the most recent day?**
 A: It depends on the file, which is a classic trap. The authors' README says: in the day file, suffix `.6` is the day before the event and the unsuffixed column is seven days before (their paper first stated this the wrong way round); in the week file, the unsuffixed columns are the week before the event. Our loader puts both into oldest-to-newest order, otherwise a sequence model would read time backwards.
 
-<!-- piece 1 Q&A on roles is added after the role decisions -->
+**Dataset roles (decided 2026-10-14, DECISIONS D-012 to D-015).** Lövdal is the only source of injury evidence. PAMAP2 and WESAD feed the IoT tiers and the generators. Sport DB 2.0 checks whether synthetic heart rate looks real. SIRP-600 and ziya07 are demos only. Kaggle runners is the same data as Lövdal. SoccerMon is cited in related work.
+
+**Q: Your Review 1 slide used SIRP-600 for injury risk. Why did you change that?**
+A: Three reasons found by the audit. Its rows are anonymous people with no athlete ID, so we cannot test on unseen people. Its origin is undocumented and a 2-question rule predicts its label 89.7 % of the time, which real injuries never allow. And fusion needs both model arms to judge the same athlete on the same day. So the snapshot arm now uses Lövdal's weekly summaries: real injuries, the same runners as the sequence arm.
+
+**Q: Can your sensor data predict injuries?**
+A: No, and we do not claim it. PAMAP2/WESAD people are not the Lövdal runners and have no injury records. The sensor data shows the IoT pipeline (edge, fog, cloud) and trains the generators; injury results come only from the Lövdal training logs. That separation is exactly the data gap our project statement describes.
+
+**Q: Why an "ACWR-style 3-week" baseline instead of the normal ACWR?**
+A: The classic acute:chronic workload ratio compares this week's load with the last 4 weeks, but the runner files only hold 3 weeks. We use an adapted 3-week version and label it as such, rather than claim the classic rule.

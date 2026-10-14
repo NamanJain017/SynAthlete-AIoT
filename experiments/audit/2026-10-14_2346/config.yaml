@@ -1,0 +1,102 @@
+# Candidate datasets (docs/DATASETS.md). Human-recorded facts only: source, licence, origin, role.
+# Every count or statistic comes from src/data/audit.py, never from this file.
+# origin: real | simulated | unknown (AGENTS.md invariant 8). role: set by a DECISIONS entry.
+# licence: as stated by the source; [VERIFY] = not yet checked on the download page.
+
+datasets:
+  lovdal:
+    number: 1
+    name: Lövdal et al. runner logs (DataverseNL original)
+    folder: lovdal
+    reader: runners
+    source_url: https://doi.org/10.34894/UWU9PV
+    licence: CC0 (per docs/PROJECT_BRIEF.md)
+    access_date: 2026-10-14  # DataverseNL zip doi-10.34894-uwu9pv.zip (HTTP 500 on 2026-10-13)
+    origin: real
+    origin_evidence: published dataset of a peer-reviewed paper (Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518)
+    role: "sole injury evidence: sequence + snapshot arms, explanations, dashboard replay (D-012, D-013)"
+
+  kaggle_runners:
+    number: 2
+    name: Injury Prediction for Competitive Runners (Kaggle, shashwatwork)
+    folder: kaggle_runners
+    reader: runners
+    mirror_of: lovdal  # audit compares the two file sets cell by cell when both are present
+    source_url: https://www.kaggle.com/datasets/shashwatwork/injury-prediction-for-competitive-runners
+    licence: "[VERIFY]"
+    access_date: 2026-10-13
+    origin: real
+    origin_evidence: byte-identical copy of #1 (same sha256 for both CSVs; audit run 2026-10-14_0502)
+    role: "none separate; cite #1 (D-012)"
+
+  pamap2:
+    number: 3
+    name: PAMAP2 Physical Activity Monitoring
+    folder: pamap2
+    reader: pamap2
+    source_url: https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring
+    licence: "free for academic research, no constraints for scientific use (readme.pdf); UCI page licence [VERIFY]"
+    access_date: 2026-10-13
+    origin: real
+    origin_evidence: readme.pdf describes 9 consenting subjects, hardware and protocol; papers Reiss and Stricker, ISWC 2012
+    role: "wearable stream for edge/fog tiers + generator training and fidelity (D-012)"
+
+  wesad:
+    number: 4
+    name: WESAD (Wearable Stress and Affect Detection)
+    folder: wesad
+    reader: wesad
+    source_url: https://archive.ics.uci.edu/dataset/465/wesad+wearable+stress+and+affect+detection
+    licence: "academic, non-commercial use; follow the Siegen acknowledgement policy (docs/DATASETS.md) [VERIFY]"
+    access_date: 2026-10-13
+    origin: real
+    origin_evidence: wesad_readme.pdf describes 17 subjects (2 discarded), devices and protocol; paper Schmidt et al., ICMI 2018, doi 10.1145/3242969.3242985
+    role: "second wearable dataset: generator generalisation (D-012)"
+
+  sportdb2:
+    number: 5
+    name: Sport DB 2.0 (slide name "Collective Sports Sensor DB")
+    folder: sportdb2
+    reader: sportdb
+    source_url: https://data.mendeley.com/datasets/kzkjkt7mx2/2
+    licence: "[VERIFY]"
+    access_date: 2026-10-13
+    origin: real
+    origin_evidence: Mendeley Data deposit (doi 10.17632/kzkjkt7mx2.2) with an ethics committee document (EthicalComm-SPortDB.pdf)
+    role: "realism check for synthetic heart rate + extra edge stream (D-012)"
+
+  sirp600:
+    number: 6
+    name: SIRP-600 Sports Injury Risk Prediction (Kaggle)
+    folder: sirp600
+    reader: sirp
+    source_url: https://www.kaggle.com/datasets/yuanchunhong/sirp-600-sports-injury-risk-prediction-dataset
+    licence: "[VERIFY]"
+    access_date: 2026-10-13
+    origin: unknown
+    origin_evidence: no documented collection method; see audit plausibility checks and file metadata
+    role: "demo / sanity check only, never evidence (D-012, D-013)"
+
+  ziya07_wearable:
+    number: 7
+    name: Wearable Sports Health Monitoring (Kaggle, ziya07)
+    folder: ziya07_wearable
+    reader: ziya
+    source_url: https://www.kaggle.com/datasets/ziya07/wearable-sports-health-monitoring-dataset
+    licence: "[VERIFY]"
+    access_date: 2026-10-13
+    origin: unknown
+    origin_evidence: reported simulated (docs/DATASETS.md); fails the heart-rate-vs-activity check that PAMAP2 passes
+    role: "dashboard demo only, never evidence (D-012)"
+
+  soccermon:
+    number: 8
+    name: SoccerMon (Midoglu et al., Scientific Data 2024)
+    folder: soccermon
+    reader: none  # not downloadable on 2026-10-13
+    source_url: https://datasets.simula.no/soccermon/
+    licence: "[VERIFY]"
+    access_date: null
+    origin: real
+    origin_evidence: peer-reviewed data descriptor, Scientific Data 11:553 (2024), doi 10.1038/s41597-024-03386-x
+    role: "related work only (not downloadable) (D-012)"
