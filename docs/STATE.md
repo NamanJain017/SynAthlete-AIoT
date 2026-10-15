@@ -34,7 +34,7 @@ Last updated: 2026-10-15 by Claude Code (Naman's laptop)
 
 ## Ideas for later
 - Optional BiLSTM comparison (one extra row) if time allows; not an R1 commitment.
-- Proposed 2026-10-15 (needs Naman's OK, piece 9): dashboard "Training lab" page to retrain fast models (LR, RF, CatBoost, small GRU) on one development group with safe slider ranges, labelled "demo", never touching the locked test; GANs show saved results only.
+- Approved 2026-10-15 (D-016, piece 9): dashboard "Training lab" page; runs saved separately in experiments/training_lab/, never overwriting official models/results, never using the locked test.
 - Beginner study guide: docs/STUDY_GUIDE.md (covers everything so far + plans; update it after each piece).
 
 ## Known issues and surprises
