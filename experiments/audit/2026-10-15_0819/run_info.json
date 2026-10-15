@@ -1,0 +1,69 @@
+{
+  "run_id": "2026-10-15_0819",
+  "command": "python -m src.data.audit ",
+  "only": null,
+  "git_commit": "b34af2384fe4a98da9ab7b10125bfeccf0a444c4",
+  "git_dirty": false,
+  "python": "3.12.2",
+  "packages": {
+    "numpy": "2.5.2",
+    "pandas": "3.0.6",
+    "pyarrow": "25.0.1",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "openpyxl": "3.1.5",
+    "PyYAML": "6.0.3"
+  },
+  "seed": 0,
+  "cpu_count": 12,
+  "runtime": {
+    "lovdal": {
+      "seconds": 0.5,
+      "workers": 1
+    },
+    "kaggle_runners": {
+      "seconds": 0.5,
+      "workers": 1
+    },
+    "pamap2": {
+      "seconds": 14.2,
+      "workers": 3
+    },
+    "wesad": {
+      "seconds": 97.2,
+      "workers": 2
+    },
+    "sportdb2": {
+      "seconds": 7.6,
+      "workers": 12
+    },
+    "sirp600": {
+      "seconds": 1.6,
+      "workers": 1
+    },
+    "ziya07_wearable": {
+      "seconds": 0.2,
+      "workers": 1
+    },
+    "soccermon": {
+      "seconds": 2.9,
+      "workers": 1
+    },
+    "pmdata": {
+      "seconds": 10.0,
+      "workers": 1
+    },
+    "total_seconds": 135.2
+  },
+  "data_fingerprints": {
+    "lovdal": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "kaggle_runners": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "pamap2": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+    "wesad": "93026805cd4d85ca37cb69369854990c92354926d4d27b45ce0825e9b1aca220",
+    "sportdb2": "0490ca6af6082928a87e19cf9baca2e56126126995a33eb14da1c15fd9c95d8e",
+    "sirp600": "eed2c3bc502d72b114c21fadb352c6b476d1987ebf50611b5ad50f8d8af0dc5f",
+    "ziya07_wearable": "7b57e318ad6f8ce0d8bfa9263a14f439d3d26d3e5c27422c68131ea2cb135dcb",
+    "soccermon": "a323193a54460239e6d296ccc7608f63d64b7eab29057b827d3d878d0d9471df",
+    "pmdata": "286847643dddb19d5c393b28f5317b8139303e5deb98f718ff5707fde75749be"
+  }
+}

@@ -7,7 +7,7 @@ Order is fixed; dates are flexible until the Review 2 date is confirmed. Tick a 
 | 0 | Setup | `python tasks.py check` passes on the laptop; GPU visible to PyTorch | - |
 | 1 | Download + audit all 6 datasets | Audit table in docs/DATASETS.md filled from `src/data/audit.py`; a role decided for each dataset (DECISIONS entry) | Methodology |
 | 2 | Loaders + person-level splits | Loaders for every dataset kept; splits saved once in data/splits; leakage tests pass; data cards written | Methodology, Implementation |
-| 3 | Real-data baselines | `python tasks.py baselines` writes metrics.json + summary table (injury: majority, ACWR rule, LR, RF, CatBoost, GRU; activity: small CNN/GRU) | Implementation |
+| 3 | Real-data baselines | `python tasks.py baselines` writes metrics.json + summary table (injury: majority, ACWR rule, LR, RF, CatBoost, GRU on the 5 Lövdal development groups; Lövdal paper method rebuilt, pipeline-checked on stand-in runners 54-63; locked runners untouched, D-017; activity: small CNN/GRU) | Implementation |
 | 4 | Evaluation protocol | Blanks in docs/EVAL_PROTOCOL.md filled BEFORE any generator runs | Methodology |
 | 5 | Generators | TimeGAN, WGAN-GP, TimeVAE, classic augmentation; fidelity, usefulness (train on synthetic, test on real) and privacy checks | Implementation |
 | 6 | Edge-fog-cloud tiers | Reflex / supervisor / deep layers as separate processes; latency and bytes benchmark, cloud-only vs tiered | Implementation |

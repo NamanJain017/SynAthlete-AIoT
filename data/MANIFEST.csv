@@ -17,7 +17,182 @@ pamap2,pamap2/PAMAP2_Dataset/Protocol/subject106.dat,https://archive.ics.uci.edu
 pamap2,pamap2/PAMAP2_Dataset/Protocol/subject107.dat,https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring,"free for academic research, no constraints for scientific use (readme.pdf); UCI page licence [VERIFY]",2026-10-13,a02195e9599eb249f79103912d27eb4f62d8a0f59e4763b0dd8250fee5f3f020
 pamap2,pamap2/PAMAP2_Dataset/Protocol/subject108.dat,https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring,"free for academic research, no constraints for scientific use (readme.pdf); UCI page licence [VERIFY]",2026-10-13,81ce6b21b9c1e01dc02099c4f9387699547b08b28b387d09a56e0cb0a8af22fc
 pamap2,pamap2/PAMAP2_Dataset/Protocol/subject109.dat,https://archive.ics.uci.edu/dataset/231/pamap2+physical+activity+monitoring,"free for academic research, no constraints for scientific use (readme.pdf); UCI page licence [VERIFY]",2026-10-13,5109d5cd8334769566b4ae602adf3e5f4bb7b9ee8ca678f0c481d333114b07c7
+pmdata,pmdata/p01/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,de8ce718980da184774f5ea1c13c43feef1753af127cc0cb39eaa57c81c46ed7
+pmdata,pmdata/p01/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,376fbaca47512db45960d82c747835ae22fa4ba7740dd7e5ff200c542a1d89c7
+pmdata,pmdata/p01/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f18937b69bc5501e2a0f9da5a063c40ec55112bcd346baa41f5974c3cb3ab86d
+pmdata,pmdata/p01/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,c10fefb2be936d85ec2cee33d61de2babdd1850cbba123e787330f5113e6bb8a
+pmdata,pmdata/p01/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,01fc09f685cc5844eea5b64cc47b4a5b486f41eeba3b96b8302e480cbe58690f
+pmdata,pmdata/p01/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,24149da71e88fc8d1c058ba932f4bda8acc48821b596dbdb88fc7cd66075429b
+pmdata,pmdata/p01/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,17af203cb94feec04a5feb817b4cfcd23f67b3435a30ea6d10146fad3c0a7227
+pmdata,pmdata/p01/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,26c480ee3139933aeca70e6443e6f4205cf520014be4fe9a17afcd1ecdbf55f0
+pmdata,pmdata/p01/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,e787bfc34ab7bcf157f60874a03270abd8b6fe93dc87590a5499a0dbc4a2d39f
+pmdata,pmdata/p01/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9dc6e6c0bd33487d4621ac4cf26a4f10b150d30a4bb1179b2b52f4396b1cde2e
+pmdata,pmdata/p02/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f72c8b881394a349bdd16b6771527946f75e6f5bc868acb7af76694730f5044e
+pmdata,pmdata/p02/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b82bb975132cb09a9ece223948871aa1c10e077110a5a557992554768e08e751
+pmdata,pmdata/p02/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f477f28122db257adc773d45995f0cfc98c3cdddf5d44d881c9f367d3c424b55
+pmdata,pmdata/p02/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f83faa124028ef30bdddf34abb0c88ab18405bc46aa40dc54b088d683423b1b7
+pmdata,pmdata/p02/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,49b2dc35f4d1eab0a31e4ba4f75285f262666a595ebe1baaeef1b2b400a0ee84
+pmdata,pmdata/p02/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9ea3ccb41615066de51a829827acf190d91b019a50785c390709cfdc921887c5
+pmdata,pmdata/p02/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,dd1ee1eefdf43b9f5d32d9ddec21b0d45b0592546fd18f7952653438ff366dbd
+pmdata,pmdata/p02/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,827ee325848709eb27a22c51aaea70fb0463f2d87ae2fbe4d096c1af746c2a2f
+pmdata,pmdata/p02/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,1c7db476db505537de55264b788ece4bb30fb92a630fbb2190a0915e61cf23ca
+pmdata,pmdata/p02/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,0175eeb76a0ababbe55e413dec70768644c02a991afea672a6b0e979bbdafa09
+pmdata,pmdata/p03/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b3abdf2c9c3758514120581c7860e1c8208004f0c4f2da07b2032ba08b1428f4
+pmdata,pmdata/p03/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,739021a32239990de88580c56eacd5e171efd07efd17287e0e9135b7912c46d5
+pmdata,pmdata/p03/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,fa9c66fa7267634a15aec3f9b9b4ec0b6653862e4dc2344a01e24fa9728f2c72
+pmdata,pmdata/p03/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,97223d03e460bd42a0b12851503c3f8ca7f8749972d1646b7e14eaa82f4b81b2
+pmdata,pmdata/p03/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,99f4c3864c90be11f95fab17e7017514a31dd3c69b1158c60a58252b0d1b1d89
+pmdata,pmdata/p03/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,248b569e4b8ccb77c71b108c26105797df52d89762b4b344f23c80db503a9b42
+pmdata,pmdata/p03/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,8497f84bde73efae687d56c4493c6b6e42d56b498e14fd45e459917418ab44b5
+pmdata,pmdata/p03/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,0cf2f4105cbfc87bab2291b300347595c1aaa6d522c4695735384863b5e5552d
+pmdata,pmdata/p03/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d1a9be8bd0e7baee66c18dadb553cd021e4f7cf11b45aef0f742368b27e91c97
+pmdata,pmdata/p03/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,e951fa6f4d4932df8dade879b5800e2bbb470b94eebfeb05dff508e3780032c4
+pmdata,pmdata/p04/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,7f34ff904f516621a897d0d0fe75a27a12a149ba3ca00af2eaab2e743e835190
+pmdata,pmdata/p04/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,74fc838d551c4d63dbb88d52f0a8ebfd6ca3bd1634b6b0cceb6e97cdd8c6958e
+pmdata,pmdata/p04/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ad6c39948154c2700310040b0b1e2f9be49db257f53c7f776555882355d4ec02
+pmdata,pmdata/p04/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,5ce75973076396bbee588f99011150848af1f981cc2b7e2fecd3142a41e65081
+pmdata,pmdata/p04/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,dc35defb807d175597ef10df7d6a0dcc85f506151d300c127d719446c46b397b
+pmdata,pmdata/p04/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,c60f82fda204f89a6004b3792f88f2f903cf260d38d63f5fc29c4d89c2c1d443
+pmdata,pmdata/p04/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f930c2115b5c16643d98239d16f910eb271aed2a8645e63b305bfdc100b2f5ea
+pmdata,pmdata/p04/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,5a331bd9cae72878d116290397d020bebfba3a978d0d5f4c88a9d5f0ca4d5bba
+pmdata,pmdata/p04/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,74126bcd5e2133c32db681453a5c43fa3ca58d7aa345f857e363acaeb6c4aeb2
+pmdata,pmdata/p04/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,6a431a635071cf9a5ebbc20eb7122847f20f8a1472fb1c96573fa5a846393db2
+pmdata,pmdata/p05/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,02cb8270949c29bc8fa03182b8c106546f5cfa36ead24fb788b71595ea91a108
+pmdata,pmdata/p05/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,bcfcf40b16a81ee3828870c451a39ba7a192d2bf184509c816a57b4701ee3276
+pmdata,pmdata/p05/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,36a7f39f4a6ca1ed3142973a25928398b8481b2a784c4ed7caf7e2374d5f0fb9
+pmdata,pmdata/p05/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,c16c1062ff0e2920b9d02afbdc6411551614749a59d7e90b32aeacf3acbcb42d
+pmdata,pmdata/p05/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,937546f5deba55c99caa874ea19fba6d2f3344d5d55c50bacd912e48720e6612
+pmdata,pmdata/p05/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,3dc29f62d810e0fde2630392eedb692dfb5970bca346bd51e1406cc736429c28
+pmdata,pmdata/p05/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,1437da4556fb506cd82e89ffc70b272a50abe4c466173468f333528f344fa19b
+pmdata,pmdata/p05/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,6bf5c874a2b44285bd86d517760004a6c8df2f671b3a2049f5f4051c49ed21ef
+pmdata,pmdata/p05/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,3b738ba8b931b2844aee5cfee4555ce6197c985317968f946c7c889fc026c642
+pmdata,pmdata/p05/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,c1f6e1f492436450ee74bcac66265143d9c11d7fa4ea293a0067a2c642955420
+pmdata,pmdata/p06/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,87021ce06acc2d8be4bc4498981df122bf51ef1cad038f8b4437e08d3df92b03
+pmdata,pmdata/p06/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,acd84b9a75f7f55cb2b106ee707c39b2e88b1b25891ac7c972ce25d280b44d48
+pmdata,pmdata/p06/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f8e0e50f0bc5f437622ccf9b4e98a8c6bf8c5e753974e94153be7399cdac13dc
+pmdata,pmdata/p06/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ee5968c68bee5ff5d9da8db465e4adf8e3a7b9a7aea999a09721cd7e7bdfeead
+pmdata,pmdata/p06/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,67d4504b386036e6c86c1c3eed4c0bbef83fe848e62f78b2ce236ecb0cb70ba5
+pmdata,pmdata/p06/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b7e447816bfb838707b6307fb94c9cc574a346a11e9459b7fce23de0c9dc517f
+pmdata,pmdata/p06/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b515df68757ca2724ce3d6f1bad13a1463baf039a3a7607e2d9245cba021b71e
+pmdata,pmdata/p06/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,49047726edf538678a1193622878b113228c087f3a571e34d5fdc82b7ff9812c
+pmdata,pmdata/p06/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,2c1b330fe07bf06f524fb237cd0fe583328ffcafb6d6708ac5b77155d624e8e1
+pmdata,pmdata/p06/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,a60a0f533de146b5ca0558164b772a5ad738fd4c1f7795a0135246b7e3a31e8e
+pmdata,pmdata/p07/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,3c30a29931eb8b470b730946a1f1c33c0238945276e7d8443c62869aa2d98954
+pmdata,pmdata/p07/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,3861f824d658e5a502e6a8da0fb9cb01591645e6f68cb4362a86abb2dbe900b0
+pmdata,pmdata/p07/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,8d7d1329420b70ece5b8fffb8089b99956ed722c0938937e7c1b20508be89999
+pmdata,pmdata/p07/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d604e7773b1b2d00a645beb527b8738feacabe48171f74b66223060ab76f9fc7
+pmdata,pmdata/p07/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,cafbca1be3ed0c1f0b124d85d2122f5a2b8bd2f9693c12164a14307b43b23073
+pmdata,pmdata/p07/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9834642cd9056ed5545535e812375f09b881df1faf3bc4de7cd222efb49f6c20
+pmdata,pmdata/p07/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,38b630d551e3ff7ce4a0269478b7377c071ba5ea7e79b16846fc79acd6d9d154
+pmdata,pmdata/p07/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,0c0a6144198fa7d8845ca0d1e23bb9fd0d35df853b1fc17a44bf105a0130e582
+pmdata,pmdata/p07/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,171a7a483db07d6c57d923f23527cadd7ffc78d2a25e0f136cf24b92a42eb6da
+pmdata,pmdata/p07/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f33a14b06ccf6393895322391df5d3c0d6ea113322c5c9a7671c46bb22993897
+pmdata,pmdata/p08/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d8fda9b938a94d5f6e1662b2b685cd1f641313b73d52909a81c0cc765fc987c1
+pmdata,pmdata/p08/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d8020bb288bc4418253c90a456508545dc157e23eec9e5a3076ab483cfede3e8
+pmdata,pmdata/p08/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,7ee1300d4060d3ee4079c6214cdc7139359112f865cb1a80467d6ec8dd6e7234
+pmdata,pmdata/p08/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,eb43a9e3d54fca38e3bf85bc4f33fc6b851e1d242c6c9caf3116e0fb969d3876
+pmdata,pmdata/p08/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,81917b720a845253002436a5e2bd12d480d5b8f138f0e4f5ae1465a45ad84001
+pmdata,pmdata/p08/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b45df9a9904627abbec7317264bf1602570ffca6a4d514f13936f7ab01cb7de9
+pmdata,pmdata/p08/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,027f34312b0004f7a26d86d5289b08e8d226cc1a9f703dce2968796fcce7d961
+pmdata,pmdata/p08/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9c63151086b4e2a1817309e7e1b5d151bc0d0999dac5d51cd1bda06f21ad4f2a
+pmdata,pmdata/p08/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,a4474f816d00ad23ba63887619383fb5530ec7dd955e19940fa73115767bdc7b
+pmdata,pmdata/p09/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,e06a1b819a676ca2fa66154d413f48a323083ad97d6aada244c2b05955c5c0e8
+pmdata,pmdata/p09/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,faea67388b9517df0fc3a6c75050eedc2b731f0fb057870dc8a9af4248ae310e
+pmdata,pmdata/p09/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,08c6482d64fb1f81900d6a20ad77b195bbbed72b6b7f67d286ffaaaca3835d5d
+pmdata,pmdata/p09/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,25d882aaa83ecda72049eff44fb0a210a825f3d217df288bd1855f25395b181f
+pmdata,pmdata/p09/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ebfeea761667dedf6a7be9acb4a30178738b15b5634814cb491e32be90a18ea9
+pmdata,pmdata/p09/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d7cec94a9dae62a26a6fcfad51d73d8ea6cedd5566676bf2a904b2abc23e640d
+pmdata,pmdata/p09/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,bb72152ad2bc81972301242adc0d16c0128d28b76e03b93c73ffabfe1f4d1fe0
+pmdata,pmdata/p09/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,49bbb7d274ddc00da8b77836f4b7400c48a81eb9cec691656425e45933081310
+pmdata,pmdata/p09/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,87540ebfea2878c9a246e3b8d18473323707176dbe8c04fcc083faa66cf40e66
+pmdata,pmdata/p09/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,77f4fcd0222bdb37d85b0991620851104f5d383c6aa9d2b5e2230805917baa4d
+pmdata,pmdata/p10/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,982e70ef818ea3f7b7b04b23708fa150a2e56915b3756d923d91e173d43bc851
+pmdata,pmdata/p10/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,7c7b5216656923c4ed64e924d9a4a1127be65c186601d82a63f8eff65a8a05fd
+pmdata,pmdata/p10/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b6cf561a146c2cf13cefccf8cc976f9b211cec828ebcd892fe683d8653107272
+pmdata,pmdata/p10/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,83e5e9d86d8d073b0509dd492b961edc472234e2aa7050eb8395b89c8abf0a75
+pmdata,pmdata/p10/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9d7dde3095d408e6942f47c8dab36c2a908725f9e27ba40906de7ea5313d3fdb
+pmdata,pmdata/p10/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d46be87c28bf9cb5def02e6db1fbedb3e8a334ed195213f27e5f8da314645624
+pmdata,pmdata/p10/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,2ee17ab3c4f50fde776eaa0c268c403edce14ac4554cd5da0f2e7bef501b5dac
+pmdata,pmdata/p10/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,89d7895c7d58eab96db313039a7e0a2865535c0c6b1f19ae7b376d5368cea843
+pmdata,pmdata/p10/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f7a9fadac7efee5dffe2f442c8af6de1632cca76a28b214834f29163ac9fa86e
+pmdata,pmdata/p10/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b4fefbdfbb8f0ec7178c0cc83efcc03a2f68ebe227e11e67a5471cd25840aab1
+pmdata,pmdata/p11/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ab32ddcc3f8655f6661f51a3daa8813115df23fb0b62de626704b9f2cbbb2174
+pmdata,pmdata/p11/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,8512ef32308a4eb11723eef0269549ede1dd468381a84ba0092861ccbae965d1
+pmdata,pmdata/p11/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,408a5b6943c8fedb441e54f23bfba33c561f21bd4f809a86f062b09f49d7eee3
+pmdata,pmdata/p11/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ed3998faf1f826db6cb0d2c2e85d0fc77e64d427cf4b58691af2c6da1e27ce5a
+pmdata,pmdata/p11/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,2cb2e63825f0e2cc29d9ebcd758623e397570bd6fb3bb70ecbac06f11075c832
+pmdata,pmdata/p11/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d66ea4ab6041be1267925ff5245ec9d5b14c9f99db90c26dcf3e237cbd2e4c05
+pmdata,pmdata/p11/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,153947ae2f45ea3c9ef12e07a3e15f5d6fb6e252f68be7cc5f71873ff4a633cb
+pmdata,pmdata/p11/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,0f8c9bb6deae8aa4d0cf8f83a08bdc8524a3e1c7f652b7ecbc65c8fd67a5293c
+pmdata,pmdata/p11/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,65829c6e4b2a9b49c110fcdad015eef8ede140c365bf696e58a778ecd55971c5
+pmdata,pmdata/p11/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d2793ccb5ead696090e539a9849b91a170b4e9cd622f9745d50c0925fd73ede8
+pmdata,pmdata/p12/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,983e140471236c26b0938d71cfdd7fcd1062e30924162bb7980ef5432c8eae2b
+pmdata,pmdata/p12/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d3372d8f6fe12c43bf4534267d478a31648cf9cb878a71246c99dbba0c8f014d
+pmdata,pmdata/p12/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,16e347a04892709d7f8c4281a5f6c44f9e7d5def2b958d7a60e9c365313c7e9e
+pmdata,pmdata/p12/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,4371aa89321fbc795db51cfd5384253999673e348ff9ec2a286a66e5b01c1da7
+pmdata,pmdata/p12/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,88bc043305680207b21eb6a4eaf64bc414c6542b23998aa2e1c925dfb3665a9e
+pmdata,pmdata/p12/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,783f57844cd3066bee8cecf4b6474e8edbace3a19cc3b0c2fa1f6fe52bb48f9d
+pmdata,pmdata/p12/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,f596bc7678dd43101c4a7e197a92b5e26b79588216c6b04a5c139ca6c2fe3228
+pmdata,pmdata/p12/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,3c5e213a9c4de3a35744a81469ca1ba2db9e1e3f66ec0a0a06161c653cdbf731
+pmdata,pmdata/p13/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,6011cfd7c6f975f18ecbb06c73995f723db920846246f5e8151e4384d92a72cd
+pmdata,pmdata/p13/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,0cbc45d4553e95f04f906f30c7267f93aaa07478e2c8e869d42ebe4b8775495e
+pmdata,pmdata/p13/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9ac9f01096053018d9abc991195f0eca35ae48e819cfdfb7a5d3dbc32e21fea8
+pmdata,pmdata/p13/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,5395b1c555d8577fcb293b0accc462890a5a4b70d888e8ed4e5004226e888b4e
+pmdata,pmdata/p13/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,84ce5a99c98dc7f548f7ef0db6af951cffc49eb692bde1c1ebbb0dc681ea7be9
+pmdata,pmdata/p13/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9f48166a5b3c5ac577aa0fafd4ac28383c4e7501256e364cb0e22ba132132555
+pmdata,pmdata/p13/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ead3a890dee8aa6a2f026f3e7659c47a8dd2f8eb70a569e54c3641cae23c0e4a
+pmdata,pmdata/p13/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,ab519606bfd5c14ff2e42a0eff79b76b945d660dce42bdd6b6575b5109ec3027
+pmdata,pmdata/p13/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,14640f075ac0aa5c0e5deffcc3b888142d9b9d0752d50cb40e968cdd5b18ae16
+pmdata,pmdata/p14/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,2f2435add08a066eaf6d373ba02915e5dadbbdc6c603408046502e8c0688b2ff
+pmdata,pmdata/p14/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9b995c32d1e204558c4a09cdb9dc61180f6973fa3aa4d1e203926f8c34bc323e
+pmdata,pmdata/p14/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,0e8ae7137866c41a3ea708760aa638417334a0929d5ee843bc6c6377bf28471e
+pmdata,pmdata/p14/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,4d2e43911f28480f4968bb3b065d54aeb7763a9e18f6680891454e997bb81a52
+pmdata,pmdata/p14/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,764b37fbf1198424027de3ebceaa3d0dce8b2d4d28fc97fb32c9c88d0ea46653
+pmdata,pmdata/p14/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,5c43d75a4bd5a77fd3bd98c35307cbe2a81d2edf12928dc3eb617c488ca66e64
+pmdata,pmdata/p14/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,8b4ba7b150bb414616bea2f21a1b475e6a398eb743dc1a51cd0b04787518fe5d
+pmdata,pmdata/p14/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,3fe4d0f6eb289b30f1bdce5f22fe245e771742e2e0ac4f97cf1504c26f5ed040
+pmdata,pmdata/p14/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,66a0b9a9441f0e5d8db1ce309cbdb1c2e40455efee8b9951368bd213eae8dc91
+pmdata,pmdata/p14/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,61cfd166d45db134bb27ae1549d2748e18bce4ad0c18137362d3965e3f5152e5
+pmdata,pmdata/p15/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,752144dce2a574ea743e3797e24e8b94d3d0d825e6c2f2fd25e671b2657c0d7a
+pmdata,pmdata/p15/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,9c64e289777228936022c0713266dc2cdde341745d546ef80d27b32ee1023c47
+pmdata,pmdata/p15/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,75df5401e71dc11baf39521ec6288ea22edd842fa425ad570ab693725fea1e9e
+pmdata,pmdata/p15/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,b27c6b94cec2d2d96ff06458ff5b0d84235f6971b16c29842f43545b96e5ec13
+pmdata,pmdata/p15/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,98d8f562129c4b07b1b1ac976927f3794bab6acb8d463059dc0afb6386688611
+pmdata,pmdata/p15/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,1b5ba056489de7646d8e415e9c60aa35e1455d3833ad2965fa41ff4a9c816776
+pmdata,pmdata/p15/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,40d7da3337ad9c73580434c09dc90c4e5e219e46d7ac6293e7e1d922c452daf9
+pmdata,pmdata/p15/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,deaebfa4dd68201da2297f22ff0de18b114e3eb4f9bc1865f051a828cba3e194
+pmdata,pmdata/p15/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,119e56cd45f833409759c188a36befcc7514feb2ae1af6e52cc208c2e2967064
+pmdata,pmdata/p15/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,d0a06ced1b229e6972c1342f378f518587302f0cc23b71c5f34f816f4d4226ad
+pmdata,pmdata/p16/fitbit/lightly_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,00f6ca09fb019f08eb0bdda1dd3553f296614b33c8629eb09c72a9b4f7ebc63e
+pmdata,pmdata/p16/fitbit/moderately_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,628b73bc97fab7a853f47a6ef0da074d2dbeb36cb7c86655645cf11753e268fd
+pmdata,pmdata/p16/fitbit/resting_heart_rate.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,347c36a1b354e9e70785dbc448b74fb7be96a0591bfade9d2ccb9926f30512b9
+pmdata,pmdata/p16/fitbit/sedentary_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,17466ae60b61b1613ba515d115c3111d53ff5a35055a0885ae878353b0ee9f3e
+pmdata,pmdata/p16/fitbit/sleep_score.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,769dfb36af9ae4a410e30bdb42f69d34c0e549c02a954903d64a79b84b58badf
+pmdata,pmdata/p16/fitbit/steps.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,89a60d64417064f7e8883db59e9d0d050ba9f8dfd34e6083cc13b3ca5b9c1f11
+pmdata,pmdata/p16/fitbit/very_active_minutes.json,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,a3fcd19297c4dc7d6822a612794b7bac4160b79abc9fdb68f323460dcb589690
+pmdata,pmdata/p16/pmsys/injury.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,a34c7a09670367c0b17d9981c6a0da8f14574706d6be2e23a7ecdcc64d02fb7d
+pmdata,pmdata/p16/pmsys/srpe.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,e931d04b3ed7137d4dfe0badce8020772f24bac8c1054b97dac703fe87e0ae1d
+pmdata,pmdata/p16/pmsys/wellness.csv,https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk),[VERIFY],2026-10-15,991e1ffc3784f744613f42228c2c57de5e082535a536942b5ede9ac8befef082
 sirp600,sirp600/High_Accuracy_Sport_Injury_Dataset.xlsx,https://www.kaggle.com/datasets/yuanchunhong/sirp-600-sports-injury-risk-prediction-dataset,[VERIFY],2026-10-13,186bdc117b33d3eb9148f1a345d2cd9509bc5c39b4b190c75c10319876758fef
+soccermon,soccermon/subjective/game-performance/game-performance.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,7548ccb5d94e6460f28cf24fe210a7c45b87193bb5bf5ca9d5b796369fe47a80
+soccermon,soccermon/subjective/illness/illness.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,120c11e7a260e8216c0cf6b9fd0f28c7e404c4315862e7073eeea05d3b21493f
+soccermon,soccermon/subjective/injury/injury.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,f10075e247f62ac2a4a4c5681d3cbf6883dd5ab8bdc37a6bbbfc7cee48599e78
+soccermon,soccermon/subjective/training-load/acwr.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,31d735fc3ca78cbc64f8f95c1e2a426ee16c3bd3ee0316b187d92aa1190a12ea
+soccermon,soccermon/subjective/training-load/atl.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,b7eac03cc5cbdb76dd196b2bc54d75244e949e29a22cd5abbf7c05da3b31754c
+soccermon,soccermon/subjective/training-load/ctl28.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,fac98c5415168d82368323be53f9f8f96c0e4542c4021632dc450b409d4bdd5e
+soccermon,soccermon/subjective/training-load/ctl42.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,ffb6f814465ba959e59ece08c796584ba3e1c19afbea09163968d1ffcedb3ef7
+soccermon,soccermon/subjective/training-load/daily_load.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,49b06772aae7992b15bb289dd21ba8dac1d539ab939a6d8c232e42b9e4725280
+soccermon,soccermon/subjective/training-load/monotony.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,b5a6a425466cc26849162cac500ca43a94125cb611edf012d6b6d7dbb0b1d9f4
+soccermon,soccermon/subjective/training-load/session.json,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,3366eceaaa294ee2d7bfa2b9b8e4fa93dec58cb5554ab95a583ac9e0985c50a5
+soccermon,soccermon/subjective/training-load/strain.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,70c325e2e69e9ceeb715b99e994ca6c75c41e02c08225a0e4e50a302c694a8d2
+soccermon,soccermon/subjective/training-load/weekly_load.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,98b830a2aba76a9a8404b31ea4dd2582648097fa1a2a717d3846167d9093d018
+soccermon,soccermon/subjective/wellness/fatigue.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,319eae0981a23d3fdca1ad2e3cf5e305ff91161fe9f87055843ba93835a3c9bd
+soccermon,soccermon/subjective/wellness/mood.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,8cbff2e709037bcc5aaf293637b2351facaeab2056905550bcb42ae3dbd1e20b
+soccermon,soccermon/subjective/wellness/readiness.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,d1e540814c901b2f9aa398c498154d2876d957c0fe4a8367f11c8c0f3b2e9e6f
+soccermon,soccermon/subjective/wellness/sleep_duration.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,fd3125ed69d24ce1d1add8742f022aa43ae004dc09c4ea0962ca8150dcb0cca8
+soccermon,soccermon/subjective/wellness/sleep_quality.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,26959b3ecc7804964954cd1f8a2fe75ebfdcec443830f895989bf28854547355
+soccermon,soccermon/subjective/wellness/soreness.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,4d1a6542901a8e4eab39c7f288c3a51b5619d74042fca02bea1a8b467d8af5a0
+soccermon,soccermon/subjective/wellness/stress.csv,https://zenodo.org/doi/10.5281/zenodo.10033832,CC BY 4.0 (Zenodo record),2026-10-15,9f241d82749195c228bb314ede79bfa255a550d1053f6503ac7a2a82e915ee57
 sportdb2,sportdb2/Sport DB 2.0/SportDB2/AMF/S1/CRD1/Data.mat,https://data.mendeley.com/datasets/kzkjkt7mx2/2,[VERIFY],2026-10-13,e68587e330df6c5d398d964fcf6b561660943c2b76c35bb9f9a845d36b764da7
 sportdb2,sportdb2/Sport DB 2.0/SportDB2/AMF/S1/CRD1/Dem.txt,https://data.mendeley.com/datasets/kzkjkt7mx2/2,[VERIFY],2026-10-13,f3c62549c8373e6d28ae41dde7c2e8ece86d25ab0007697fd2c920a1d997cf1b
 sportdb2,sportdb2/Sport DB 2.0/SportDB2/AMF/S1/CRD1/TrNote.txt,https://data.mendeley.com/datasets/kzkjkt7mx2/2,[VERIFY],2026-10-13,6d9cbacbb432b73e92cd4b203784904c17a97b47a9567845ef27eb30243abdd4

@@ -185,10 +185,10 @@ The plan is being written for Naman's approval.
 ### Why split by person, not by row
 Days from the same runner look alike. If runner #12's Monday is in training and Tuesday in the test, the model "recognises" runner #12 and the score is inflated. So each runner is **entirely** in training, validation, or test (D-002, rule 2).
 
-### Lövdal split design (approved in principle by Naman; re-verified 2026-10-15; saved in piece 2)
+### Lövdal split design (saved 2026-10-15 in data/splits/lovdal_folds.json; decision D-017)
 ```
 74 runners
-├── 10 newest runners (IDs 64-73)  →  LOCKED FINAL TEST, used ONCE at the very end
+├── 10 newest runners (IDs 64-73)  →  LOCKED FINAL TEST, opened ONCE, after the evaluation freeze
 └── 64 older runners (IDs 0-63)    →  DEVELOPMENT, 5 balanced groups
        each round: 1 group = test (12-14 runners), 9-10 runners = validation, the rest = training (41-43)
        → each of the 64 is tested exactly once
@@ -196,7 +196,13 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 - **Why lock the 10 newest?**
   1. Nobody can say we tuned on the test.
   2. They are exactly the paper's test runners. We checked: IDs 64-73 contain 50 injuries and 2,994 healthy events, the same as the paper. So the final comparison is like-for-like.
-  3. They joined last, so the test also asks "does it work on newer athletes?".
+  3. They joined last, so the test also asks "does it work on newer athletes?". It is NOT a "future" (prospective) test: it is a test on 10 different runners who joined later. Say "newer athletes", never "future data".
+- **Main result vs final check (D-017, Naman chose option A).**
+  - **Main result** = the average ± spread over the 5 development test groups: 64 runners, 533 injuries. More injuries make the number more precise.
+  - **Final check** = the 10 locked runners (50 injuries), opened once at the very end. Their score is noisier, but nobody could have tuned on it.
+  - Both are reported. If they disagree a lot, we say so.
+  - **Not before the end, even for Review 2.** Review 2 shows development results and says the locked test is sealed.
+  - **Pipeline check in piece 3** (rebuilding the paper's method): uses **stand-in runners 54-63** (trained on 0-53), never the locked runners.
 - **Balance (re-verified):**
   - Injuries per test group: day 105 / 108 / 108 / 105 / 107; week 103 / 107 / 107 / 105 / 105.
   - Validation groups: 79-85 injuries each.
@@ -205,22 +211,33 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 - **Final model:** trained on 51 runners, validated on 13 (development group 0), tested once on the 10 locked runners.
 - **Safety rules:**
   - seed 0 chosen in advance;
-  - balance checked on label counts only (each group within ±20 % of the average);
-  - the split script refuses to overwrite saved splits;
-  - automatic tests: no runner in two roles, everyone tested once, locked runners never in development;
+  - balance checked on label counts only (each group within ±20 % of the average). Honest note: we looked at the group counts before writing this rule, so it is a sanity check, not a pre-registered test;
+  - the split script writes all files or none, and refuses to overwrite;
+  - **sealed:** `data/splits/SHA256SUMS` stores a fingerprint of every split file; the tests fail if one byte changes, and the script refuses any further re-make;
+  - **locked runners kept apart:** their arrays are in a separate folder and only `src/data/lockbox.py` opens them. It refuses unless the code is at the commit tagged `eval-freeze`, and it writes every opening to a log;
+  - every loader checks that the raw files it reads match the fingerprints in `data/MANIFEST.csv`;
+  - automatic tests: no runner in two roles, everyone tested once, locked runners never in development, files complete and matching the audited data;
   - an independent AI reviewer (eval-auditor) checks the splits.
 
 ### Other datasets (📝 refined after re-verification, part of the piece 2 plan)
 | Dataset | Split | Why |
 |---|---|---|
-| PAMAP2 | 4 test groups of 2 subjects; subject 109 always in training | 109 has only ~85 s of protocol data |
-| WESAD | 5 test groups of 3 subjects | balanced and simple |
+| PAMAP2 | 4 test groups of 2 subjects; validation = 1 person from the next group; subject 109 always in training | 109 has only ~85 s of protocol data |
+| WESAD | 5 test groups of 3 subjects; validation = 2 people from the next group | balanced and simple |
 | Sport DB 2.0 | 5 groups by subject; all 4 skating recordings kept together | their identity is unknown, so they might be one person |
 | SoccerMon | leave-one-player-out, all predictions pooled into one score | injury reports are very uneven (a fixed 5-group split gave 2, 65, 5, 51 and 39 reports per group) |
 | PMData | leave-one-person-out, pooled; results reported with and without p12; p08 excluded from injury tests | p12 holds 48 of 77 injuries; p08's injury file is missing |
 | SIRP-600 | 80/20 by rows, labelled "demo only" | no people to split by |
 
 "Leave-one-person-out": train on everyone except one person, test on that person, repeat for every person, then score all predictions together. Best for very small groups of people.
+
+**The one-time re-make (D-020).** The first PAMAP2 and WESAD files picked validation people badly: in WESAD, 10 validation slots were filled by only 5 people (S4 and S14 three times each). An independent review caught it. Before any model was trained, Naman approved re-making only those 2 files, once:
+- the test groups stayed exactly the same (the code refuses otherwise);
+- validation now rotates: fold k validates on people from test group k+1, so nobody validates twice (PAMAP2: 4 different people, WESAD: 10);
+- the old files are kept in `data/splits/superseded/`, and the decision is logged;
+- then the folder was sealed, so it can never happen again.
+
+Why this is not cheating: the rule "never regenerate splits" stops people from reshuffling until the *results* look good. No results existed yet, and the test groups did not change.
 
 ### Other leakage rules
 - Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which uses test labels; we won't.
@@ -263,7 +280,7 @@ The model outputs a risk (e.g. 0.37); the dashboard needs "alert" or "no alert".
 
 ### Reporting honestly
 - Report **mean ± spread** across groups and seeds (e.g. "0.70 ± 0.04": example only).
-- The locked test has only 50 injuries, so it gets an uncertainty range.
+- The locked test has only 50 injuries, so it gets an uncertainty range. It is the final check; the main number is the 5-group development average (D-017).
 
 ---
 
@@ -974,6 +991,8 @@ From the paper: individual features correlate only weakly with injury (r between
 | Shared day+week runner-days | 42,680 | data check |
 | Locked test (IDs 64-73) | 50 injuries + 2,994 healthy (day); 48 injuries (week) | our check = paper |
 | Development test groups | 105-108 injuries each (day) | split re-check |
+| Development runners 0-63 | day 39,722 windows / 533 injuries; week 39,783 / 527 | data/processed/lovdal/*_meta.json |
+| Validation people (D-020) | PAMAP2 4 different people in 4 folds; WESAD 10 in 5 | data/splits |
 | Paper AUC day / week | 0.724 / 0.678 | paper Table 3 |
 | Paper sensitivity / specificity (day) | 58.4 % / 74.1 % | paper Table 3 |
 | Kaggle = Lövdal | identical sha256 (fingerprint bf5e4401…) | audit |

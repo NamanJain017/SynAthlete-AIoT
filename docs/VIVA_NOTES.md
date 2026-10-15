@@ -74,3 +74,48 @@ A: No, and we do not claim it. PAMAP2/WESAD people are not the Lövdal runners a
 
 **Q: Why an "ACWR-style 3-week" baseline instead of the normal ACWR?**
 A: The classic acute:chronic workload ratio compares this week's load with the last 4 weeks, but the runner files only hold 3 weeks. We use an adapted 3-week version and label it as such, rather than claim the classic rule.
+
+## Piece 2: loaders and person-level splits (built 2026-10-15)
+**What it does.** Two jobs.
+1. **Loaders** (`python tasks.py data`) turn each raw dataset into tidy arrays in `data/processed/` (not in git). They keep raw values: no scaling and no filling-in of gaps, because those must be learned from training people only (rule 3). Every loader first checks that the raw files it reads still match the fingerprints the audit saved in `data/MANIFEST.csv`.
+2. **Splits** (`python tasks.py splits`) decide, once and for all, which people are used for training, validation and testing. They are saved in `data/splits/`, committed to git, and sealed with a fingerprint file (`SHA256SUMS`).
+
+**Why it is needed.** Every later score depends on these two steps. If a person appeared in both training and test, or the test changed between runs, no result could be trusted.
+
+**What the numbers mean.**
+- **Lövdal runners** (`data/processed/lovdal/*_meta.json`): each row is one runner's last 7 days (day file) or last 3 weeks (week file), ordered oldest to newest.
+  - Development runners 0-63: 39,722 day windows (533 injuries) and 39,783 week windows (527 injuries).
+  - Locked runners 64-73: 3,044 day windows with 50 injuries (the paper's exact test set). They are kept in a separate folder.
+  - Proof of the time order, run on the real file: for 40,000+ pairs of consecutive days, day d+1's window is exactly day d's window moved one day.
+- **Sensor windows** (`data/processed/{pamap2,wesad}/windows_meta.json`): 5.1-second slices at 25 samples per second.
+  - PAMAP2: 10,361 windows × 128 steps × 10 channels, 18 activities.
+  - WESAD: 17,401 windows × 128 × 6 (baseline 6,846, stress 3,861, amusement 2,144, meditation 4,550).
+  - 0 missing values in either.
+- **Daily tables** (`data/processed/{soccermon,pmdata}/daily_meta.json`): one row per person per day. Repeated pain reports are grouped into episodes (21-day rule, D-018).
+  - SoccerMon: 156 pain-report days become 27 episodes in 14 of 50 players.
+  - PMData: 72 report days become 8 episodes in 6 of 15 people.
+- **Sport DB 2.0** (`data/processed/sportdb2/hr_meta.json`): 55 heart-rate recordings, 461,744 samples. 93.91 % are plausible (30-220 bpm). Most of the rest are 0, the device's "no signal" value.
+- **Splits:**
+  - Lövdal: 5 development groups with 105-108 injuries each; the 10 locked runners are opened once at the end.
+  - PAMAP2: 4 groups. WESAD: 5 groups. Validation rotates, so nobody validates twice (D-020).
+  - SoccerMon and PMData: leave-one-person-out.
+
+**The main result and the locked test (D-017).** The headline score will be the average ± spread over the 5 development groups: 533 injuries, so more precise. The 10 locked runners are the final check: 50 injuries, opened once after the evaluation freeze, even if Review 2 comes first.
+
+**Q: Why not just report the score on the paper's 10 test runners? That's the fair comparison.**
+A: We report both. The 10 runners have only 50 injuries, so their score is noisy: a rough 95 % range of about ±0.08 AUC (our estimate from a standard formula, not a measurement). The 5 development groups test 533 injuries, so their average is about three times more precise. The locked runners stay untouched until the end, so that final number is one nobody could have tuned on. And the paper comparison happens on the same 10 runners, at the end.
+
+**Q: Your rules say splits are created once. Why were two files re-made?**
+A: An independent review found that the first PAMAP2 and WESAD files reused the same people for validation (in WESAD, 10 validation slots held only 5 people). The rule exists to stop reshuffling until results look good. No model had been trained yet, the test groups stayed identical (the code checks this), the old files are kept in `data/splits/superseded/`, and the decision is logged (D-020). Then the folder was sealed, so it can't happen again.
+
+**Q: How do you know nobody peeked at the locked test runners?**
+A: Four safeguards.
+1. Their arrays are saved in a separate folder.
+2. Only one function can open them. It refuses unless the code is at the commit tagged `eval-freeze`, and it writes every opening to a log.
+3. The tests fail if a development file ever contains a locked runner.
+4. Git history shows when the tag was made.
+
+In honesty, the raw file still contains them, so this is a guard rail plus an audit trail, not encryption. Their rows were also part of the dataset-level audit counts in piece 1, but no model has been trained or scored on them.
+
+**Q: Why 21 days for SoccerMon/PMData episodes?**
+A: People report the same sore knee on many days in a row. Counting each report as a new injury would multiply one problem into ten. We copied the Lövdal authors' rule: reports within 3 weeks are the same problem. The result is 162 SoccerMon reports, falling on 156 report days, which become 27 episodes.
