@@ -1,5 +1,7 @@
 # VIVA NOTES
 
+For the full beginner-level explanation of everything (datasets, splits, metrics, every model, CNN/VGG16/GoogLeNet/ResNet, GANs, tiers, explanations, a big question bank and a numbers cheat sheet), read `docs/STUDY_GUIDE.md`.
+
 Plain-language explanation of every piece, added as each piece is built. Each section: what it does, why it is needed, what the numbers mean, likely questions with answers.
 
 ## The project in 30 seconds
