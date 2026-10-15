@@ -1,0 +1,94 @@
+{
+ "meta": {
+  "dataset": "pamap2",
+  "created_utc": "2026-10-15T02:11:16+00:00",
+  "git_commit": "8e5b360a57ba5e4626ef1ddc2d1cf21508c591a7",
+  "git_dirty": false,
+  "seed": 0,
+  "method": "seed-0 permutation of subjects 101-108 into 4 test groups of 2; val = 1 subject from the rest; 109 always in training",
+  "scikit_learn": "1.9.1",
+  "data_fingerprint": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+  "decision": "D-017",
+  "subjects": [
+   "101",
+   "102",
+   "103",
+   "104",
+   "105",
+   "106",
+   "107",
+   "108",
+   "109"
+  ]
+ },
+ "folds": {
+  "0": {
+   "train_ids": [
+    "101",
+    "102",
+    "104",
+    "107",
+    "108",
+    "109"
+   ],
+   "val_ids": [
+    "105"
+   ],
+   "test_ids": [
+    "103",
+    "106"
+   ]
+  },
+  "1": {
+   "train_ids": [
+    "102",
+    "103",
+    "104",
+    "107",
+    "108",
+    "109"
+   ],
+   "val_ids": [
+    "106"
+   ],
+   "test_ids": [
+    "101",
+    "105"
+   ]
+  },
+  "2": {
+   "train_ids": [
+    "101",
+    "103",
+    "105",
+    "107",
+    "108",
+    "109"
+   ],
+   "val_ids": [
+    "106"
+   ],
+   "test_ids": [
+    "102",
+    "104"
+   ]
+  },
+  "3": {
+   "train_ids": [
+    "101",
+    "102",
+    "103",
+    "105",
+    "106",
+    "109"
+   ],
+   "val_ids": [
+    "104"
+   ],
+   "test_ids": [
+    "107",
+    "108"
+   ]
+  }
+ }
+}

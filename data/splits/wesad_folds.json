@@ -1,14 +1,14 @@
 {
  "meta": {
   "dataset": "wesad",
-  "created_utc": "2026-10-15T02:11:16+00:00",
-  "git_commit": "8e5b360a57ba5e4626ef1ddc2d1cf21508c591a7",
+  "created_utc": "2026-10-15T02:46:42+00:00",
+  "git_commit": "49ba528573388c930cce3a65231673215d5f6193",
   "git_dirty": false,
   "seed": 0,
-  "method": "seed-0 permutation into 5 test groups of 3; val = 2 subjects from the rest",
+  "method": "seed-0 permutation into 5 test groups of 3; val of fold k = 2 subjects of test group k+1 (rotating, D-020)",
   "scikit_learn": "1.9.1",
   "data_fingerprint": "93026805cd4d85ca37cb69369854990c92354926d4d27b45ce0825e9b1aca220",
-  "decision": "D-017",
+  "decision": "D-017, D-020",
   "subjects": [
    "S2",
    "S3",
@@ -25,7 +25,14 @@
    "S15",
    "S16",
    "S17"
-  ]
+  ],
+  "supersedes": {
+   "file": "data/splits/superseded/wesad_folds.v1.json",
+   "sha256": "d9fe711fb5796b08c4daba961a7c514cb1120e8939022bd475e11015968096e0",
+   "created_utc": "2026-10-15T02:11:16+00:00",
+   "git_commit": "8e5b360a57ba5e4626ef1ddc2d1cf21508c591a7",
+   "reason": "validation people repeated across folds; test groups unchanged"
+  }
  },
  "folds": {
   "0": {
@@ -33,17 +40,17 @@
     "S10",
     "S11",
     "S13",
-    "S14",
+    "S15",
     "S16",
     "S17",
     "S2",
     "S3",
-    "S7",
-    "S9"
+    "S5",
+    "S7"
    ],
    "val_ids": [
-    "S15",
-    "S5"
+    "S14",
+    "S9"
    ],
    "test_ids": [
     "S4",
@@ -55,18 +62,18 @@
    "train_ids": [
     "S10",
     "S13",
+    "S15",
     "S16",
     "S17",
     "S2",
     "S3",
-    "S5",
+    "S4",
     "S6",
-    "S7",
     "S8"
    ],
    "val_ids": [
-    "S15",
-    "S4"
+    "S5",
+    "S7"
    ],
    "test_ids": [
     "S11",
@@ -78,18 +85,18 @@
    "train_ids": [
     "S10",
     "S11",
-    "S13",
+    "S14",
     "S15",
-    "S17",
     "S2",
     "S3",
+    "S4",
     "S6",
     "S8",
     "S9"
    ],
    "val_ids": [
-    "S14",
-    "S4"
+    "S13",
+    "S17"
    ],
    "test_ids": [
     "S16",
@@ -100,10 +107,10 @@
   "3": {
    "train_ids": [
     "S11",
-    "S15",
+    "S14",
     "S16",
-    "S2",
     "S3",
+    "S4",
     "S5",
     "S6",
     "S7",
@@ -111,8 +118,8 @@
     "S9"
    ],
    "val_ids": [
-    "S14",
-    "S4"
+    "S15",
+    "S2"
    ],
    "test_ids": [
     "S10",
@@ -125,16 +132,16 @@
     "S10",
     "S11",
     "S13",
+    "S14",
     "S16",
     "S17",
-    "S4",
     "S5",
     "S7",
     "S8",
     "S9"
    ],
    "val_ids": [
-    "S14",
+    "S4",
     "S6"
    ],
    "test_ids": [

@@ -1,14 +1,14 @@
 {
  "meta": {
   "dataset": "pamap2",
-  "created_utc": "2026-10-15T02:11:16+00:00",
-  "git_commit": "8e5b360a57ba5e4626ef1ddc2d1cf21508c591a7",
+  "created_utc": "2026-10-15T02:46:42+00:00",
+  "git_commit": "49ba528573388c930cce3a65231673215d5f6193",
   "git_dirty": false,
   "seed": 0,
-  "method": "seed-0 permutation of subjects 101-108 into 4 test groups of 2; val = 1 subject from the rest; 109 always in training",
+  "method": "seed-0 permutation of subjects 101-108 into 4 test groups of 2; val of fold k = 1 subject of test group k+1 (rotating, D-020); 109 always in training",
   "scikit_learn": "1.9.1",
   "data_fingerprint": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
-  "decision": "D-017",
+  "decision": "D-017, D-020",
   "subjects": [
    "101",
    "102",
@@ -19,7 +19,14 @@
    "107",
    "108",
    "109"
-  ]
+  ],
+  "supersedes": {
+   "file": "data/splits/superseded/pamap2_folds.v1.json",
+   "sha256": "207dc9c07641023726ddccccec4baa979c578bff4f3d7af0073ab74e4bc4712e",
+   "created_utc": "2026-10-15T02:11:16+00:00",
+   "git_commit": "8e5b360a57ba5e4626ef1ddc2d1cf21508c591a7",
+   "reason": "validation people repeated across folds; test groups unchanged"
+  }
  },
  "folds": {
   "0": {
@@ -43,13 +50,13 @@
    "train_ids": [
     "102",
     "103",
-    "104",
+    "106",
     "107",
     "108",
     "109"
    ],
    "val_ids": [
-    "106"
+    "104"
    ],
    "test_ids": [
     "101",
@@ -61,12 +68,12 @@
     "101",
     "103",
     "105",
-    "107",
+    "106",
     "108",
     "109"
    ],
    "val_ids": [
-    "106"
+    "107"
    ],
    "test_ids": [
     "102",
@@ -77,13 +84,13 @@
    "train_ids": [
     "101",
     "102",
-    "103",
+    "104",
     "105",
     "106",
     "109"
    ],
    "val_ids": [
-    "104"
+    "103"
    ],
    "test_ids": [
     "107",
