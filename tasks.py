@@ -50,6 +50,16 @@ def audit() -> int:
     return run([sys.executable, "-m", "src.data.audit", *sys.argv[2:]])
 
 
+def data() -> int:
+    """Loaders (piece 2): raw datasets -> data/processed/ (git-ignored)."""
+    return run([sys.executable, "-m", "src.data.loaders", *sys.argv[2:]])
+
+
+def splits() -> int:
+    """Person-level splits (piece 2): written once to data/splits/, never overwritten."""
+    return run([sys.executable, "-m", "src.data.splits"])
+
+
 def not_implemented(piece: str):
     def _f() -> int:
         print(f"not implemented yet ({piece}, see docs/PLAN.md)")
@@ -62,7 +72,8 @@ TASKS = {
     "check": check,
     "snapshot": snapshot,
     "audit": audit,
-    "data": not_implemented("pieces 1-2"),
+    "data": data,
+    "splits": splits,
     "baselines": not_implemented("piece 3"),
     "gen": not_implemented("piece 5"),
     "pipeline": not_implemented("piece 6"),
