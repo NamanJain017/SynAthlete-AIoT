@@ -1,25 +1,36 @@
-"""Leakage tests for the person-level splits (piece 2, D-017).
+"""Leakage tests for the person-level splits (piece 2, D-017, D-020).
 
-Unit tests use fake data. The checks on data/splits/*.json run once those files exist
-(they are created once by `python tasks.py splits` and committed).
+Unit tests use fake data. The checks on data/splits/ FAIL (never skip) when a file is missing:
+the split files are committed, so every clone must have them. Completeness is checked against
+data/MANIFEST.csv, which is committed too, so these tests need no raw data.
 """
 
+import csv
+import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from src.data import loaders, splits
+from src.data import audit, loaders, splits
 
-SPLITS = Path(__file__).resolve().parents[1] / "data" / "splits"
+ROOT = Path(__file__).resolve().parents[1]
+SPLITS = ROOT / "data" / "splits"
+MANIFEST = ROOT / "data" / "MANIFEST.csv"
 
 
 def _load(name: str) -> dict:
     path = SPLITS / name
-    if not path.exists():
-        pytest.skip(f"{name} not created yet")
+    assert path.exists(), f"{name} is missing: split files are committed, never regenerated"
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _manifest(dataset: str) -> dict[str, str]:
+    """file path inside the dataset folder -> sha256, from the committed MANIFEST."""
+    with open(MANIFEST, newline="", encoding="utf-8") as f:
+        return {r["file"].split("/", 1)[1]: r["sha256"]
+                for r in csv.DictReader(f) if r["dataset"] == dataset}
 
 
 def _roles_disjoint(fold: dict) -> bool:
@@ -46,10 +57,47 @@ def test_write_once_never_overwrites(tmp_path):
     assert json.loads(path.read_text(encoding="utf-8")) == {"v": 1}
 
 
+def test_write_all_writes_everything_or_nothing(tmp_path):
+    (tmp_path / "b.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(splits.SplitError):
+        splits.write_all({"a.json": {"v": 1}, "b.json": {"v": 2}}, tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["b.json"]  # a.json not written
+    splits.write_all({"c.json": {"v": 3}, "d.json": {"v": 4}}, tmp_path)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["b.json", "c.json", "d.json"]
+
+
 def test_balance_rule_stops_on_unbalanced_groups():
     splits.check_balance([100, 105, 95, 110, 90], "ok")
     with pytest.raises(splits.BalanceError):
         splits.check_balance([100, 100, 100, 100, 40], "bad")
+
+
+def test_rotating_folds_never_reuse_a_validation_person():
+    people = [f"S{i}" for i in range(15)]
+    folds = splits.rotating_folds(people, 5, 2)
+    vals = [p for f in folds.values() for p in f["val_ids"]]
+    assert len(vals) == len(set(vals)) == 10
+    tests = [p for f in folds.values() for p in f["test_ids"]]
+    assert sorted(tests) == sorted(people)
+    for f in folds.values():
+        assert _roles_disjoint(f)
+        assert set(f["train_ids"]) | set(f["val_ids"]) | set(f["test_ids"]) == set(people)
+
+
+def test_remake_refuses_when_sealed_unlogged_or_not_allowed(tmp_path, monkeypatch):
+    decisions = tmp_path / "DECISIONS.md"
+    decisions.write_text("- D-020 | 2026-10-15 | ok\n", encoding="utf-8")
+    monkeypatch.setattr(splits, "DECISIONS", decisions)
+    monkeypatch.setattr(splits, "SEAL", tmp_path / "missing")
+    with pytest.raises(splits.SplitError, match="not logged"):
+        splits.remake(["wesad_folds.json"], "D-999")
+    with pytest.raises(splits.SplitError, match="may not be re-made"):
+        splits.remake(["lovdal_folds.json"], "D-020")
+    seal = tmp_path / "SHA256SUMS"
+    seal.write_text("", encoding="utf-8")
+    monkeypatch.setattr(splits, "SEAL", seal)
+    with pytest.raises(splits.SplitError, match="sealed"):
+        splits.remake(["wesad_folds.json"], "D-020")
 
 
 def test_lovdal_split_structure_on_fake_runners():
@@ -74,26 +122,75 @@ def test_leave_one_out_tests_each_person_once():
     assert all(f["test_ids"][0] not in f["train_ids"] for f in folds.values())
 
 
-# ---------------------------------------------------------------- checks on the saved split files
+# ---------------------------------------------------------------- the saved split files
+
+
+def test_split_files_match_their_pinned_hashes():
+    seal = SPLITS / "SHA256SUMS"
+    assert seal.exists(), "data/splits is not sealed (python tasks.py splits --seal)"
+    pinned = {}
+    for line in seal.read_text(encoding="utf-8").splitlines():
+        sha, name = line.split("  ", 1)
+        pinned[name] = sha
+    on_disk = {p.relative_to(SPLITS).as_posix() for p in SPLITS.rglob("*.json")}
+    assert on_disk == set(pinned), "a split file is not pinned, or a pinned file is missing"
+    assert set(splits.FILES) <= set(pinned)
+    for name, sha in pinned.items():
+        digest = hashlib.sha256((SPLITS / name).read_bytes()).hexdigest()
+        assert digest == sha, f"{name} changed after sealing"
+
+
+@pytest.mark.parametrize("name", splits.FILES)
+def test_every_split_file_records_clean_code_and_seed(name):
+    m = _load(name)["meta"]
+    assert m["seed"] == splits.SEED
+    assert len(m["git_commit"]) == 40 and m["git_dirty"] is False
+    assert m["data_fingerprint"]
+
+
+@pytest.mark.parametrize("name,dataset", [
+    ("lovdal_folds.json", "lovdal"), ("pamap2_folds.json", "pamap2"),
+    ("wesad_folds.json", "wesad"), ("sportdb2_folds.json", "sportdb2"),
+    ("sirp600_demo_split.json", "sirp600"),
+])
+def test_fingerprint_matches_the_audited_data(name, dataset):
+    assert _load(name)["meta"]["data_fingerprint"] == audit.fingerprint(_manifest(dataset))
+
+
+def test_exploratory_fingerprints_match_the_audited_files():
+    soccer = _manifest("soccermon")
+    picked = ("subjective/training-load/daily_load.csv", "subjective/injury/injury.csv")
+    assert all(f in soccer for f in picked), "SoccerMon files missing from MANIFEST"
+    assert _load("soccermon_lopo.json")["meta"]["data_fingerprint"] == \
+        audit.fingerprint({f: soccer[f] for f in picked})
+    pm = _manifest("pmdata")
+    s = _load("pmdata_lopo.json")
+    injury = {f"{p}/pmsys/injury.csv" for f in s["folds"].values() for p in f["test_ids"]}
+    assert injury <= set(pm), "PMData injury files missing from MANIFEST"
+    assert s["meta"]["data_fingerprint"] == audit.fingerprint({f: pm[f] for f in injury})
 
 
 def test_lovdal_saved_split_is_leak_free():
     s = _load("lovdal_folds.json")
+    lockbox = set(s["lockbox_ids"])
     assert s["lockbox_ids"] == list(range(64, 74))
     dev = set(range(64))
     tested = [a for f in s["folds"].values() for a in f["test_ids"]]
     assert sorted(tested) == sorted(dev) and len(tested) == len(set(tested))
     for f in s["folds"].values():
-        assert _roles_disjoint(f)
-        used = set(f["train_ids"]) | set(f["val_ids"]) | set(f["test_ids"])
-        assert not (set(s["lockbox_ids"]) & used)
-    assert set(s["final"]["train_ids"]) | set(s["final"]["val_ids"]) == dev
-    assert s["final"]["test_ids"] == s["lockbox_ids"]
+        assert _roles_disjoint(f) and f["val_ids"] and f["train_ids"]
+        assert set(f["train_ids"]) | set(f["val_ids"]) | set(f["test_ids"]) == dev
+    final = s["final"]
+    assert _roles_disjoint(final)
+    assert set(final["train_ids"]) | set(final["val_ids"]) == dev
+    assert final["val_ids"] == s["folds"]["0"]["test_ids"]
+    assert set(final["test_ids"]) == lockbox
+    paper = s["paper_split"]
+    assert set(paper["train_ids"]) == dev and set(paper["test_ids"]) == lockbox
     for view in s["balance"].values():
         counts = view["test_group_injuries"]
         mean = np.mean(counts)
         assert all(abs(c - mean) <= splits.BALANCE_TOLERANCE * mean for c in counts)
-    assert s["meta"]["seed"] == 0
 
 
 def test_lovdal_lockbox_is_the_papers_test_set():
@@ -102,35 +199,52 @@ def test_lovdal_lockbox_is_the_papers_test_set():
     assert s["balance"]["day"]["lockbox_events"] == 3044
 
 
-@pytest.mark.parametrize("name", ["pamap2_folds.json", "wesad_folds.json"])
-def test_sensor_splits_test_each_subject_once(name):
+@pytest.mark.parametrize("name,dataset", [("pamap2_folds.json", "pamap2"),
+                                          ("wesad_folds.json", "wesad")])
+def test_sensor_splits_are_complete_and_rotate_validation(name, dataset):
     s = _load(name)
+    everyone = set(s["meta"]["subjects"])
+    audited = {Path(f).stem.removeprefix("subject") for f in _manifest(dataset)
+               if f.endswith((".dat", ".pkl"))}
+    assert everyone == audited, "subject list differs from the audited files"
     tested = [x for f in s["folds"].values() for x in f["test_ids"]]
-    assert len(tested) == len(set(tested))
+    vals = [x for f in s["folds"].values() for x in f["val_ids"]]
+    assert len(tested) == len(set(tested)) and len(vals) == len(set(vals))  # D-020
     for f in s["folds"].values():
-        assert _roles_disjoint(f)
-    if name == "pamap2_folds.json":
-        assert "109" not in tested
-        for f in s["folds"].values():
-            assert "109" not in f["val_ids"] and "109" in f["train_ids"]
+        assert _roles_disjoint(f) and f["val_ids"]
+        assert set(f["train_ids"]) | set(f["val_ids"]) | set(f["test_ids"]) == everyone
+    if dataset == "pamap2":
+        assert set(tested) == everyone - {"109"}
+        assert all("109" in f["train_ids"] for f in s["folds"].values())
+    else:
+        assert set(tested) == everyone
 
 
-def test_sportdb_groups_cover_each_recording_once_and_keep_unnamed_together():
+def test_sportdb_groups_cover_every_audited_recording_once():
     s = _load("sportdb2_folds.json")
     recs = [r for f in s["folds"].values() for r in f["test_recordings"]]
-    assert len(recs) == len(set(recs))
-    unnamed = [k for f in s["folds"].values() for k in f["test_ids"] if "<no subject folder>" in k]
-    assert len(unnamed) == len(set(unnamed))  # each unnamed group appears in exactly one fold
+    audited = {f.rsplit("/", 1)[0] for f in _manifest("sportdb2") if f.endswith("Data.mat")}
+    assert len(recs) == len(set(recs)) == len(audited)
+    keys = [k for f in s["folds"].values() for k in f["test_ids"]]
+    assert len(keys) == len(set(keys))  # a subject (or the unnamed group) is in one fold only
 
 
-@pytest.mark.parametrize("name", ["soccermon_lopo.json", "pmdata_lopo.json"])
-def test_leave_one_out_files(name):
+@pytest.mark.parametrize("name,dataset", [("soccermon_lopo.json", "soccermon"),
+                                          ("pmdata_lopo.json", "pmdata")])
+def test_leave_one_out_files_are_complete(name, dataset):
     s = _load(name)
     tested = [f["test_ids"][0] for f in s["folds"].values()]
     assert len(tested) == len(set(tested))
-    assert all(f["test_ids"][0] not in f["train_ids"] for f in s["folds"].values())
-    if name == "pmdata_lopo.json":
-        assert "p08" not in tested
+    everyone = set(tested)
+    for f in s["folds"].values():
+        assert f["test_ids"][0] not in f["train_ids"]
+        assert set(f["train_ids"]) | set(f["test_ids"]) == everyone
+    if dataset == "soccermon":
+        assert len(tested) == s["meta"]["players"]
+    else:
+        people = {f.split("/", 1)[0] for f in _manifest("pmdata")}
+        assert everyone | set(s["meta"]["excluded_from_injury_tasks"]) == people
+        assert "p08" not in everyone
 
 
 def test_sirp_demo_split_rows_are_disjoint():

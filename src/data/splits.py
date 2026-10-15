@@ -1,14 +1,18 @@
-"""Create the person-level splits ONCE (piece 2, AGENTS.md rule 2, decision D-017).
+"""Create the person-level splits ONCE (piece 2, AGENTS.md rule 2, decisions D-017, D-020).
 
-    python -m src.data.splits        (same as: python tasks.py splits)
+    python -m src.data.splits             create all files (same as: python tasks.py splits)
+    python -m src.data.splits --remake FILE... --decision D-xxx   one-time re-make, logged first
+    python -m src.data.splits --seal      pin every file's sha256 in data/splits/SHA256SUMS
 
-Every file in data/splits/ is written once and never overwritten: an existing file is skipped.
-Each file records seed, method, library version, git commit and the data fingerprint.
-A Lövdal test group whose injury count is over 20 % from the mean stops the run (no re-seeding).
+All files are written together or not at all, and never overwritten. Each file records seed,
+method, library version, git commit and the data fingerprint. A Lövdal test group whose injury
+count is over 20 % from the mean stops the run (no re-seeding). Once SHA256SUMS exists the
+folder is sealed: nothing can be re-made, and the tests compare every file with its pinned hash.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import os
@@ -22,11 +26,15 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold, StratifiedGroupKFold, StratifiedShuffleSplit
 
 from src.data import audit, loaders, readers
+from src.data.reference import only_file
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
 SPLITS = ROOT / "data" / "splits"
 MANIFEST = ROOT / "data" / "MANIFEST.csv"
+DECISIONS = ROOT / "docs" / "DECISIONS.md"
+SEAL = SPLITS / "SHA256SUMS"
+SUPERSEDED = SPLITS / "superseded"  # earlier versions are moved here, never deleted
 SEED = 0
 BALANCE_TOLERANCE = 0.20
 N_LOCKBOX = 10
@@ -39,8 +47,10 @@ METHODS = {
               "test set); dev test groups: StratifiedGroupKFold(5, shuffle, seed 0) on the "
               "day file; val: first group of the same procedure on the remaining dev athletes",
     "pamap2": "seed-0 permutation of subjects 101-108 into 4 test groups of 2; "
-              "val = 1 subject from the rest; 109 always in training",
-    "wesad": "seed-0 permutation into 5 test groups of 3; val = 2 subjects from the rest",
+              "val of fold k = 1 subject of test group k+1 (rotating, D-020); "
+              "109 always in training",
+    "wesad": "seed-0 permutation into 5 test groups of 3; "
+             "val of fold k = 2 subjects of test group k+1 (rotating, D-020)",
     "sportdb2": "GroupKFold(5) on subject folders; recordings without a subject folder form "
                 "one group; test groups only (realism-check reference)",
     "soccermon": "leave-one-player-out; predictions pooled into one score; "
@@ -53,7 +63,11 @@ METHODS = {
 
 
 class BalanceError(RuntimeError):
-    """A test group is outside the pre-registered balance rule: stop and ask (D-017)."""
+    """A test group is outside the balance rule: stop and ask (D-017)."""
+
+
+class SplitError(RuntimeError):
+    """A request that would mix, overwrite or re-make split files outside the rules."""
 
 
 # ---------------------------------------------------------------- helpers
@@ -121,6 +135,26 @@ def write_once(path: Path, obj: dict) -> bool:
     os.replace(tmp, path)
     print(f"    wrote {path.name}")
     return True
+
+
+def write_all(built: dict[str, dict], folder: Path = SPLITS) -> None:
+    """Write every file or none: all are written to temporary files first, then renamed."""
+    clash = [name for name in built if (folder / name).exists()]
+    if clash:
+        raise SplitError(f"{clash} already exist: nothing written (splits are never regenerated)")
+    folder.mkdir(parents=True, exist_ok=True)
+    tmps: dict[str, Path] = {}
+    try:
+        for name, obj in built.items():
+            tmps[name] = folder / f"{name}.tmp"
+            tmps[name].write_text(json.dumps(obj, indent=1), encoding="utf-8")
+    except OSError:
+        for tmp in tmps.values():  # only our own temporary files
+            tmp.unlink(missing_ok=True)
+        raise
+    for name, tmp in tmps.items():
+        os.replace(tmp, folder / name)
+        print(f"    wrote {name}")
 
 
 def injuries_per(ids_list: list[list], athlete: np.ndarray, y: np.ndarray) -> list[int]:
@@ -191,13 +225,18 @@ def lovdal_split(day: loaders.RunnerData, week: loaders.RunnerData) -> dict:
 
 def rotating_folds(subjects: list[str], n_groups: int, n_val: int,
                    always_train: tuple[str, ...] = ()) -> dict:
-    """Seed-0 permutation into test groups; validation drawn from the remaining subjects."""
+    """Seed-0 permutation into test groups; fold k validates on n_val people of test group k+1.
+
+    Taking the validation people from the next fold's test group gives every fold different
+    validation people (D-020). The test groups are the same as in the first version.
+    """
     perm = [str(s) for s in np.random.default_rng(SEED).permutation(subjects)]
     tests = [sorted(perm[i::n_groups]) for i in range(n_groups)]
     folds = {}
     for k, test in enumerate(tests):
+        nxt = tests[(k + 1) % n_groups]
+        val = sorted([s for s in perm if s in nxt][:n_val])  # permutation order = seeded pick
         remaining = [s for s in subjects if s not in test]
-        val = sorted(str(s) for s in np.random.default_rng(SEED).permutation(remaining)[:n_val])
         train = sorted(set(remaining) - set(val)) + sorted(always_train)
         folds[str(k)] = {"train_ids": sorted(train), "val_ids": val, "test_ids": test}
     return folds
@@ -266,7 +305,7 @@ def pmdata_split(folder: Path = RAW / "pmdata") -> dict:
 
 
 def sirp_split(folder: Path = RAW / "sirp600") -> dict:
-    path = sorted(folder.rglob("*.xlsx"))[0]
+    path = only_file(folder, "*.xlsx")
     y = readers.read_sirp_xlsx(path)["Injury_Risk"].to_numpy()
     sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=SEED)
     train, test = next(sss.split(np.zeros(len(y)), y))
@@ -285,21 +324,90 @@ def build_all() -> dict[str, dict]:
     return dict(zip(FILES, built, strict=True))
 
 
-def main() -> int:
+def create() -> None:
+    existing = [name for name in FILES if (SPLITS / name).exists()]
+    if len(existing) == len(FILES):
+        print("all split files already exist: nothing to do (splits are never regenerated)")
+        return
+    if existing:
+        raise SplitError(f"only some split files exist {existing}: refusing to mix files "
+                         "from different runs. Ask before changing anything.")
+    write_all(build_all())
+
+
+def remake(names: list[str], decision: str | None) -> None:
+    """One-time re-make of a split file, allowed only before sealing and only for D-020.
+
+    The decision must already be logged in docs/DECISIONS.md. Test groups must come out
+    identical; the old file is moved to data/splits/superseded/ (kept in git, never deleted).
+    """
+    builders = {"pamap2_folds.json": pamap2_split, "wesad_folds.json": wesad_split}
+    if SEAL.exists():
+        raise SplitError("data/splits is sealed (SHA256SUMS exists): nothing can be re-made")
+    if not decision or f"- {decision} |" not in DECISIONS.read_text(encoding="utf-8"):
+        raise SplitError(f"decision {decision!r} is not logged in docs/DECISIONS.md")
+    bad = [name for name in names if name not in builders]
+    if bad:
+        raise SplitError(f"{bad} may not be re-made (only {sorted(builders)}, D-020)")
+    built = {}
+    for name in names:
+        path, kept = SPLITS / name, SUPERSEDED / f"{Path(name).stem}.v1.json"
+        if kept.exists():
+            raise SplitError(f"{name} was already re-made once ({kept.name} exists)")
+        old = json.loads(path.read_text(encoding="utf-8"))
+        new = builders[name]()
+        old_tests = [f["test_ids"] for f in old["folds"].values()]
+        if old_tests != [f["test_ids"] for f in new["folds"].values()]:
+            raise SplitError(f"{name}: the test groups would change; refused (D-020)")
+        new["meta"]["decision"] = f"D-017, {decision}"
+        new["meta"]["supersedes"] = {
+            "file": kept.relative_to(ROOT).as_posix(),
+            "sha256": audit.sha256_file(path),
+            "created_utc": old["meta"]["created_utc"],
+            "git_commit": old["meta"]["git_commit"],
+            "reason": "validation people repeated across folds; test groups unchanged",
+        }
+        built[name] = new
+    SUPERSEDED.mkdir(parents=True, exist_ok=True)
+    for name, new in built.items():
+        os.replace(SPLITS / name, SUPERSEDED / f"{Path(name).stem}.v1.json")  # moved, kept
+        write_once(SPLITS / name, new)
+
+
+def seal() -> None:
+    """Pin the sha256 of every split file in data/splits/SHA256SUMS (written once)."""
+    if SEAL.exists():
+        raise SplitError("already sealed: SHA256SUMS is never rewritten")
+    missing = [name for name in FILES if not (SPLITS / name).exists()]
+    if missing:
+        raise SplitError(f"cannot seal: {missing} missing")
+    files = sorted(SPLITS.rglob("*.json"))
+    lines = [f"{audit.sha256_file(p)}  {p.relative_to(SPLITS).as_posix()}" for p in files]
+    SEAL.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"    sealed {len(files)} files in {SEAL.name}")
+
+
+def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    if all((SPLITS / name).exists() for name in FILES):
-        print("all split files already exist: nothing to do (splits are never regenerated)")
-        return 0
+    parser = argparse.ArgumentParser(description="person-level splits (written once)")
+    parser.add_argument("--remake", nargs="+", metavar="FILE",
+                        help="one-time re-make before sealing (D-020 files only)")
+    parser.add_argument("--decision", help="DECISIONS.md entry that approved the re-make")
+    parser.add_argument("--seal", action="store_true", help="write SHA256SUMS")
+    args = parser.parse_args(argv)
     try:
-        built = build_all()
-    except BalanceError as e:
+        if args.remake:
+            remake(args.remake, args.decision)
+        elif args.seal:
+            seal()
+        else:
+            create()
+    except (BalanceError, SplitError) as e:
         print(f"STOP: {e}")
         return 2
-    for name, obj in built.items():
-        write_once(SPLITS / name, obj)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

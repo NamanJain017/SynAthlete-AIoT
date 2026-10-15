@@ -6,7 +6,9 @@ build on these readers, so each raw format is parsed in exactly one place.
 
 from __future__ import annotations
 
+import ast
 import io
+import json
 import pickle
 import re
 import zipfile
@@ -241,3 +243,69 @@ def xlsx_metadata(path: Path) -> dict[str, str]:
 
 def read_ziya_csv(path: Path) -> pd.DataFrame:
     return pd.read_csv(path, dtype={"Record_ID": str})
+
+
+# ---------------------------------------------------------------- SoccerMon (subjective export)
+
+
+def read_soccermon_wide(path: Path) -> pd.DataFrame:
+    """Wide CSV: one row per date (dd.mm.yyyy), one column per player. Index = date.
+
+    The first column is the date; its header varies ("Date", "Fatigue Data", ...).
+    """
+    df = pd.read_csv(path)
+    date_col = df.columns[0]
+    df[date_col] = pd.to_datetime(df[date_col], format="%d.%m.%Y")
+    return df.rename(columns={date_col: "date"}).set_index("date")
+
+
+def read_soccermon_reports(path: Path) -> pd.DataFrame:
+    """injury.csv / illness.csv / game-performance.csv: one row per report, date dd.mm.yyyy."""
+    df = pd.read_csv(path)
+    df["date"] = pd.to_datetime(df["timestamp"], format="%d.%m.%Y")
+    return df
+
+
+def read_soccermon_sessions(path: Path) -> pd.DataFrame:
+    """session.json: {player: [{srpe, rpe, duration, date}, ...]} -> one row per session."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    rows = [{"player": p, **s} for p, sessions in data.items() for s in sessions]
+    df = pd.DataFrame(rows)
+    df["date"] = pd.to_datetime(df["date"], format="%d.%m.%Y")
+    return df
+
+
+# ---------------------------------------------------------------- PMData
+
+
+def utc_date(series: pd.Series) -> pd.Series:
+    """ISO timestamps ('2019-11-01T08:31:40.751Z') -> calendar date in UTC."""
+    return pd.to_datetime(series, utc=True, format="ISO8601").dt.tz_localize(None).dt.normalize()
+
+
+def read_pmdata_injuries(path: Path) -> pd.DataFrame:
+    """pmsys/injury.csv: one check-in per row; '{}' means 'no injury'. Adds date and has_injury.
+
+    The injuries column holds a Python-style dict literal, parsed with ast.literal_eval (data only).
+    """
+    df = pd.read_csv(path)
+    parsed = df["injuries"].fillna("{}").map(lambda s: ast.literal_eval(s) if s.strip() else {})
+    df["injuries"] = parsed
+    df["has_injury"] = parsed.map(lambda d: isinstance(d, dict) and len(d) > 0)
+    df["date"] = utc_date(df["effective_time_frame"])
+    return df
+
+
+def read_pmdata_pmsys(path: Path, time_col: str) -> pd.DataFrame:
+    """pmsys/wellness.csv (time_col effective_time_frame) or srpe.csv (end_date_time)."""
+    df = pd.read_csv(path)
+    df["date"] = utc_date(df[time_col])
+    return df
+
+
+def read_fitbit_json(path: Path) -> pd.DataFrame:
+    """Fitbit export [{"dateTime": ..., "value": x or {"value": x, ...}}] -> date_time, value."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    values = [d["value"]["value"] if isinstance(d["value"], dict) else d["value"] for d in data]
+    return pd.DataFrame({"date_time": pd.to_datetime([d["dateTime"] for d in data]),
+                         "value": pd.to_numeric(values, errors="coerce")})

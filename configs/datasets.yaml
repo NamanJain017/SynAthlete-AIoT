@@ -15,6 +15,12 @@ datasets:
     origin: real
     origin_evidence: published dataset of a peer-reviewed paper (Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518)
     role: "sole injury evidence: sequence + snapshot arms, explanations, dashboard replay (D-012, D-013)"
+    known_issues:
+      - "Healthy days close to an injury were removed by the authors, so no model is ever asked to score the run-up to an injury; scores may overstate real daily use."
+      - "Column order (authors' README v2): day file suffix .6 = the day before the event, week file without suffix = the week before; the loader orders both oldest -> newest, verified on the data itself."
+      - "-0.01 in the three perceived-effort columns means a rest day; kept as a value, with a rest-day mask."
+      - "Injury = the runner's own log entry 'unable to complete the session due to injury', not a medical diagnosis."
+      - "One team; fewer women than men."
 
   kaggle_runners:
     number: 2
@@ -28,6 +34,8 @@ datasets:
     origin: real
     origin_evidence: byte-identical copy of #1 (same sha256 for both CSVs; audit run 2026-10-14_0502)
     role: "none separate; cite #1 (D-012)"
+    known_issues:
+      - "Byte-identical copy of #1: never counted as extra data."
 
   pamap2:
     number: 3
@@ -40,6 +48,10 @@ datasets:
     origin: real
     origin_evidence: readme.pdf describes 9 consenting subjects, hardware and protocol; papers Reiss and Stricker, ISWC 2012
     role: "wearable stream for edge/fog tiers + generator training and fidelity (D-012)"
+    known_issues:
+      - "Participants are mainly employees and students, not athletes: call it wearable sensor data."
+      - "Heart rate is recorded at about 9 Hz; values between readings are interpolated in the windows."
+      - "Subject 109 has almost no protocol data and is always kept in training."
 
   wesad:
     number: 4
@@ -52,6 +64,10 @@ datasets:
     origin: real
     origin_evidence: wesad_readme.pdf describes 17 subjects (2 discarded), devices and protocol; paper Schmidt et al., ICMI 2018, doi 10.1145/3242969.3242985
     role: "second wearable dataset: generator generalisation (D-012)"
+    known_issues:
+      - "Participants are not described as athletes."
+      - "Academic, non-commercial licence: do not publish WESAD-derived synthetic data without checking it."
+      - "Windows use the wrist device only; EDA and TEMP are upsampled from 4 Hz by interpolation."
 
   sportdb2:
     number: 5
@@ -64,6 +80,10 @@ datasets:
     origin: real
     origin_evidence: Mendeley Data deposit (doi 10.17632/kzkjkt7mx2.2) with an ethics committee document (EthicalComm-SPortDB.pdf)
     role: "realism check for synthetic heart rate + extra edge stream (D-012)"
+    known_issues:
+      - "Sampling rates are not stored in the files; the implied heart-rate rate is about 1 Hz [VERIFY]."
+      - "Subject folders restart per sport, so one person in two sports cannot be detected; recordings without a subject folder are kept in one split group."
+      - "Most recordings are short ECG clips, not continuous sessions."
 
   sirp600:
     number: 6
@@ -76,6 +96,8 @@ datasets:
     origin: unknown
     origin_evidence: no documented collection method; see audit plausibility checks and file metadata
     role: "demo / sanity check only, never evidence (D-012, D-013)"
+    known_issues:
+      - "Undocumented origin and a label predictable by a 2-question rule: demo only, never evidence."
 
   ziya07_wearable:
     number: 7
@@ -88,15 +110,38 @@ datasets:
     origin: unknown
     origin_evidence: reported simulated (docs/DATASETS.md); fails the heart-rate-vs-activity check that PAMAP2 passes
     role: "dashboard demo only, never evidence (D-012)"
+    known_issues:
+      - "Heart rate does not differ between activities, unlike real data: demo only, never evidence."
 
   soccermon:
     number: 8
-    name: SoccerMon (Midoglu et al., Scientific Data 2024)
+    name: SoccerMon (Midoglu et al., Scientific Data 2024), subjective part only
     folder: soccermon
-    reader: none  # not downloadable on 2026-10-13
-    source_url: https://datasets.simula.no/soccermon/
-    licence: "[VERIFY]"
-    access_date: null
+    reader: soccermon
+    source_url: https://zenodo.org/doi/10.5281/zenodo.10033832
+    licence: CC BY 4.0 (Zenodo record)
+    access_date: 2026-10-15  # subjective.zip (705.8 kB, md5 matches Zenodo); GPS files not downloaded
     origin: real
     origin_evidence: peer-reviewed data descriptor, Scientific Data 11:553 (2024), doi 10.1038/s41597-024-03386-x
-    role: "related work only (not downloadable) (D-012)"
+    role: "secondary, exploratory: pain-report episodes from daily load and wellness (D-018)"
+    known_issues:
+      - "Injury = self-reported pain on a body map, not a diagnosis; the same pain is often reported on consecutive days (grouped by the 21-day rule, D-018)."
+      - "Almost all reports come from one team, so reporting habits differ between teams."
+      - "A first report within 21 days of a player's data start is not counted as a new episode."
+
+  pmdata:
+    number: 9
+    name: PMData (Thambawita et al., ACM MMSys 2020)
+    folder: pmdata
+    reader: pmdata
+    source_url: https://datasets.simula.no/pmdata (mirror https://osf.io/vx4bk)
+    licence: "[VERIFY]"
+    access_date: 2026-10-15  # pmdata.zip 1.42 GB; food photos not extracted
+    origin: real
+    origin_evidence: published dataset paper, ACM MMSys 2020, doi 10.1145/3339825.3394926 (citation on the dataset page)
+    role: "secondary, exploratory: same people wear a Fitbit and report pain (D-018)"
+    known_issues:
+      - "Participants are lifelogging volunteers of a wide age range, not athletes."
+      - "Some files are missing in the dataset itself (p08 injury file; p12 and p13 resting heart rate; p12 lightly-active minutes): those values stay missing; p08 is excluded from injury tasks."
+      - "Participant p12 reports pain throughout their data from shortly after its start: one long problem, 0 episodes under the 21-day rule."
+      - "Dates come from UTC timestamps; the per-minute heart_rate.json files are not used yet."

@@ -26,7 +26,6 @@ import subprocess
 import sys
 import time
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 from functools import partial
 from importlib.metadata import version
@@ -40,7 +39,8 @@ from scipy import stats
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 
-from src.data import readers
+from src.data import daily, readers
+from src.data.hashing import fingerprint, sha256_file, sha256_files  # noqa: F401
 from src.data.parallel import parallel_map, pick_workers
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -71,26 +71,6 @@ def new_result() -> dict:
         "duplicates": None, "plausibility": {}, "details": {}, "notes": [], "table": {},
         "_files": [],
     }
-
-
-def sha256_file(path: Path, chunk: int = 1 << 20) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        while block := f.read(chunk):
-            h.update(block)
-    return h.hexdigest()
-
-
-def sha256_files(paths: list[Path]) -> dict[Path, str]:
-    """Hash many files at once; threads suffice because hashlib and file reads release the GIL."""
-    with ThreadPoolExecutor(max_workers=os.cpu_count() or 1) as pool:
-        return dict(zip(paths, pool.map(sha256_file, paths), strict=True))
-
-
-def fingerprint(hashes: dict[str, str]) -> str:
-    """One hash for a whole dataset version: the hash of its sorted (file, sha256) list."""
-    lines = "\n".join(f"{name}:{sha}" for name, sha in sorted(hashes.items()))
-    return hashlib.sha256(lines.encode("utf-8")).hexdigest()
 
 
 def r(x: float | None, digits: int = 3) -> float | None:
@@ -816,6 +796,68 @@ def audit_ziya(folder: Path, workers: int | None = None) -> dict:
     return res
 
 
+# ---------------------------------------------------------------- exploratory datasets (#8, #9)
+
+
+def _daily_result(table: pd.DataFrame, files: list[Path], raw_reports: int,
+                  label: str) -> dict:
+    """Shared audit facts for the SoccerMon/PMData daily tables (21-day episode rule, D-018)."""
+    s = daily.summarise(table)
+    res = new_result()
+    res["_files"] = files
+    res["subjects"] = {"count": s["people"], "with_injury_labels": s["people_with_labels"]}
+    res["rows"] = s["person_days"]
+    res["channels"] = {"count": len(table.columns) - 3, "names": list(table.columns)}
+    res["labels"] = {"pain_report_days": s["pain_report_days"], "episodes": s["episodes"],
+                     "healthy_event_days": s["healthy_event_days"]}
+    res["injury"] = {"has_labels": True, "type": label,
+                     "raw_reports_naming_an_injury": raw_reports, "episodes": s["episodes"],
+                     "people_with_an_episode": s["people_with_an_episode"],
+                     "rule": "reports <= 21 days apart = one episode (D-018)"}
+    res["time_series"] = {"value": True, "detail": "one row per person per calendar day"}
+    res["missingness"] = s["missing_percent"]
+    res["details"] = {"episodes_per_person": s["episodes_per_person"]}
+    res["table"] = {
+        "subjects": f"{s['people']} ({s['people_with_labels']} with injury labels)",
+        "size": f"{s['person_days']:,} person-days",
+        "channels": f"{len(table.columns) - 3} daily fields",
+        "labels": f"{raw_reports} pain reports -> {s['episodes']} episodes (21-day rule)",
+        "injury": f"{label}: {s['episodes']} episodes in {s['people_with_an_episode']} people",
+        "time_series": "yes: one row per person per day",
+    }
+    return res
+
+
+def audit_soccermon(folder: Path, workers: int | None = None) -> dict:
+    sub = folder / "subjective"
+    if not sub.is_dir():
+        return {"status": "subjective/ not unzipped", "table": {}}
+    table = daily.soccermon_daily(sub)
+    injury = readers.read_soccermon_reports(sub / "injury" / "injury.csv")
+    raw = int(injury["type"].map(lambda s: len(json.loads(s)) > 0).sum())
+    files = sorted(p for p in sub.rglob("*") if p.is_file() and p.suffix in (".csv", ".json"))
+    res = _daily_result(table, files, raw, "self-reported pain (body map)")
+    res["notes"].append("GPS/heart-rate files (99.1 GB) not downloaded")
+    return res
+
+
+def audit_pmdata(folder: Path, workers: int | None = None) -> dict:
+    people = sorted(p for p in folder.iterdir() if p.is_dir() and p.name.startswith("p"))
+    if not people:
+        return {"status": "participant folders not unzipped", "table": {}}
+    table = daily.pmdata_daily(folder)
+    files = daily.pmdata_files(folder)
+    raw = 0
+    for p in people:
+        f = p / "pmsys" / "injury.csv"
+        if f.exists():
+            raw += int(readers.read_pmdata_injuries(f)["has_injury"].sum())
+    res = _daily_result(table, files, raw, "self-reported pain (PMSys)")
+    res["notes"].append(f"files missing in the dataset itself: {daily.PMDATA_MISSING}")
+    res["notes"].append("food photos not extracted (not used)")
+    return res
+
+
 AUDITORS = {
     "runners": audit_runners,
     "pamap2": audit_pamap2,
@@ -823,6 +865,8 @@ AUDITORS = {
     "sportdb": audit_sportdb,
     "sirp": audit_sirp,
     "ziya": audit_ziya,
+    "soccermon": audit_soccermon,
+    "pmdata": audit_pmdata,
 }
 
 

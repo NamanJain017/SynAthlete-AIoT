@@ -1,0 +1,19 @@
+# WESAD sensor windows (DATA_CONTRACT Track B): wrist device only. The channel ORDER is fixed.
+# Changing anything here changes the data contract and needs a DECISIONS entry.
+sampling_hz: 25          # BVP 64 Hz and ACC 32 Hz -> polyphase resampling; EDA/TEMP 4 Hz -> interpolation
+window: 128
+stride: 64
+label_hz: 700            # labels are synchronised with the chest device (wesad_readme.pdf II.3)
+label_margin: 10         # 25 Hz steps around a window that must carry the same label (filter edge)
+channels:
+  - BVP
+  - EDA
+  - TEMP
+  - ACC_x
+  - ACC_y
+  - ACC_z
+keep_labels:             # wesad_readme.pdf II.3; 0 = transient and 5-7 = ignore are dropped
+  1: baseline
+  2: stress
+  3: amusement
+  4: meditation

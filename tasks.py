@@ -51,13 +51,15 @@ def audit() -> int:
 
 
 def data() -> int:
-    """Loaders (piece 2): raw datasets -> data/processed/ (git-ignored)."""
+    """Loaders (piece 2): raw datasets -> data/processed/ (git-ignored), then the data cards.
+    Optional dataset names limit the run, e.g. python tasks.py data lovdal."""
     return run([sys.executable, "-m", "src.data.loaders", *sys.argv[2:]])
 
 
 def splits() -> int:
-    """Person-level splits (piece 2): written once to data/splits/, never overwritten."""
-    return run([sys.executable, "-m", "src.data.splits"])
+    """Person-level splits (piece 2): written once to data/splits/, never overwritten.
+    --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
+    return run([sys.executable, "-m", "src.data.splits", *sys.argv[2:]])
 
 
 def not_implemented(piece: str):

@@ -1,0 +1,22 @@
+# PAMAP2 sensor windows (DATA_CONTRACT Track B). The channel ORDER is fixed: models depend on it.
+# Changing anything here changes the data contract and needs a DECISIONS entry.
+sampling_hz: 25          # resampled from 100 Hz (IMU) by anti-aliased decimation (factor 4)
+window: 128              # steps per window (~5.1 s)
+stride: 64               # 50 % overlap
+source_hz: 100
+channels:
+  - heart_rate           # ~9 Hz in the raw file: values between readings are INTERPOLATED
+  - hand_acc16_x
+  - hand_acc16_y
+  - hand_acc16_z
+  - chest_acc16_x
+  - chest_acc16_y
+  - chest_acc16_z
+  - ankle_acc16_x
+  - ankle_acc16_y
+  - ankle_acc16_z
+max_gap_s:               # longer gaps make the samples invalid (their windows are dropped)
+  heart_rate: 2.0
+  imu: 0.5
+label_margin: 10         # 25 Hz steps around a window that must carry the same activity (filter edge)
+drop_labels: [0]         # 0 = transient, to be discarded (PAMAP2 readme II.2)

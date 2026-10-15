@@ -2,23 +2,29 @@
 
 Loaders keep raw values: no scaling, no imputation. Scalers and imputers are fitted on training
 folds only, later (AGENTS.md rule 3). File parsing lives in readers.py; this module only reshapes.
+The Lövdal locked final-test runners are saved apart from the development runners (D-017):
+use load_dev() for all development work; only src/data/lockbox.py reads the locked ones.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from src.data import readers
+from src.data import manifest, readers
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw"
 PROCESSED = ROOT / "data" / "processed"
+SPLITS = ROOT / "data" / "splits"
+LOCKBOX_DIR = PROCESSED / "lovdal_lockbox"  # read only through src/data/lockbox.py
 
 LOVDAL_PERCEIVED = ("perceived exertion", "perceived trainingSuccess", "perceived recovery")
 REST_DAY_CODE = -0.01  # authors' README: perceived values on a rest day
@@ -110,7 +116,24 @@ def shared_days(day: RunnerData, week: RunnerData) -> tuple[np.ndarray, np.ndarr
     return i_day, i_week
 
 
-def save_runner_data(data: RunnerData, out_dir: Path) -> Path:
+def lovdal_lockbox_ids() -> list[int]:
+    """The locked final-test runners, from the committed split file (D-017)."""
+    split = json.loads((SPLITS / "lovdal_folds.json").read_text(encoding="utf-8"))
+    return split["lockbox_ids"]
+
+
+def select(data: RunnerData, keep: np.ndarray) -> RunnerData:
+    """The same file restricted to the rows where keep is True."""
+    return dataclasses.replace(
+        data, X=data.X[keep], y=data.y[keep], athlete_id=data.athlete_id[keep],
+        date=data.date[keep],
+        extra=None if data.extra is None else data.extra[keep],
+        rest_day=None if data.rest_day is None else data.rest_day[keep],
+    )
+
+
+def save_runner_data(data: RunnerData, out_dir: Path, contents: str = "",
+                     source: dict | None = None) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     arrays = {"X": data.X, "y": data.y, "athlete_id": data.athlete_id, "date": data.date}
     if data.extra is not None:
@@ -121,6 +144,7 @@ def save_runner_data(data: RunnerData, out_dir: Path) -> Path:
     np.savez_compressed(path, **arrays)
     meta = {
         "kind": data.kind,
+        "contents": contents,
         "shape": list(data.X.shape),
         "axis1": "oldest -> newest step (last = just before the event day)",
         "feature_names": data.feature_names,
@@ -128,38 +152,93 @@ def save_runner_data(data: RunnerData, out_dir: Path) -> Path:
         "events": int(len(data.y)),
         "injuries": int(data.y.sum()),
         "athletes": int(len(np.unique(data.athlete_id))),
+        "athlete_ids": [int(a) for a in np.unique(data.athlete_id)],
         "rest_day_cells": int(data.rest_day.sum()) if data.rest_day is not None else None,
+        "source": source,
     }
     (out_dir / f"{data.kind}_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     return path
+
+
+def load_runner_data(folder: Path, kind: str) -> RunnerData:
+    """Read back what save_runner_data wrote."""
+    meta = json.loads((folder / f"{kind}_meta.json").read_text(encoding="utf-8"))
+    with np.load(folder / f"{kind}.npz") as z:
+        return RunnerData(
+            kind=kind, X=z["X"], y=z["y"], athlete_id=z["athlete_id"], date=z["date"],
+            feature_names=meta["feature_names"],
+            extra=z["extra"] if "extra" in z else None,
+            extra_names=tuple(meta["extra_names"]),
+            rest_day=z["rest_day"] if "rest_day" in z else None,
+        )
+
+
+def load_dev(kind: str) -> RunnerData:
+    """Development runners only (IDs 0-63): the data for all work before the evaluation freeze."""
+    data = load_runner_data(PROCESSED / "lovdal", kind)
+    if np.isin(data.athlete_id, lovdal_lockbox_ids()).any():
+        raise RuntimeError("development file contains locked runners: re-run python tasks.py data")
+    return data
 
 
 # ---------------------------------------------------------------- command line
 
 
 def prepare_lovdal() -> dict:
+    """Whole files are checked (shapes, shared days), then saved as development and locked parts."""
+    files = readers.find_runner_files(RAW / "lovdal")
+    source = manifest.verify([files["day"], files["week"]], RAW / "lovdal")
     day, week = load_lovdal("day"), load_lovdal("week")
     i_day, _ = shared_days(day, week)
+    locked_ids = lovdal_lockbox_ids()
+    out = {"source_fingerprint": source["fingerprint"], "whole_day": list(day.X.shape),
+           "whole_week": list(week.X.shape), "whole_shared_days": int(len(i_day))}
     for data in (day, week):
-        save_runner_data(data, PROCESSED / "lovdal")
-    return {"day": list(day.X.shape), "day_injuries": int(day.y.sum()),
-            "week": list(week.X.shape), "week_injuries": int(week.y.sum()),
-            "week_extra": list(week.extra.shape), "shared_days": int(len(i_day)),
-            "shared_injuries": int(day.y[i_day].sum())}
+        locked = np.isin(data.athlete_id, locked_ids)
+        dev = select(data, ~locked)
+        save_runner_data(dev, PROCESSED / "lovdal", "development runners 0-63 (D-017)", source)
+        save_runner_data(select(data, locked), LOCKBOX_DIR,
+                         "LOCKED final-test runners 64-73: open only via lockbox.py", source)
+        out[f"dev_{data.kind}"] = list(dev.X.shape)
+        out[f"dev_{data.kind}_injuries"] = int(dev.y.sum())
+    return out
 
 
-def main() -> int:
-    import sys
+def _short(meta: dict) -> dict:
+    """The headline numbers of a builder's metadata, for the console."""
+    return {k: v for k, v in meta.items()
+            if not isinstance(v, (list, dict)) or k in ("shape", "windows_per_label")
+            or (isinstance(v, list) and len(v) <= 3 and k.startswith(("dev_", "whole_")))}
+
+
+def main(argv: list[str] | None = None) -> int:
+    """python tasks.py data [NAME ...]: every builder (or the named ones), then the data cards."""
     import time
+
+    from src.data import daily, datacards, reference, windows
 
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    for name, job in {"lovdal": prepare_lovdal}.items():
+    jobs = {
+        "lovdal": prepare_lovdal,
+        "pamap2": lambda: windows.build("pamap2"),
+        "wesad": lambda: windows.build("wesad"),
+        "soccermon": lambda: daily.build("soccermon"),
+        "pmdata": lambda: daily.build("pmdata"),
+        "sportdb2": reference.build_sportdb,
+        "sirp600": lambda: reference.build_demo("sirp600"),
+        "ziya07_wearable": lambda: reference.build_demo("ziya07_wearable"),
+    }
+    unknown = [n for n in argv or [] if n not in jobs]
+    if unknown:
+        print(f"unknown dataset(s) {unknown}; choose from: {', '.join(jobs)}")
+        return 2
+    for name in argv or list(jobs):
         t0 = time.time()
-        print(f"[{name}] {job()} ({time.time() - t0:.1f} s)", flush=True)
+        print(f"[{name}] {_short(jobs[name]())} ({time.time() - t0:.1f} s)", flush=True)
     print("wrote data/processed/ (git-ignored)")
-    return 0
+    return datacards.main()
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
