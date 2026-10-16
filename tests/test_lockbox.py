@@ -47,12 +47,28 @@ def test_lockbox_opens_at_the_freeze_and_logs_it(monkeypatch, tmp_path):
     assert entry["commit"] == HEAD and entry["reason"] == "final evaluation"
 
 
-def test_load_dev_refuses_a_file_with_locked_runners(monkeypatch, tmp_path):
-    loaders.save_runner_data(_runners([1, 70]), tmp_path / "lovdal")
+def _fake_split(monkeypatch, tmp_path, ids: list[int], source_fp: str) -> None:
+    loaders.save_runner_data(_runners(ids), tmp_path / "lovdal", source={"fingerprint": source_fp})
     monkeypatch.setattr(loaders, "PROCESSED", tmp_path)
-    monkeypatch.setattr(loaders, "lovdal_lockbox_ids", lambda: list(range(64, 74)))
+    monkeypatch.setattr(loaders, "lovdal_split", lambda: {
+        "lockbox_ids": list(range(64, 74)), "meta": {"data_fingerprint": "split-version"}})
+
+
+def test_load_dev_refuses_a_file_with_locked_runners(monkeypatch, tmp_path):
+    _fake_split(monkeypatch, tmp_path, [1, 70], "split-version")
     with pytest.raises(RuntimeError, match="locked runners"):
         loaders.load_dev("day")
+
+
+def test_load_dev_refuses_another_data_version(monkeypatch, tmp_path):
+    _fake_split(monkeypatch, tmp_path, [1, 2], "other-version")
+    with pytest.raises(RuntimeError, match="data version"):
+        loaders.load_dev("day")
+
+
+def test_load_dev_returns_matching_development_data(monkeypatch, tmp_path):
+    _fake_split(monkeypatch, tmp_path, [1, 2], "split-version")
+    assert sorted(np.unique(loaders.load_dev("day").athlete_id)) == [1, 2]
 
 
 def test_saved_development_files_hold_no_locked_runner():

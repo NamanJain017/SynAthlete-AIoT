@@ -145,3 +145,4 @@ datasets:
       - "Some files are missing in the dataset itself (p08 injury file; p12 and p13 resting heart rate; p12 lightly-active minutes): those values stay missing; p08 is excluded from injury tasks."
       - "Participant p12 reports pain throughout their data from shortly after its start: one long problem, 0 episodes under the 21-day rule."
       - "Dates come from UTC timestamps; the per-minute heart_rate.json files are not used yet."
+      - "PMSys times are UTC but Fitbit days are the device's local days: PMSys rows stamped 22:00-24:00 UTC (count in daily_meta.json, utc_date_check) may belong to the next local day; the participants' time zone is not verified yet."

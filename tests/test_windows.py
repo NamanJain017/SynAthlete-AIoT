@@ -52,3 +52,10 @@ def test_cut_shapes():
     X = windows.cut(sig, np.array([0, 64]), 128)
     assert X.shape == (2, 128, 3) and X.dtype == np.float32
     assert X[1, 0, 0] == sig[64, 0]
+
+
+def test_nearest_index_hits_the_same_instant_despite_float_error():
+    k = np.arange(200_000)
+    idx = windows.nearest_index(k / 25, 700, 10**9)
+    assert np.array_equal(idx, 28 * k)  # 700 / 25 = 28 label samples per 25 Hz step
+    assert windows.nearest_index(np.array([10.0]), 700, 50)[0] == 49  # clipped to the end

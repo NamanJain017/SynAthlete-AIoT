@@ -166,6 +166,23 @@ def pmdata_files(folder: Path) -> list[Path]:
     return [p / u for p in people for u in PMDATA_USED if (p / u).exists()]
 
 
+def pmsys_late_rows(folder: Path) -> dict:
+    """PMSys rows stamped 22:00-24:00 UTC: their UTC date may differ from the local date.
+
+    PMSys times are UTC ('Z') while Fitbit days are the device's local days, so these rows
+    could sit one day off from the Fitbit values of the same local day.
+    """
+    total = late = 0
+    for person in sorted(p for p in folder.iterdir() if p.is_dir() and p.name.startswith("p")):
+        for name, col in (("wellness.csv", "effective_time_frame"),
+                          ("injury.csv", "effective_time_frame"), ("srpe.csv", "end_date_time")):
+            path = person / "pmsys" / name
+            if path.exists():
+                t = pd.to_datetime(pd.read_csv(path)[col], utc=True, format="ISO8601")
+                total, late = total + len(t), late + int((t.dt.hour >= 22).sum())
+    return {"pmsys_rows": total, "stamped_22_to_24_utc": late}
+
+
 def pmdata_daily(folder: Path = RAW / "pmdata") -> pd.DataFrame:
     tables, reports = [], {}
     for person in sorted(p.name for p in folder.iterdir() if p.is_dir() and p.name.startswith("p")):
@@ -237,6 +254,7 @@ def build(name: str) -> dict:
             **summarise(table)}
     meta["source"] = source
     if name == "pmdata":
+        meta["utc_date_check"] = pmsys_late_rows(folder)
         meta["files_missing_in_dataset"] = {k: sorted(v) for k, v in sorted(PMDATA_MISSING.items())}
     (out / "daily_meta.json").write_text(json.dumps(meta, indent=2, default=str), encoding="utf-8")
     return meta

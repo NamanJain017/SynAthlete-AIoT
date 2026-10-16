@@ -116,10 +116,14 @@ def shared_days(day: RunnerData, week: RunnerData) -> tuple[np.ndarray, np.ndarr
     return i_day, i_week
 
 
+def lovdal_split() -> dict:
+    """The committed Lövdal split file (D-017)."""
+    return json.loads((SPLITS / "lovdal_folds.json").read_text(encoding="utf-8"))
+
+
 def lovdal_lockbox_ids() -> list[int]:
     """The locked final-test runners, from the committed split file (D-017)."""
-    split = json.loads((SPLITS / "lovdal_folds.json").read_text(encoding="utf-8"))
-    return split["lockbox_ids"]
+    return lovdal_split()["lockbox_ids"]
 
 
 def select(data: RunnerData, keep: np.ndarray) -> RunnerData:
@@ -174,9 +178,17 @@ def load_runner_data(folder: Path, kind: str) -> RunnerData:
 
 
 def load_dev(kind: str) -> RunnerData:
-    """Development runners only (IDs 0-63): the data for all work before the evaluation freeze."""
-    data = load_runner_data(PROCESSED / "lovdal", kind)
-    if np.isin(data.athlete_id, lovdal_lockbox_ids()).any():
+    """Development runners only (IDs 0-63): the data for all work before the evaluation freeze.
+
+    Refuses files built from another data version than the splits, or holding a locked runner.
+    """
+    folder, split = PROCESSED / "lovdal", lovdal_split()
+    meta = json.loads((folder / f"{kind}_meta.json").read_text(encoding="utf-8"))
+    if (meta.get("source") or {}).get("fingerprint") != split["meta"]["data_fingerprint"]:
+        raise RuntimeError("processed Lövdal data is not the data version the splits were made "
+                           "from: re-run python tasks.py data lovdal")
+    data = load_runner_data(folder, kind)
+    if np.isin(data.athlete_id, split["lockbox_ids"]).any():
         raise RuntimeError("development file contains locked runners: re-run python tasks.py data")
     return data
 

@@ -89,6 +89,15 @@ def pure_window_starts(labels: np.ndarray, valid: np.ndarray, window: int, strid
     return np.asarray(out, dtype=np.int64)
 
 
+def nearest_index(t: np.ndarray, hz: float, n: int) -> np.ndarray:
+    """Index of the sample at (or nearest to) each time t in a series sampled at hz.
+
+    Rounding, not truncation: k / 25 * 700 can come out as 27.999..., which truncation
+    would turn into the sample before the intended one.
+    """
+    return np.minimum(np.rint(np.asarray(t) * hz).astype(np.int64), n - 1)
+
+
 def cut(signal: np.ndarray, starts: np.ndarray, window: int) -> np.ndarray:
     if len(starts) == 0:
         return np.empty((0, window, signal.shape[1]), dtype=np.float32)
@@ -163,7 +172,7 @@ def wesad_subject_windows(pkl: Path) -> dict:
              "ACC_x": acc[:, 0], "ACC_y": acc[:, 1], "ACC_z": acc[:, 2]}
     n = min(n, *(len(v) for v in parts.values()))
     sig = np.column_stack([parts[ch][:n] for ch in cfg["channels"]])
-    lab = label[np.minimum((t[:n] * cfg["label_hz"]).astype(np.int64), len(label) - 1)]
+    lab = label[nearest_index(t[:n], cfg["label_hz"], len(label))]
     keep = {int(k) for k in cfg["keep_labels"]}
     starts = pure_window_starts(lab, np.isfinite(sig).all(axis=1), cfg["window"], cfg["stride"],
                                 cfg.get("label_margin", 10), keep)

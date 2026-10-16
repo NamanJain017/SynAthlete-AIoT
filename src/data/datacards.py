@@ -87,7 +87,7 @@ def card(name: str, cfg: dict, res: dict, run_id: str) -> str:
         for m in metas:
             meta = json.loads(m.read_text(encoding="utf-8"))
             keep = {k: v for k, v in meta.items()
-                    if k not in ("feature_names", "columns", "athlete_ids")}
+                    if k not in ("feature_names", "columns", "athlete_ids", "workers")}
             lines.append(f"- `data/processed/{m.relative_to(PROCESSED).as_posix()}`: {_fmt(keep)}")
     split = SPLIT_FILE.get(name)
     if split and (SPLITS / split).exists():

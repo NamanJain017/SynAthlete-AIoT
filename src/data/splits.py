@@ -346,6 +346,7 @@ def remake(names: list[str], decision: str | None) -> None:
         raise SplitError("data/splits is sealed (SHA256SUMS exists): nothing can be re-made")
     if not decision or f"- {decision} |" not in DECISIONS.read_text(encoding="utf-8"):
         raise SplitError(f"decision {decision!r} is not logged in docs/DECISIONS.md")
+    names = list(dict.fromkeys(names))  # a repeated name would overwrite the kept v1 file
     bad = [name for name in names if name not in builders]
     if bad:
         raise SplitError(f"{bad} may not be re-made (only {sorted(builders)}, D-020)")
