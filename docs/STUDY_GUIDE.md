@@ -79,7 +79,7 @@ Short per-piece Q&A stays in `docs/VIVA_NOTES.md`; this file explains everything
 
 ## 3. The datasets: what each one is, whether it's real, what it's used for
 
-Numbers come from our audit (run `experiments/audit/2026-10-14_2346/`) unless marked "paper" or "file check".
+Numbers come from files written by code: the audit (latest run `experiments/audit/2026-10-15_0819/`), the loader metadata in `data/processed/` (also shown in `docs/data_cards/`) and the split files in `data/splits/`, unless marked "paper".
 
 ### #1 Lövdal runner logs ✅ (our main evidence)
 - **What:** daily training logs of a Dutch high-level running team, 2012-2019, 800 m to marathon (paper). 74 runners (27 women, 47 men) after the authors' cleaning; 77 before (paper).
@@ -87,10 +87,10 @@ Numbers come from our audit (run `experiments/audit/2026-10-14_2346/`) unless ma
   - *Day file:* each row = one runner, one "event day", described by the 7 days before it × 10 features = 70 numbers. 42,766 rows; 583 injury rows (1.36 %).
   - *Week file:* each row = the 3 weeks before the event day, each week summarised by 22 features, + 3 "mileage change" features = 69 numbers. 42,798 rows; 575 injury rows (1.34 %).
 - **The 10 day features:** number of sessions, total km, km in zones 3-4, km in zone 5 / track intervals (T1, T2), km sprinting, strength training, hours of cross-training, perceived exertion, perceived training success, perceived recovery. The three "perceived" ones use a 0-1 scale; **-0.01 means rest day** (authors' README).
-- **What counts as an injury (paper):** a "flag" in the runner's own training log: "unable to complete the scheduled session due to injury". Injuries less than 3 weeks apart count as one, so all 583 are at least 22 days apart (we checked).
+- **What counts as an injury (paper):** a "flag" in the runner's own training log: "unable to complete the scheduled session due to injury". Injuries less than 3 weeks apart count as one, so all 583 are at least 22 days apart (`data/processed/lovdal/facts.json`).
 - **Real?** Yes. Peer-reviewed paper (Int J Sports Physiol Perform 2021), university repository with DOI, ethics approval, CC0 licence. Our audit counts match the paper exactly (583 + 42,183 day; 575 + 42,223 week).
 - **Trap we found:** the two files count days in **opposite directions**. Day file: suffix `.6` = the day before the event, no suffix = 7 days before. Week file: no suffix = the week before. The loader must put both in oldest-to-newest order.
-- **Athlete IDs (we checked):** 0-73, given in the order runners joined the team. IDs 64-73 are the 10 newest: the paper's test runners.
+- **Athlete IDs:** 0-73. The authors' notebook takes the last 10 IDs (64-73) as "the last athletes that joined the club": the paper's test runners. IDs 0-63 are only roughly in joining order (runners joined in groups), so never read an ID as a date.
 - **Role (D-012):** the only source of injury evidence (sequence model, snapshot model, explanations, dashboard replay).
 
 ### #2 Kaggle "Injury Prediction for Competitive Runners" ✅
@@ -147,13 +147,13 @@ Byte-for-byte identical to Lövdal (same sha256 fingerprints). It's the dataset 
 - Python 3.12.2 in a private environment (`.venv`).
 - PyTorch 2.14.1 with CUDA on an NVIDIA RTX 4050 Laptop GPU (~6 GB).
 - Exact package versions recorded in `requirements.lock.txt`.
-- `python tasks.py check` runs ruff (code checker) + pytest (automatic tests). Now 23 tests pass.
+- `python tasks.py check` runs ruff (code checker) + pytest (automatic tests). 23 tests passed at the end of piece 1; the current count is in `docs/STATE.md`.
 
 ### Piece 1: dataset audit ✅
 - `python tasks.py audit` opens every dataset and writes facts: people, hours, signals, labels, injuries, missing values, duplicates, plausibility checks.
 - **Outputs:**
   - `experiments/audit/<run>/`: `audit.json`, `audit_table.md`, `config.yaml`, `run_info.json` (code version, seed, data fingerprints);
-  - `data/MANIFEST.csv`: sha256 of 554 files;
+  - `data/MANIFEST.csv`: sha256 of every raw file read (729 after the 2026-10-15 run, which added SoccerMon and PMData);
   - the table in `docs/DATASETS.md`.
 - **Speed:** files are processed in parallel on all CPU cores, limited by free memory. A full run takes about 1.5-2 minutes with enough free RAM; it once took ~18 minutes with only 2.6 GB free.
 - **Safety:** WESAD pickle files are opened with a "numpy-only" loader that refuses hidden code. A test proves it refuses a pickle that tries to run a command.
@@ -170,8 +170,8 @@ Byte-for-byte identical to Lövdal (same sha256 fingerprints). It's the dataset 
 - D-016: dashboard Training-lab rules.
 - Splits re-verified (section 5).
 
-### Piece 2: loaders + splits 🔜
-The plan is being written for Naman's approval.
+### Piece 2: loaders + splits ✅ (built 2026-10-15; waiting for Naman to say it is clear)
+- Loaders, splits, safeguards and the one-time re-make: section 5 below and `docs/VIVA_NOTES.md` (piece 2).
 
 ---
 
@@ -209,6 +209,7 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
   - Every development runner is tested exactly once, and the locked runners never appear in development.
 - **One grouping for both files.** Re-verification found that grouping the day file and the week file *separately* gives slightly different runner groups. Fusion needs the same runners in both arms, so the groups are built **once** (from the day file) and the same runner lists are used for the week file and for fusion.
 - **Final model:** trained on 51 runners, validated on 13 (development group 0), tested once on the 10 locked runners.
+- **Validation runners repeat across folds (we disclose it).** Each fold draws its validation group from its own non-test runners. Across the 5 folds, 46 validation places are filled by 30 runners; runners 20, 21, 33 and 37 validate three times. A test pins these numbers. Inside one fold, validation and test never overlap. But a runner can validate in one fold and be tested in another, so settings must be chosen inside each fold. One setting picked by averaging validation scores across folds would leak test runners (rule to confirm before piece 3).
 - **Safety rules:**
   - seed 0 chosen in advance;
   - balance checked on label counts only (each group within ±20 % of the average). Honest note: we looked at the group counts before writing this rule, so it is a sanity check, not a pre-registered test;
@@ -219,14 +220,14 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
   - automatic tests: no runner in two roles, everyone tested once, locked runners never in development, files complete and matching the audited data;
   - an independent AI reviewer (eval-auditor) checks the splits.
 
-### Other datasets (📝 refined after re-verification, part of the piece 2 plan)
+### Other datasets (saved 2026-10-15; D-017, D-020)
 | Dataset | Split | Why |
 |---|---|---|
 | PAMAP2 | 4 test groups of 2 subjects; validation = 1 person from the next group; subject 109 always in training | 109 has only ~85 s of protocol data |
 | WESAD | 5 test groups of 3 subjects; validation = 2 people from the next group | balanced and simple |
 | Sport DB 2.0 | 5 groups by subject; all 4 skating recordings kept together | their identity is unknown, so they might be one person |
-| SoccerMon | leave-one-player-out, all predictions pooled into one score | injury reports are very uneven (a fixed 5-group split gave 2, 65, 5, 51 and 39 reports per group) |
-| PMData | leave-one-person-out, pooled; results reported with and without p12; p08 excluded from injury tests | p12 holds 48 of 77 injuries; p08's injury file is missing |
+| SoccerMon | leave-one-player-out, all predictions pooled into one score | pain reports come from few players (15 of 50; `daily_meta.json`), so fixed groups would get very different numbers of reports |
+| PMData | leave-one-person-out, pooled; results reported with and without p12; p08 excluded from injury tests | p12 has 44 of the 72 pain-report days (`daily_meta.json`); p08's injury file is missing |
 | SIRP-600 | 80/20 by rows, labelled "demo only" | no people to split by |
 
 "Leave-one-person-out": train on everyone except one person, test on that person, repeat for every person, then score all predictions together. Best for very small groups of people.
@@ -240,7 +241,7 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 Why this is not cheating: the rule "never regenerate splits" stops people from reshuffling until the *results* look good. No results existed yet, and the test groups did not change.
 
 ### Other leakage rules
-- Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which uses test labels; we won't.
+- Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which reads test labels. Our comparisons won't. How the paper's method is rebuilt without it is decided before piece 3 (EVAL_PROTOCOL, open decisions).
 - The alert threshold is chosen on validation runners only (rule 5).
 - Synthetic data never enters validation or test (rule 3).
 - A result that looks too good is treated as a bug until proven otherwise.
@@ -987,10 +988,11 @@ From the paper: individual features correlate only weakly with injury (r between
 | Lövdal runners | 74 (27 women, 47 men); 77 before cleaning | paper |
 | Day windows / injuries | 42,766 / 583 (1.36 %) | audit |
 | Week windows / injuries | 42,798 / 575 (1.34 %) | audit |
-| Injured runners (day file) | 63 of 74; 11 never injured | audit |
-| Shared day+week runner-days | 42,680 | data check |
-| Locked test (IDs 64-73) | 50 injuries + 2,994 healthy (day); 48 injuries (week) | our check = paper |
-| Development test groups | 105-108 injuries each (day) | split re-check |
+| Injured runners (day file) | 63 of 74; 11 never injured | audit; data/processed/lovdal/facts.json |
+| Shared day+week runner-days | 42,680 (575 injuries) | data/processed/lovdal/facts.json |
+| Locked test (IDs 64-73) | day 50 injuries / 3,044 windows (= paper: 50 + 2,994); week 48 / 3,015 | data/splits/lovdal_folds.json, data/processed/lovdal_lockbox/*_meta.json; paper |
+| Development test groups | 105-108 injuries each (day) | data/splits/lovdal_folds.json (balance) |
+| Lövdal validation overlap | 46 places filled by 30 runners | data/splits/lovdal_folds.json (pinned by a test) |
 | Development runners 0-63 | day 39,722 windows / 533 injuries; week 39,783 / 527 | data/processed/lovdal/*_meta.json |
 | Validation people (D-020) | PAMAP2 4 different people in 4 folds; WESAD 10 in 5 | data/splits |
 | Paper AUC day / week | 0.724 / 0.678 | paper Table 3 |
@@ -1002,10 +1004,10 @@ From the paper: individual features correlate only weakly with injury (r between
 | Sport DB 2.0 | 168 recordings, 55 continuous (~127.6 h); height-weight r = 0.686 | audit |
 | SIRP-600 warning | 2-question tree 89.7 % vs 68.5 % majority | audit |
 | ziya07 warning | HR resting 120.6 vs running 118.0 | audit |
-| SoccerMon injuries | 162 reports from 15 of 50 players | file check |
-| PMData injuries | 77 real reports of 225; 9 of 16 people; p12 = 48 | file check |
-| Files fingerprinted | 554 in `data/MANIFEST.csv` | audit |
-| Tests passing | 23 | `python tasks.py check` |
+| SoccerMon pain reports | 162 reports on 156 days from 15 of 50 players -> 27 episodes in 14 players | audit; data/processed/soccermon/daily_meta.json |
+| PMData pain reports | 77 reports on 72 days from 9 of 15 labelled people (p12: 44 days) -> 8 episodes in 6 people | audit; data/processed/pmdata/daily_meta.json |
+| Files fingerprinted | 729 in `data/MANIFEST.csv` | audit run 2026-10-15_0819 |
+| Tests passing | see docs/STATE.md (grows with every piece) | `python tasks.py check` |
 | VGG16 parameters | ~138 million (first FC layer: 102,764,544) | standard architecture |
 | GoogLeNet parameters | ~5-7 million (slide: ~6.8 M) | standard architecture |
 | ResNet-50 parameters | ~25.6 million | standard architecture |

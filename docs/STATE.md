@@ -18,8 +18,9 @@ Last updated: 2026-10-15 by Claude Code (Naman's laptop), piece 2 built
   - Roles and protocol decisions: D-012 (role per dataset), D-013 (snapshot arm on Lövdal week features, SIRP-600 demo only), D-014 (fusion on the 42,680 shared athlete-days), D-015 (ACWR-style 3-week baseline).
   - Extra data facts checked 2026-10-14 (read-only, not in audit.json): all 583 injury windows are separate injuries (no two within 7 days; minimum gap 22 days); 11 of 74 athletes never injured; top-5 athletes hold 18.4 % of windows and 14.6 % of injury windows.
 
-- Piece 2 Loaders + person-level splits (2026-10-15; commits 8e5b360, 49ba528, b34af23 and the piece-2 docs commit):
-  - `python tasks.py check` -> ruff `All checks passed!`, pytest `79 passed`.
+- Piece 2 Loaders + person-level splits (2026-10-15/16; commits 8e5b360, 49ba528, b34af23, a6560f4, 7564323 and the review-fix commit):
+  - `python tasks.py check` -> ruff `All checks passed!`, pytest `102 passed`.
+  - Independent eval-auditor re-review (2026-10-16): no blocker for closing piece 2; re-make confirmed not a disguised re-split (test groups identical, hashes match). Its should-fix items are fixed (stricter lockbox guard: annotated pushed tag, one frozen commit, untracked code counts; bypass test; strict MANIFEST check; pinned SHA256SUMS digest; re-make refusal tests; Lövdal validation overlap disclosed and pinned; numbers in the guide now from code-written files).
   - Splits (D-017, D-020): 7 files in data/splits/, sealed by `data/splits/SHA256SUMS` (9 files incl. the 2 superseded first versions). Lövdal lockbox = runners 64-73 (day 50 injuries / 3,044 windows = the paper's test set); 5 development groups with 105/108/108/105/107 day injuries. PAMAP2 4 groups, WESAD 5 groups, validation rotates (4 and 10 different validation people). SoccerMon 50 and PMData 15 leave-one-person-out (p08 excluded). A second re-make stops with "data/splits is sealed".
   - Processed data (data/processed/, git-ignored; each meta records the raw-file fingerprint): Lövdal development day (39,722, 7, 10) with 533 injuries, week (39,783, 3, 22) with 527; locked runners in data/processed/lovdal_lockbox/ (read only via src/data/lockbox.py). PAMAP2 (10,361, 128, 10), WESAD (17,401, 128, 6), 0 NaN. SoccerMon 36,550 person-days, 27 episodes in 14 players; PMData 2,365 person-days, 8 episodes in 6 people. Sport DB 55 HR recordings, 93.91 % plausible.
   - Audit re-run `experiments/audit/2026-10-15_0819/` (commit b34af23, git_dirty false): SoccerMon and PMData added to data/MANIFEST.csv (175 rows); all earlier fingerprints unchanged.
@@ -33,7 +34,7 @@ Last updated: 2026-10-15 by Claude Code (Naman's laptop), piece 2 built
 - Review 2 date and target conference (ask the guide). Scope risk: pieces 2-10 remain; follow the PLAN cut order if time is short.
 - Licences marked [VERIFY] in configs/datasets.yaml: Kaggle runners, SIRP-600, ziya07, Sport DB 2.0, SoccerMon (check each download page).
 - Lövdal paper read 2026-10-15 (details in docs/DATASETS.md Rules): AUC 0.724/0.678 verified; test = the 10 most recently joined athletes; healthy events exclude the 3 weeks around injuries (limitation for any score on this data). Their 10-athlete split is saved (paper_split, locked until the evaluation freeze); piece 3 rebuilds their method and checks it on stand-in runners 54-63 (D-017).
-- Before the first piece-3 run: decide per-athlete normalisation (each runner vs their own history) or one scaler for everyone (EVAL_PROTOCOL, open decision). Ask Naman.
+- Before the first piece-3 number, Naman decides 4 points (EVAL_PROTOCOL, "Open decisions before piece 3"): (1) Track A metric blanks + model list; (2) settings chosen inside each fold only; (3) how the paper's method is rebuilt without its label-based test scaling; (4) per-athlete normalisation.
 - `data/raw/soccermon/Unconfirmed 486200.crdownload` is an unfinished browser download (Naman's); ignored by all code. Delete only if Naman says so.
 
 ## Next three actions
@@ -49,6 +50,9 @@ Last updated: 2026-10-15 by Claude Code (Naman's laptop), piece 2 built
 ## Known issues and surprises
 - requirements.lock.txt pins the CUDA build (`torch==2.14.1+cu132`). Teammates without a GPU install CPU torch first, then `pip install -r requirements.txt` (not the lock file). See docs/SETUP_WINDOWS.md.
 - Runner logs (authors' README.txt): `-0.01` in the three perceived-effort columns means "rest day"; dates are a day index from the first record. GOTCHA: day file suffix `.6` = day before the event and no suffix = seven days before, while the week file's no-suffix = the week before; the loader must put both into oldest-to-newest order.
+- PMData: PMSys times are UTC but Fitbit days are local; 31 of 2,755 PMSys rows are stamped 22:00-24:00 UTC (data/processed/pmdata/daily_meta.json) and may belong to the next local day. Time zone not verified; processing unchanged.
+- Lövdal validation groups overlap across folds (46 places, 30 runners); disclosed in VIVA_NOTES and STUDY_GUIDE, pinned by a test.
+- Split metadata records the scikit-learn version but not numpy's (the PAMAP2/WESAD permutation uses numpy); requirements.lock.txt pins numpy for the split commits.
 - Locked runners (64-73) are still inside the raw Lövdal CSVs: experiment code must use `loaders.load_dev()`, never read the raw files directly. The lockbox guard is a code-level rail plus an access log, not encryption.
 - Git converts line endings on this laptop (core.autocrlf true); `.gitattributes` keeps data/splits byte-for-byte so the pinned hashes match on every OS.
 - Sensor datasets and runner logs are different people: two separate tracks (DATA_CONTRACT A/B); the demo must never present them as one athlete. PAMAP2 and WESAD subjects are not described as athletes: call them "wearable sensor data" in slides.

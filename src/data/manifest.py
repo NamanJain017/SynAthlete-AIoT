@@ -1,8 +1,9 @@
 """Check that the raw files a builder reads are the files the audit hashed (data/MANIFEST.csv).
 
 Every builder passes the exact paths it reads to verify(). A file whose sha256 differs from the
-MANIFEST stops the run; the returned record (files read + fingerprint) is saved next to the
-outputs, so each processed file names its data version (AGENTS.md rule 11).
+MANIFEST, or that the audit never saw, stops the run (run the audit first); the returned record
+(files read + fingerprint) is saved next to the outputs, so each processed file names its data
+version (AGENTS.md rule 11).
 """
 
 from __future__ import annotations
@@ -18,13 +19,13 @@ MANIFEST = ROOT / "data" / "MANIFEST.csv"
 
 
 class ManifestMismatch(RuntimeError):
-    """A raw file changed after the audit: re-run the audit and ask before using it."""
+    """A raw file changed after the audit, or was never audited: run the audit and ask."""
 
 
 def recorded(path: Path = MANIFEST) -> dict[str, str]:
-    """MANIFEST as {path under data/raw: sha256}; empty if there is no MANIFEST yet."""
+    """MANIFEST as {path under data/raw: sha256}."""
     if not path.exists():
-        return {}
+        raise ManifestMismatch(f"{path} is missing: run python tasks.py audit first")
     with open(path, newline="", encoding="utf-8") as f:
         return {row["file"]: row["sha256"] for row in csv.DictReader(f)}
 
@@ -33,7 +34,6 @@ def verify(paths: list[Path], dataset_folder: Path, raw: Path = RAW,
            manifest: Path = MANIFEST) -> dict:
     """Hash the files a builder read and compare them with the MANIFEST.
 
-    Files the audit never saw are listed (not an error: re-run the audit to add them).
     The fingerprint uses paths inside the dataset folder, like the audit's fingerprint.
     """
     known = recorded(manifest)
@@ -49,7 +49,8 @@ def verify(paths: list[Path], dataset_folder: Path, raw: Path = RAW,
         raise ManifestMismatch(f"{len(changed)} raw file(s) differ from data/MANIFEST.csv, "
                                f"e.g. {changed[0]}: re-run the audit and ask before using them")
     if unlisted:
-        print(f"    note: {len(unlisted)} file(s) not in data/MANIFEST.csv yet (run the audit)")
+        raise ManifestMismatch(f"{len(unlisted)} raw file(s) were never audited, e.g. "
+                               f"{unlisted[0]}: run python tasks.py audit first")
     inside = {p.relative_to(dataset_folder).as_posix(): sha for p, sha in hashes.items()}
     return {"files_read": len(hashes), "fingerprint": hashing.fingerprint(inside),
             "not_in_manifest": sorted(unlisted)}

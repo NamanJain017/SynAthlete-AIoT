@@ -103,7 +103,7 @@ A: The classic acute:chronic workload ratio compares this week's load with the l
 **The main result and the locked test (D-017).** The headline score will be the average ± spread over the 5 development groups: 533 injuries, so more precise. The 10 locked runners are the final check: 50 injuries, opened once after the evaluation freeze, even if Review 2 comes first.
 
 **Q: Why not just report the score on the paper's 10 test runners? That's the fair comparison.**
-A: We report both. The 10 runners have only 50 injuries, so their score is noisy: a rough 95 % range of about ±0.08 AUC (our estimate from a standard formula, not a measurement). The 5 development groups test 533 injuries, so their average is about three times more precise. The locked runners stay untouched until the end, so that final number is one nobody could have tuned on. And the paper comparison happens on the same 10 runners, at the end.
+A: We report both. The 10 runners have only 50 injuries, so one score on them moves a lot with luck. The 5 development groups test 533 injuries from 64 runners, so their average is much more stable. We will measure both uncertainties with a bootstrap that resamples runners (piece 4) instead of quoting a guess. The locked runners stay untouched until the end, so that final number is one nobody could have tuned on. And the paper comparison happens on the same 10 runners, at the end.
 
 **Q: Your rules say splits are created once. Why were two files re-made?**
 A: An independent review found that the first PAMAP2 and WESAD files reused the same people for validation (in WESAD, 10 validation slots held only 5 people). The rule exists to stop reshuffling until results look good. No model had been trained yet, the test groups stayed identical (the code checks this), the old files are kept in `data/splits/superseded/`, and the decision is logged (D-020). Then the folder was sealed, so it can't happen again.
@@ -111,11 +111,19 @@ A: An independent review found that the first PAMAP2 and WESAD files reused the 
 **Q: How do you know nobody peeked at the locked test runners?**
 A: Four safeguards.
 1. Their arrays are saved in a separate folder.
-2. Only one function can open them. It refuses unless the code is at the commit tagged `eval-freeze`, and it writes every opening to a log.
-3. The tests fail if a development file ever contains a locked runner.
-4. Git history shows when the tag was made.
+2. Only one function can open them (`src/data/lockbox.py`). It refuses unless:
+   - the code is at the commit marked by an annotated `eval-freeze` tag that is also on GitHub;
+   - no unfrozen code is lying around;
+   - the lockbox was never opened at a different commit.
+
+   Every opening is written to a log, which is committed afterwards.
+3. Tests fail if any other module reads the raw or locked runner data, or if a development file ever contains a locked runner.
+4. An annotated tag records who made it and when, and once it is pushed anyone can check that on GitHub.
 
 In honesty, the raw file still contains them, so this is a guard rail plus an audit trail, not encryption. Their rows were also part of the dataset-level audit counts in piece 1, but no model has been trained or scored on them.
+
+**Q: In the Lövdal folds, do validation runners repeat?**
+A: Yes, and we say so. Each fold picks its validation group from its own non-test runners, so across 5 folds the 46 validation places are filled by 30 runners (a test pins these numbers). Inside one fold, validation and test never overlap, which is what matters for that fold's score. Because a runner can validate in one fold and be tested in another, settings must be chosen inside each fold. We never pick one setting by averaging across folds (rule to confirm before piece 3).
 
 **Q: Why 21 days for SoccerMon/PMData episodes?**
 A: People report the same sore knee on many days in a row. Counting each report as a new injury would multiply one problem into ten. We copied the Lövdal authors' rule: reports within 3 weeks are the same problem. The result is 162 SoccerMon reports, falling on 156 report days, which become 27 episodes.

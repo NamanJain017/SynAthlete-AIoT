@@ -14,7 +14,7 @@ Draft defaults; confirm after the dataset audit (docs/DATASETS.md). Sport DB 2.0
 - Exact column order (authors' README v2): day file suffix .6 = the day before the event and no suffix = 7 days before (order kept); week file no suffix = the week before and .2 = three weeks before (order reversed). Verified on the data and pinned by tests.
 - -0.01 in the three perceived columns = rest day: the value is kept and rest_day marks it.
 - Metadata: athlete_id, date (day index from the first record). Label: injury (1) / no injury (0) as defined by the authors; document any deviation.
-- Development runners 0-63: data/processed/lovdal/. Locked runners 64-73: data/processed/lovdal_lockbox/, read only through src/data/lockbox.py (D-017). Use loaders.load_dev() for all development work.
+- Development runners 0-63: data/processed/lovdal/. Locked runners 64-73: data/processed/lovdal_lockbox/, read only through src/data/lockbox.py (D-017: annotated, pushed eval-freeze tag; one frozen commit only; access log). Use loaders.load_dev() for all development work; it also refuses data from another raw-data version than the splits. data/processed/lovdal/facts.json holds the whole-dataset counts quoted in the docs.
 
 ## Daily tables (Track C, SoccerMon and PMData; exploratory, D-018)
 - One row per person per calendar day (UTC dates), saved as data/processed/<dataset>/daily.parquet. Missing days stay empty: no imputation.
@@ -28,7 +28,7 @@ Draft defaults; confirm after the dataset audit (docs/DATASETS.md). Sport DB 2.0
 - Normalisation statistics computed on training folds only and stored with each run.
 
 ## Data versions
-- Every builder hashes the raw files it reads, stops if they differ from data/MANIFEST.csv, and records {files_read, fingerprint} as "source" in its metadata (D-019).
+- Every builder hashes the raw files it reads, stops if they differ from (or are missing in) data/MANIFEST.csv, and records {files_read, fingerprint} as "source" in its metadata (D-019).
 
 ## Synthetic data
 - Stored as data/processed/synthetic/<generator>/<run_id>/ with a datasheet: generator, seed, training fold, conditioning, fidelity report path.

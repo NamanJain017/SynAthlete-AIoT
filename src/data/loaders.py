@@ -196,6 +196,23 @@ def load_dev(kind: str) -> RunnerData:
 # ---------------------------------------------------------------- command line
 
 
+def lovdal_facts(day: RunnerData, week: RunnerData, i_day: np.ndarray) -> dict:
+    """Whole-dataset counts quoted in the docs (dataset-level, like the audit; D-017)."""
+    per = pd.DataFrame({"athlete": day.athlete_id, "date": day.date, "y": day.y})
+    injured = per.groupby("athlete")["y"].sum()
+    inj = per[per["y"] == 1].sort_values(["athlete", "date"])
+    gaps = inj.groupby("athlete")["date"].diff().dropna()
+    return {
+        "athletes": int(len(injured)),
+        "day_events": int(len(day.y)), "day_injuries": int(day.y.sum()),
+        "week_events": int(len(week.y)), "week_injuries": int(week.y.sum()),
+        "athletes_injured_day_file": int((injured > 0).sum()),
+        "athletes_never_injured_day_file": int((injured == 0).sum()),
+        "shared_athlete_days": int(len(i_day)), "shared_injuries": int(day.y[i_day].sum()),
+        "min_days_between_injuries_same_runner": int(gaps.min()) if len(gaps) else None,
+    }
+
+
 def prepare_lovdal() -> dict:
     """Whole files are checked (shapes, shared days), then saved as development and locked parts."""
     files = readers.find_runner_files(RAW / "lovdal")
@@ -205,6 +222,9 @@ def prepare_lovdal() -> dict:
     locked_ids = lovdal_lockbox_ids()
     out = {"source_fingerprint": source["fingerprint"], "whole_day": list(day.X.shape),
            "whole_week": list(week.X.shape), "whole_shared_days": int(len(i_day))}
+    facts = lovdal_facts(day, week, i_day)
+    (PROCESSED / "lovdal").mkdir(parents=True, exist_ok=True)
+    (PROCESSED / "lovdal" / "facts.json").write_text(json.dumps(facts, indent=2), encoding="utf-8")
     for data in (day, week):
         locked = np.isin(data.athlete_id, locked_ids)
         dev = select(data, ~locked)

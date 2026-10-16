@@ -237,6 +237,8 @@ def summarise(table: pd.DataFrame) -> dict:
         "healthy_event_days": int(t["healthy_event"].sum()),
         "people_with_an_episode": int((per["episode_start"] > 0).sum()),
         "episodes_per_person": {k: int(v) for k, v in per["episode_start"].items() if v > 0},
+        "pain_report_days_per_person": {k: int(v) for k, v in per["pain_report"].items()
+                                        if v > 0},
         "missing_percent": {c: round(float(table[c].isna().mean() * 100), 1)
                             for c in table.columns if table[c].isna().any()},
     }

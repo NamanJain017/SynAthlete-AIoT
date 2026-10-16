@@ -26,7 +26,7 @@ SPLIT_FILE = {
     "sirp600": "sirp600_demo_split.json",
 }
 PROCESSED_META = {
-    "lovdal": ["lovdal/day_meta.json", "lovdal/week_meta.json"],
+    "lovdal": ["lovdal/facts.json", "lovdal/day_meta.json", "lovdal/week_meta.json"],
     "pamap2": ["pamap2/windows_meta.json"], "wesad": ["wesad/windows_meta.json"],
     "soccermon": ["soccermon/daily_meta.json"], "pmdata": ["pmdata/daily_meta.json"],
     "sportdb2": ["sportdb2/hr_meta.json"], "sirp600": ["sirp600/meta.json"],

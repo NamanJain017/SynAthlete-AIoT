@@ -18,6 +18,9 @@ from src.data import audit, loaders, splits
 ROOT = Path(__file__).resolve().parents[1]
 SPLITS = ROOT / "data" / "splits"
 MANIFEST = ROOT / "data" / "MANIFEST.csv"
+# sha256 of data/splits/SHA256SUMS as sealed on 2026-10-15 (commit b34af23): changing a split
+# file AND its pinned hash still fails here.
+SEAL_DIGEST = "97a603e4eda39f5f9e8aac81a98c43f7c478a8d4942b5e884aa6b3c396fc71f4"
 
 
 def _load(name: str) -> dict:
@@ -100,6 +103,44 @@ def test_remake_refuses_when_sealed_unlogged_or_not_allowed(tmp_path, monkeypatc
         splits.remake(["wesad_folds.json"], "D-020")
 
 
+def _remake_sandbox(tmp_path, monkeypatch, old_folds: dict) -> None:
+    """A temporary data/splits with one old wesad file and a logged decision."""
+    splits_dir = tmp_path / "splits"
+    splits_dir.mkdir()
+    (splits_dir / "wesad_folds.json").write_text(
+        json.dumps({"meta": {"created_utc": "t0", "git_commit": "c0"}, "folds": old_folds}),
+        encoding="utf-8")
+    decisions = tmp_path / "DECISIONS.md"
+    decisions.write_text("- D-020 | 2026-10-15 | ok\n", encoding="utf-8")
+    for name, value in {"SPLITS": splits_dir, "SUPERSEDED": splits_dir / "superseded",
+                        "SEAL": splits_dir / "SHA256SUMS", "DECISIONS": decisions,
+                        "ROOT": tmp_path}.items():
+        monkeypatch.setattr(splits, name, value)
+    new = {"0": {"train_ids": ["c"], "val_ids": ["b"], "test_ids": ["a"]}}
+    monkeypatch.setattr(splits, "wesad_split", lambda: {"meta": {}, "folds": new})
+
+
+def test_remake_refuses_changed_test_groups(tmp_path, monkeypatch):
+    _remake_sandbox(tmp_path, monkeypatch,
+                    {"0": {"train_ids": ["a"], "val_ids": ["b"], "test_ids": ["c"]}})
+    with pytest.raises(splits.SplitError, match="test groups would change"):
+        splits.remake(["wesad_folds.json"], "D-020")
+    assert not (tmp_path / "splits" / "superseded").exists()  # nothing moved
+
+
+def test_remake_keeps_the_old_file_and_runs_only_once(tmp_path, monkeypatch):
+    _remake_sandbox(tmp_path, monkeypatch,
+                    {"0": {"train_ids": ["b"], "val_ids": ["c"], "test_ids": ["a"]}})
+    splits.remake(["wesad_folds.json", "wesad_folds.json"], "D-020")  # repeat is collapsed
+    kept = tmp_path / "splits" / "superseded" / "wesad_folds.v1.json"
+    assert json.loads(kept.read_text(encoding="utf-8"))["meta"]["git_commit"] == "c0"
+    new = json.loads((tmp_path / "splits" / "wesad_folds.json").read_text(encoding="utf-8"))
+    assert new["meta"]["decision"] == "D-017, D-020"
+    assert new["meta"]["supersedes"]["file"] == "splits/superseded/wesad_folds.v1.json"
+    with pytest.raises(splits.SplitError, match="already re-made"):
+        splits.remake(["wesad_folds.json"], "D-020")
+
+
 def test_lovdal_split_structure_on_fake_runners():
     day = _fake_runners()
     week = loaders.RunnerData("week", day.X[:, :3], day.y.copy(), day.athlete_id.copy(),
@@ -138,6 +179,7 @@ def test_split_files_match_their_pinned_hashes():
     for name, sha in pinned.items():
         digest = hashlib.sha256((SPLITS / name).read_bytes()).hexdigest()
         assert digest == sha, f"{name} changed after sealing"
+    assert hashlib.sha256(seal.read_bytes()).hexdigest() == SEAL_DIGEST
 
 
 @pytest.mark.parametrize("name", splits.FILES)
@@ -191,6 +233,16 @@ def test_lovdal_saved_split_is_leak_free():
         counts = view["test_group_injuries"]
         mean = np.mean(counts)
         assert all(abs(c - mean) <= splits.BALANCE_TOLERANCE * mean for c in counts)
+
+
+def test_lovdal_validation_overlap_is_as_disclosed():
+    """Lövdal validation groups are drawn per fold, so some runners validate in several folds
+    (disclosed in docs/VIVA_NOTES.md): 46 slots, 30 runners, 20/21/33/37 three times each."""
+    vals = [a for f in _load("lovdal_folds.json")["folds"].values() for a in f["val_ids"]]
+    counts = {a: vals.count(a) for a in set(vals)}
+    assert len(vals) == 46 and len(counts) == 30
+    assert sorted(a for a, n in counts.items() if n == 3) == [20, 21, 33, 37]
+    assert max(counts.values()) == 3
 
 
 def test_lovdal_lockbox_is_the_papers_test_set():

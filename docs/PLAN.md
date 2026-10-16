@@ -13,7 +13,7 @@ Order is fixed; dates are flexible until the Review 2 date is confirmed. Tick a 
 | 6 | Edge-fog-cloud tiers | Reflex / supervisor / deep layers as separate processes; latency and bytes benchmark, cloud-only vs tiered | Implementation |
 | 7 | Fused model | Sequence arm (LSTM/GRU/TCN) + tabular arm (RF/CatBoost), stacking, calibration, risk score 0-100, 3 seeds | Implementation |
 | 8 | Explanations | TreeSHAP, integrated gradients, attention and 1D Grad-CAM views; deletion test; agreement with known risk factors; plain-language sentences | Implementation |
-| 9 | Dashboard + demo | `python tasks.py demo` replays a held-out athlete through the tiers into Streamlit | Implementation |
+| 9 | Dashboard + demo | `python tasks.py demo` replays a held-out development runner (never runners 64-73 before the evaluation freeze) through the tiers into Streamlit | Implementation |
 | 10 | Paper + Review 2 deck | IEEE conference draft with figures generated from metrics.json; deck with corrected gap sentence and dataset audit | Paper |
 
 ## If time runs short (cut in this order)
