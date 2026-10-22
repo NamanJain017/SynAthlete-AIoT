@@ -282,7 +282,8 @@ def prepare_lovdal() -> dict:
                          "LOCKED final-test runners 64-73: open only via lockbox.py", source)
         out[f"dev_{data.kind}"] = list(dev.X.shape)
         out[f"dev_{data.kind}_injuries"] = int(dev.y.sum())
-    check = event_design_check(devs["day"], devs["week"])
+    check = {**event_design_check(devs["day"], devs["week"]),
+             "source_fingerprint": source["fingerprint"]}
     (PROCESSED / "lovdal" / "event_design_check.json").write_text(json.dumps(check, indent=2),
                                                                   encoding="utf-8")
     return out

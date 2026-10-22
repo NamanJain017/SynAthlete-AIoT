@@ -195,7 +195,7 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 ```
 - **Why lock the 10 newest?**
   1. Nobody can say we tuned on the test.
-  2. They are exactly the paper's test runners. We checked: in the day file, IDs 64-73 contain 50 injuries and 2,994 healthy events, the same as the paper. So the day-file comparison is like-for-like. Our combined model is scored on the days present in both files (2,994 events, 48 injuries), and it trains on 51 runners while the paper trained on 64: we say so.
+  2. They are exactly the paper's test runners. We checked: in the day file, IDs 64-73 contain 50 injuries and 2,994 healthy events, the same as the paper. So the day-file comparison is like-for-like. Our combined model is scored on the days present in both files (2,994 events, 48 injuries), and it trains on 51 runners while the paper trained on 64: we say so. Also, the paper's 0.724 was measured with its label-reading scaling, so even on the same runners the methods differ.
   3. They joined last, so the test also asks "does it work on newer athletes?". It is NOT a "future" (prospective) test: it is a test on 10 different runners who joined later. Say "newer athletes", never "future data".
 - **Main result vs final check (D-017, Naman chose option A).**
   - **Main result** = the average ± spread over the 5 development test groups: 64 runners, 533 injuries. More injuries make the number more precise.
@@ -244,7 +244,7 @@ Why this is not cheating: the rule "never regenerate splits" stops people from r
 - Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which reads test labels. Our comparisons won't (D-021, D-023): their exact method is run only once, as a labelled check on stand-in runners 54-63, and every comparison uses a version with one scaler learned from training runners.
 - **No per-runner scaling at all (D-023).** In this dataset, simply counting a runner's events in the previous 3 weeks finds injuries almost perfectly (ROC-AUC 0.9946, `data/processed/lovdal/event_design_check.json`). That's because the authors kept every injury at least 22 days away from other events, while healthy events follow each other day after day. It's an artefact of how the data was built, not knowledge about the body. So anything based on a runner's own history (scaling, counts, gaps, dates) is banned, and a test checks it.
 - **Tuning happens inside each round (D-021).** Each round picks its settings, alert level and stopping point using only its own practice runners. One setting picked by averaging practice scores over all rounds would use exam runners, because runner 20 is practice in rounds 0, 2 and 4 and exam in round 1.
-- **Every model gets the same number of tuning tries**, so our models get no extra chances.
+- **Every single model gets the same number of tuning tries (8 per round)**: each baseline and each candidate arm. The combined model also chooses among several arms, so its total budget is larger. That total is written down before piece 3 runs and reported next to its score.
 - **The final model is named in advance:** the fused model (piece 7). We never send whichever model scored best on the rounds to the locked test, because picking the winner on test data inflates its score.
 - The alert threshold is chosen on validation runners only (rule 5).
 - Synthetic data never enters validation or test (rule 3).
@@ -290,7 +290,7 @@ Accuracy = (TP + TN) / all. Only 1.36 % of day windows are injuries, so a model 
 The model outputs a risk (e.g. 0.37); the dashboard needs "alert" or "no alert". A lower threshold catches more injuries but gives more false alarms. The paper chose the threshold where sensitivity ≈ specificity on validation data (their notebook, line 86). We use the same rule, but inside each round on that round's own practice runners (D-022). The paper drew its validation days from the same runners it trained on (notebook lines 308-311); ours are always different people.
 
 ### Reporting honestly
-- Report **mean ± spread** across groups and seeds (e.g. "0.70 ± 0.04": example only).
+- The 3 seeds are averaged inside each group first; then report **mean ± spread** over the 5 groups (e.g. "0.70 ± 0.04": example only).
 - The locked test has only 50 injuries, so it gets an uncertainty range. It is the final check; the main number is the 5-group development average (D-017).
 
 ---

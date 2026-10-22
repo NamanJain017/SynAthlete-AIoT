@@ -38,9 +38,18 @@
   - ACWR-style rule: week file, most recent week's total km / max(mean total km of the two earlier weeks, 1 km), the uncoupled ratio; higher = riskier;
   - logistic regression, random forest and CatBoost on the day file (70 inputs) and the week file (69 inputs);
   - GRU on the day file;
-  - Lövdal bagged XGBoost (notebook settings: 9 bags, 2,048 events per class, learning rate 0.01, depth {2, 3}, trees {256, 512}, Platt): label-free variant on the 5 groups; the exact copy only as the reproduction check on runners 54-63, with its library deviations documented.
+  - Lövdal bagged XGBoost (notebook settings: 9 bags, up to 2,048 events per class drawn per athlete with replacement, learning rate 0.01, depth {2, 3}, trees {256, 512}, Platt): label-free variant on the 5 groups; the exact copy only as the reproduction check on runners 54-63, with its library deviations documented.
 - Activity (PAMAP2, 4 groups): small 1D-CNN and GRU, macro-F1.
-- Later pieces: real-only vs real+augmented (piece 5); the fused model (piece 7) is the one model sent to the locked test.
+- Later pieces: real-only vs real+augmented (piece 5); the fused model (piece 7) is the primary model on the locked test.
+## Still to fix before the first piece-3 run (in the piece-3 plan, for Naman's approval)
+1. The validation score that picks settings, arms and the early-stopping point (proposal: validation average precision).
+2. Every grid, written into configs/: logistic regression, random forest, CatBoost, GRU, plus the fused-model candidates (LSTM, TCN, combiner); the inner out-of-fold scheme for the combiner, grouped by runner.
+3. The fused model's total tuning budget (it chooses among arms), reported next to its score.
+4. The constant-risk (majority) model: add an 'alert nobody' candidate threshold, so it does not alert on every event; or call it the constant-risk model.
+5. The leak canary's output and failure rule.
+6. The reproduction check's pass rule: bootstrap type for the interval above 0.5.
+Before the evaluation freeze: which runners give validation (Platt, alert level) for the Lövdal label-free variant trained on `paper_split`, which has no validation group.
+Track C (proposed; confirm before any Track C run): the same history-signal ban; features come from the full daily tables, never from the selected event rows.
 ## Generator criteria (set now, before looking at results)
 - Discriminative accuracy within ____ of 50%.
 - TSTR macro-F1 within ____ of real-trained.
@@ -52,21 +61,22 @@ Differences between models: paired bootstrap that resamples runners within each 
 - Deletion curve: removing top-k attributed inputs lowers predicted risk by at least ____ vs random removal.
 - Model-randomisation check: attribution rank correlation drops below ____.
 - Stability: rank correlation above ____ for near-identical inputs.
-- Prior list (written BEFORE running): high load spikes, high monotony/strain, low recovery, recent injury history -> expected to raise risk.
+- Prior list (written BEFORE running): high load spikes, high monotony/strain, low recovery -> expected to raise risk. ("Recent injury history" is not testable: injury history is not an input under D-023, and the event design keeps injuries at least 22 days from other events.)
 ## Evaluation freeze
 Tag the repo with an annotated tag (`git tag -a eval-freeze`) and push it. Open the lockbox only through src/data/lockbox.py (it opens at one frozen commit only). Run the matrix once, commit experiments/lockbox_access.log, and log deviations.
-## Sources for the scoring and tuning rules (DOIs verified 2026-10-22)
-- Lövdal, den Hartigh & Azzopardi 2021, Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518 (alert rule; main.ipynb cell 1 line 86).
-- Saito & Rehmsmeier 2015, PLoS ONE, doi 10.1371/journal.pone.0118432 (PR plots for imbalanced data).
-- Davis & Goadrich 2006, ICML, doi 10.1145/1143844.1143874 (no linear interpolation in PR space).
-- Varma & Simon 2006, BMC Bioinformatics, doi 10.1186/1471-2105-7-91 (tune inside each round).
-- Cawley & Talbot 2010, J Mach Learn Res 11:2079-2107 (selection bias).
-- Kapoor & Narayanan 2023, Patterns, doi 10.1016/j.patter.2023.100804 (leakage types).
-- Van Calster et al. 2019, BMC Medicine, doi 10.1186/s12916-019-1466-7 (calibration).
-- Niculescu-Mizil & Caruana 2005, ICML, doi 10.1145/1102351.1102430 (Platt scaling and isotonic regression).
-- Vickers & Elkin 2006, Med Decis Making, doi 10.1177/0272989X06295361; Vickers, Van Calster & Steyerberg 2016, BMJ, doi 10.1136/bmj.i6 (net benefit).
-- Bahr 2016, Br J Sports Med, doi 10.1136/bjsports-2016-096256 (limits of individual injury prediction).
-- Bullock et al. 2022, Sports Medicine, doi 10.1007/s40279-022-01698-9 (quality of sports-injury prediction models).
-- Collins et al. 2024 (TRIPOD+AI), BMJ, doi 10.1136/bmj-2023-078378 (reporting checklist).
-- Lolli et al. 2019, Br J Sports Med 53:921-922, doi 10.1136/bjsports-2017-098110 (uncoupled acute:chronic ratio).
+## Sources for the scoring and tuning rules (checked 2026-10-22 on the page named)
+- Lövdal, den Hartigh & Azzopardi 2021, Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518 (alert rule; main.ipynb cell index 1 line 86). Full text: https://pure.rug.nl/ws/portalfiles/portal/183763727/
+- Saito & Rehmsmeier 2015, PLoS ONE, doi 10.1371/journal.pone.0118432. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4349800/
+- Davis & Goadrich 2006, ICML, doi 10.1145/1143844.1143874. https://mlanthology.org/icml/2006/davis2006icml-relationship
+- Varma & Simon 2006, BMC Bioinformatics, doi 10.1186/1471-2105-7-91. https://pmc.ncbi.nlm.nih.gov/articles/PMC1397873
+- Cawley & Talbot 2010, J Mach Learn Res 11:2079-2107 (no DOI). https://www.jmlr.org/papers/v11/cawley10a.html
+- Kapoor & Narayanan 2023, Patterns, doi 10.1016/j.patter.2023.100804. https://pmc.ncbi.nlm.nih.gov/articles/PMC10499856
+- Van Calster et al. 2019, BMC Medicine, doi 10.1186/s12916-019-1466-7. https://pubmed.ncbi.nlm.nih.gov/31842878/
+- Niculescu-Mizil & Caruana 2005, ICML, doi 10.1145/1102351.1102430. https://mlanthology.org/icml/2005/niculescumizil2005icml-predicting
+- Vickers & Elkin 2006, Med Decis Making, doi 10.1177/0272989X06295361. https://pmc.ncbi.nlm.nih.gov/articles/PMC2577036
+- Vickers, Van Calster & Steyerberg 2016, BMJ, doi 10.1136/bmj.i6. https://pubmed.ncbi.nlm.nih.gov/26810254/
+- Bahr 2016, Br J Sports Med, doi 10.1136/bjsports-2016-096256. https://bjsm.bmj.com/content/early/2016/04/25/bjsports-2016-096256.info
+- Bullock et al. 2022, Sports Medicine, doi 10.1007/s40279-022-01698-9. Keele repository record, output 423719
+- Collins et al. 2024 (TRIPOD+AI), BMJ, doi 10.1136/bmj-2023-078378. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11025451/
+- Lolli et al. 2019, Br J Sports Med 53:921-922, doi 10.1136/bjsports-2017-098110. https://bjsm.bmj.com/content/early/2017/11/03/bjsports-2017-098110.info
 - Notebook references: "cell 1" means notebook cell index 1 (the second cell) of data/raw/lovdal/main.ipynb.
