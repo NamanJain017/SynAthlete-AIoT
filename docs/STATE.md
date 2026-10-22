@@ -1,8 +1,8 @@
 # STATE (living status; update at the end of every session)
-Last updated: 2026-10-22 by Claude Code (Naman's laptop), piece 2 built; waiting for Naman's piece-2 questions
+Last updated: 2026-10-22 by Claude Code (Naman's laptop): piece 2 DONE (Naman: "Piece 2 is clear"); piece 3 plan in preparation
 
 ## Current piece
-2 Loaders + person-level splits: built and checked (2026-10-15). Waiting for Naman to say it is clear. Next: 3 Real-data baselines.
+2 Loaders + person-level splits: DONE (Naman said "Piece 2 is clear" on 2026-10-22; evidence below). Now: 3 Real-data baselines (plan first, for Naman's approval).
 
 ## Done (with evidence)
 - Lean starter repo pushed to GitHub (rules, brief, dataset list, plan, task runner, guard hook).
@@ -39,8 +39,8 @@ Last updated: 2026-10-22 by Claude Code (Naman's laptop), piece 2 built; waiting
 - `data/raw/soccermon/Unconfirmed 486200.crdownload` is an unfinished browser download (Naman's); ignored by all code. Delete only if Naman says so.
 
 ## Next three actions
-1. Naman reads docs/PIECE2_EXPLAINED.md (simple explanation of piece 2 + project progress), asks questions, and says whether piece 2 is clear.
-2. Piece 3 (after "clear"): its own plan, then the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
+1. Piece 3 plan (with research) for Naman's approval, including the six open details listed in EVAL_PROTOCOL.
+2. Piece 3 after approval: the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
 3. Run the eval-auditor subagent before any result goes into the Review 2 deck.
 
 ## Ideas for later
