@@ -8,6 +8,7 @@ openpyxl
 scipy
 scikit-learn
 catboost
+xgboost  # Lövdal et al. 2021 method (bagged XGBoost), D-021/D-022
 shap
 captum
 matplotlib
