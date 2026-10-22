@@ -125,6 +125,12 @@ In honesty, the raw file still contains them, so this is a guard rail plus an au
 **Q: In the Lövdal folds, do validation runners repeat?**
 A: Yes, and we say so. Each fold picks its validation group from its own non-test runners, so across 5 folds the 46 validation places are filled by 30 runners (a test pins these numbers). Inside one fold, validation and test never overlap, which is what matters for that fold's score. Because a runner can validate in one fold and be tested in another, settings must be chosen inside each fold. We never pick one setting by averaging across folds (rule to confirm before piece 3).
 
+**Q: How do you choose the alert level, and why not use accuracy?**
+A: Accuracy is useless here: only about 1.3 % of days are injuries, so saying "healthy" every time scores about 98.6 %. Our main score is PR-AUC (average precision), which needs no alert level and is built for rare events. For yes/no alerts we use the paper's rule: on each round's own practice runners, pick the level where "injuries caught" is about equal to "healthy days left alone". Then we apply that level to the round's exam runners. We also report false alarms per caught injury, so nobody over-reads the result (D-022).
+
+**Q: Why don't you send your best-scoring model to the final locked test?**
+A: Choosing the winner by its test score and then reporting that same score overstates it, because some of the win is luck. So we named the final model in advance (the fused model, D-021) and report every other model honestly next to it.
+
 **Q: How do you know your results can be reproduced?**
 A: We tested it. A fresh copy of the code from git, plus copies of exactly the 729 raw files listed in `data/MANIFEST.csv`, ran the whole audit, every data builder and every test. Everything came out identical to our working copy: the file fingerprints, the audit facts, every processed array and table, the data cards, and all 7 split files rebuilt from seed 0 (`experiments/repro/2026-10-22_0731/`). So anyone with the same raw files gets the same data.
 

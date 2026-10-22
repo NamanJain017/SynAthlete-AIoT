@@ -241,7 +241,10 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 Why this is not cheating: the rule "never regenerate splits" stops people from reshuffling until the *results* look good. No results existed yet, and the test groups did not change.
 
 ### Other leakage rules
-- Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which reads test labels. Our comparisons won't. How the paper's method is rebuilt without it is decided before piece 3 (EVAL_PROTOCOL, open decisions).
+- Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which reads test labels. Our comparisons won't (D-021): their exact method is run only once, as a labelled check on stand-in runners 54-63, and every comparison uses a version that scales each runner with their own earlier days only.
+- **Tuning happens inside each round (D-021).** Each round picks its settings, alert level and stopping point using only its own practice runners. One setting picked by averaging practice scores over all rounds would use exam runners, because runner 20 is practice in rounds 0, 2 and 4 and exam in round 1.
+- **Every model gets the same number of tuning tries**, so our models get no extra chances.
+- **The final model is named in advance:** the fused model (piece 7). We never send whichever model scored best on the rounds to the locked test, because picking the winner on test data inflates its score.
 - The alert threshold is chosen on validation runners only (rule 5).
 - Synthetic data never enters validation or test (rule 3).
 - A result that looks too good is treated as a bug until proven otherwise.
@@ -274,10 +277,16 @@ Accuracy = (TP + TN) / all. Only 1.36 % of day windows are injuries, so a model 
 - Specificity = (986 − 93) / 986 = 90.6 %.
 - Precision = 7 / 100 = 7 %. That's 5 times better than random alarms, which would be right 1.4 % of the time.
 
-**Which metrics we report:** 🔜 fixed in piece 4, before any generator runs (D-004). Proposal: ROC-AUC and PR-AUC as main scores, sensitivity/specificity at the chosen threshold, and calibration.
+**Which metrics we report (fixed by D-022, before any model runs):**
+- **Main score: PR-AUC**, computed as "average precision". It needs no alert level and is built for rare events. A model that guesses randomly gets about the injury rate (about 0.013), so we always show that next to it.
+- **ROC-AUC** next to it, because the paper reports ROC-AUC (0.724).
+- **At the alert level:** injuries caught, healthy days left alone, share of alerts that are real, **false alarms per caught injury** and **alerts per 100 runner-days**, plus MCC.
+- **Calibration:** Brier score, ECE with 10 equal-count bins, and calibration slope and intercept.
+- **Extra (exploratory): a decision curve.** It shows whether using the model does more good than harm, over risk levels from 0.5 % to 10 %.
+- **Not used:** accuracy, or a fixed-precision target. Precision depends on how common injuries are, so a target such as "5 % of alerts real" behaves differently in every group.
 
 ### Threshold
-The model outputs a risk (e.g. 0.37); the dashboard needs "alert" or "no alert". A lower threshold catches more injuries but gives more false alarms. The paper chose the threshold where sensitivity ≈ specificity on validation data. We choose it on validation runners only.
+The model outputs a risk (e.g. 0.37); the dashboard needs "alert" or "no alert". A lower threshold catches more injuries but gives more false alarms. The paper chose the threshold where sensitivity ≈ specificity on validation data (their notebook, line 86). We use the same rule, but inside each round on that round's own practice runners (D-022). The paper drew its validation days from the same runners it trained on (notebook lines 308-311); ours are always different people.
 
 ### Reporting honestly
 - Report **mean ± spread** across groups and seeds (e.g. "0.70 ± 0.04": example only).

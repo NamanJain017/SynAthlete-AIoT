@@ -35,12 +35,12 @@ Last updated: 2026-10-22 by Claude Code (Naman's laptop), piece 2 built; waiting
 - Review 2 date and target conference (ask the guide). Scope risk: pieces 2-10 remain; follow the PLAN cut order if time is short.
 - Licences marked [VERIFY] in configs/datasets.yaml: Kaggle runners, SIRP-600, ziya07, Sport DB 2.0, SoccerMon (check each download page).
 - Lövdal paper read 2026-10-15 (details in docs/DATASETS.md Rules): AUC 0.724/0.678 verified; test = the 10 most recently joined athletes; healthy events exclude the 3 weeks around injuries (limitation for any score on this data). Their 10-athlete split is saved (paper_split, locked until the evaluation freeze); piece 3 rebuilds their method and checks it on stand-in runners 54-63 (D-017).
-- Before the first piece-3 number, Naman decides 4 points (EVAL_PROTOCOL, "Open decisions before piece 3"): (1) Track A metric blanks + model list; (2) settings chosen inside each fold only; (3) how the paper's method is rebuilt without its label-based test scaling; (4) per-athlete normalisation.
+- Decided 2026-10-22 (approved plan): D-021 (tuning and leakage rules, final model declared in advance) and D-022 (Track A scoring + piece-3 model list); EVAL_PROTOCOL Track A has no blanks left. XGBoost 3.4.1 added (commit 16a79dc). Piece 3 still waits for Naman's "piece 2 is clear".
 - `data/raw/soccermon/Unconfirmed 486200.crdownload` is an unfinished browser download (Naman's); ignored by all code. Delete only if Naman says so.
 
 ## Next three actions
 1. Naman reads docs/VIVA_NOTES.md (piece 2) and docs/STUDY_GUIDE.md section 5 and says whether piece 2 is clear.
-2. Piece 3: decide normalisation, then baselines on the 5 Lövdal development groups (majority, ACWR-style 3-week, LR, RF, CatBoost, GRU) + the paper's method checked on stand-in runners 54-63. Locked runners stay untouched.
+2. Piece 3 (after "clear"): its own plan, then the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
 3. Run the eval-auditor subagent before any result goes into the Review 2 deck.
 
 ## Ideas for later
