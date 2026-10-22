@@ -171,6 +171,7 @@ Byte-for-byte identical to Lövdal (same sha256 fingerprints). It's the dataset 
 - Splits re-verified (section 5).
 
 ### Piece 2: loaders + splits ✅ (built 2026-10-15; waiting for Naman to say it is clear)
+- **Easiest explanation of all 9 parts of piece 2, with everyday examples: `docs/PIECE2_EXPLAINED.md`.**
 - Loaders, splits, safeguards and the one-time re-make: section 5 below and `docs/VIVA_NOTES.md` (piece 2).
 
 ---

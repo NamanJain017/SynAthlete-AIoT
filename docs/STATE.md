@@ -39,7 +39,7 @@ Last updated: 2026-10-22 by Claude Code (Naman's laptop), piece 2 built; waiting
 - `data/raw/soccermon/Unconfirmed 486200.crdownload` is an unfinished browser download (Naman's); ignored by all code. Delete only if Naman says so.
 
 ## Next three actions
-1. Naman reads docs/VIVA_NOTES.md (piece 2) and docs/STUDY_GUIDE.md section 5 and says whether piece 2 is clear.
+1. Naman reads docs/PIECE2_EXPLAINED.md (simple explanation of piece 2 + project progress), asks questions, and says whether piece 2 is clear.
 2. Piece 3 (after "clear"): its own plan, then the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
 3. Run the eval-auditor subagent before any result goes into the Review 2 deck.
 
