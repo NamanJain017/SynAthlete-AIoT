@@ -84,6 +84,7 @@ datasets:
       - "Sampling rates are not stored in the files; the implied heart-rate rate is about 1 Hz [VERIFY]."
       - "Subject folders restart per sport, so one person in two sports cannot be detected; recordings without a subject folder are kept in one split group."
       - "Most recordings are short ECG clips, not continuous sessions."
+      - "Some different subject folders have byte-identical demographics files (hr_meta.json, subject_folders_with_identical_dem_txt): one person filed twice or an unfilled template, we cannot tell; the sealed split may place them in different groups. Sport DB is only a realism reference (no model is scored on it), so this is disclosed, not fixed."
 
   sirp600:
     number: 6

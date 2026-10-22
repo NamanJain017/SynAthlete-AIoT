@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.data import manifest, readers
+from src.data import hashing, manifest, readers
 from src.data.parallel import parallel_map, pick_workers
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -58,6 +58,25 @@ def sportdb_hr_rows(crd: Path, root: Path) -> pd.DataFrame:
     return pd.concat(frames) if frames else pd.DataFrame()
 
 
+def subject_key(rec_dir: Path, root: Path) -> str:
+    """Split group of a recording: its subject folder (skating recordings share one group)."""
+    parts = rec_dir.relative_to(root).parts
+    return "/".join(parts[:-1]) if len(parts) >= 3 else f"{parts[0]}/<no subject folder>"
+
+
+def identical_dem_groups(mats: list[Path], root: Path) -> list[list[str]]:
+    """Different subject folders whose Dem.txt files are byte-identical.
+
+    They may be one person filed twice, or an unfilled template: we cannot tell, so we disclose.
+    """
+    by_hash: dict[str, set[str]] = {}
+    for m in mats:
+        dem = m.parent / "Dem.txt"
+        if dem.exists():
+            by_hash.setdefault(hashing.sha256_file(dem), set()).add(subject_key(m.parent, root))
+    return sorted(sorted(keys) for keys in by_hash.values() if len(keys) > 1)
+
+
 def build_sportdb(workers: int | None = None) -> dict:
     mats = sorted((RAW / "sportdb2").rglob("Data.mat"))
     read = [m.parent / f for m in mats for f in ("Data.mat", "Dem.txt", "TrNote.txt")
@@ -88,6 +107,7 @@ def build_sportdb(workers: int | None = None) -> dict:
         "hr_valid_percent": round(float(table["hr_valid"].mean() * 100), 2),
         "recordings_per_sport": {k: int(v) for k, v in
                                  table.groupby("sport")["recording"].nunique().items()},
+        "subject_folders_with_identical_dem_txt": identical_dem_groups(mats, root),
         "source": source,
     }
     (out / "hr_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
