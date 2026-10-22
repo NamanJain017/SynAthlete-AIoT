@@ -195,7 +195,7 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 ```
 - **Why lock the 10 newest?**
   1. Nobody can say we tuned on the test.
-  2. They are exactly the paper's test runners. We checked: IDs 64-73 contain 50 injuries and 2,994 healthy events, the same as the paper. So the final comparison is like-for-like.
+  2. They are exactly the paper's test runners. We checked: in the day file, IDs 64-73 contain 50 injuries and 2,994 healthy events, the same as the paper. So the day-file comparison is like-for-like. Our combined model is scored on the days present in both files (2,994 events, 48 injuries), and it trains on 51 runners while the paper trained on 64: we say so.
   3. They joined last, so the test also asks "does it work on newer athletes?". It is NOT a "future" (prospective) test: it is a test on 10 different runners who joined later. Say "newer athletes", never "future data".
 - **Main result vs final check (D-017, Naman chose option A).**
   - **Main result** = the average ± spread over the 5 development test groups: 64 runners, 533 injuries. More injuries make the number more precise.
@@ -209,7 +209,7 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
   - Every development runner is tested exactly once, and the locked runners never appear in development.
 - **One grouping for both files.** Re-verification found that grouping the day file and the week file *separately* gives slightly different runner groups. Fusion needs the same runners in both arms, so the groups are built **once** (from the day file) and the same runner lists are used for the week file and for fusion.
 - **Final model:** trained on 51 runners, validated on 13 (development group 0), tested once on the 10 locked runners.
-- **Validation runners repeat across folds (we disclose it).** Each fold draws its validation group from its own non-test runners. Across the 5 folds, 46 validation places are filled by 30 runners; runners 20, 21, 33 and 37 validate three times. A test pins these numbers. Inside one fold, validation and test never overlap. But a runner can validate in one fold and be tested in another, so settings must be chosen inside each fold. One setting picked by averaging validation scores across folds would leak test runners (rule to confirm before piece 3).
+- **Validation runners repeat across folds (we disclose it).** Each fold draws its validation group from its own non-test runners. Across the 5 folds, 46 validation places are filled by 30 runners; runners 20, 21, 33 and 37 validate three times. A test pins these numbers. Inside one fold, validation and test never overlap. But a runner can validate in one fold and be tested in another, so settings must be chosen inside each fold. One setting picked by averaging validation scores across folds would leak test runners (D-021).
 - **Safety rules:**
   - seed 0 chosen in advance;
   - balance checked on label counts only (each group within ±20 % of the average). Honest note: we looked at the group counts before writing this rule, so it is a sanity check, not a pre-registered test;
@@ -241,7 +241,8 @@ Days from the same runner look alike. If runner #12's Monday is in training and 
 Why this is not cheating: the rule "never regenerate splits" stops people from reshuffling until the *results* look good. No results existed yet, and the test groups did not change.
 
 ### Other leakage rules
-- Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which reads test labels. Our comparisons won't (D-021): their exact method is run only once, as a labelled check on stand-in runners 54-63, and every comparison uses a version that scales each runner with their own earlier days only.
+- Scaling is learned from training runners only (rule 3). The paper scaled test runners using their own non-injured days, which reads test labels. Our comparisons won't (D-021, D-023): their exact method is run only once, as a labelled check on stand-in runners 54-63, and every comparison uses a version with one scaler learned from training runners.
+- **No per-runner scaling at all (D-023).** In this dataset, simply counting a runner's events in the previous 3 weeks finds injuries almost perfectly (ROC-AUC 0.9946, `data/processed/lovdal/event_design_check.json`). That's because the authors kept every injury at least 22 days away from other events, while healthy events follow each other day after day. It's an artefact of how the data was built, not knowledge about the body. So anything based on a runner's own history (scaling, counts, gaps, dates) is banned, and a test checks it.
 - **Tuning happens inside each round (D-021).** Each round picks its settings, alert level and stopping point using only its own practice runners. One setting picked by averaging practice scores over all rounds would use exam runners, because runner 20 is practice in rounds 0, 2 and 4 and exam in round 1.
 - **Every model gets the same number of tuning tries**, so our models get no extra chances.
 - **The final model is named in advance:** the fused model (piece 7). We never send whichever model scored best on the rounds to the locked test, because picking the winner on test data inflates its score.
@@ -280,7 +281,7 @@ Accuracy = (TP + TN) / all. Only 1.36 % of day windows are injuries, so a model 
 **Which metrics we report (fixed by D-022, before any model runs):**
 - **Main score: PR-AUC**, computed as "average precision". It needs no alert level and is built for rare events. A model that guesses randomly gets about the injury rate (about 0.013), so we always show that next to it.
 - **ROC-AUC** next to it, because the paper reports ROC-AUC (0.724).
-- **At the alert level:** injuries caught, healthy days left alone, share of alerts that are real, **false alarms per caught injury** and **alerts per 100 runner-days**, plus MCC.
+- **At the alert level:** injuries caught, healthy days left alone, share of alerts that are real, **false alarms per caught injury** and **alerts per 100 scored events** (the rows are selected events, not every day), plus MCC.
 - **Calibration:** Brier score, ECE with 10 equal-count bins, and calibration slope and intercept.
 - **Extra (exploratory): a decision curve.** It shows whether using the model does more good than harm, over risk levels from 0.5 % to 10 %.
 - **Not used:** accuracy, or a fixed-precision target. Precision depends on how common injuries are, so a target such as "5 % of alerts real" behaves differently in every group.

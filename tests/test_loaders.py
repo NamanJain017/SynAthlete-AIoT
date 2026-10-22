@@ -103,3 +103,12 @@ def test_real_week_change_uses_the_two_newest_weeks(real):
 def test_real_day_and_week_files_hold_the_same_runners(real):
     day, week = real
     assert set(np.unique(day.athlete_id)) == set(np.unique(week.athlete_id))
+
+
+def test_own_history_counts_earlier_events_within_the_window():
+    athlete = np.array([1, 1, 1, 1, 2, 2], dtype=np.int16)
+    date = np.array([0, 1, 2, 30, 5, 6], dtype=np.int32)
+    count, gap, first = loaders.own_history(athlete, date, days=21)
+    assert count.tolist() == [0, 1, 2, 0, 0, 1]  # day 30: days 0-2 are more than 21 days back
+    assert np.isnan(gap[0]) and gap[1:4].tolist() == [1, 1, 28] and gap[5] == 1
+    assert first.tolist() == [True, False, False, False, True, False]

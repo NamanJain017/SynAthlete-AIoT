@@ -1,39 +1,44 @@
 # EVALUATION PROTOCOL (pre-register BEFORE final runs; deviations go to DECISIONS.md)
 
-## Splits and the main result (D-017, D-020; files in data/splits/, sealed by SHA256SUMS)
-- Track A (Lövdal): 5 development test groups over runners 0-63, grouped by runner; the same runner groups for the day file, the week file and fusion. Each fold's validation runners come from its non-test runners.
-- HEADLINE = mean ± spread over the 5 development groups (and seeds).
-- FINAL CHECK = the locked runners 64-73 (the paper's test set), opened once after the `eval-freeze` tag through src/data/lockbox.py. Reported next to the headline, never instead of it. Call it "newer athletes", not a prospective or time-based test. Its injury rate is never used for calibration.
-- Each arm is also scored on its own full-file lockbox (day file 3,044 windows, week file 3,015); fusion uses the shared days (D-014).
-- Lövdal paper method: rebuilt in piece 3. Its pipeline check uses stand-in runners 54-63 (trained on 0-53). It is compared with our models on the same 5 development groups, and on the lockbox at the end (`paper_split`).
-- The list of compared models is fixed (D-022, section "Models" below). Every model is reported, not only the best. The model for the locked test is declared in advance: the fused model (piece 7, D-021).
-- Track B: PAMAP2 4 test groups (subject 109 always in training); WESAD 5 test groups. Validation rotates, so nobody validates twice (D-020).
+## Splits and the main result (D-017, D-020, D-023; files in data/splits/, sealed by SHA256SUMS)
+- Track A (Lövdal): 5 development test groups over runners 0-63, grouped by runner; the same runner groups for the day file, the week file and fusion. Each group's validation runners come from its non-test runners.
+- HEADLINE = mean ± SD over the 5 development groups; the 3 seeds are averaged within each group first (D-023).
+- FINAL CHECK = the locked runners 64-73, opened once after the `eval-freeze` tag through src/data/lockbox.py. Reported next to the headline, never instead of it. Call it "newer athletes", not a prospective or time-based test. Its injury rate is never used for calibration.
+  - Primary on the lockbox: the fused model, on the shared days (2,994 events, 48 injuries).
+  - Secondary, scored once and never used to choose anything: the chosen arms on their own files (day 3,044 / 50; week 3,015 / 48) and the Lövdal label-free variant trained on runners 0-63 (`paper_split`). Only the day file matches the paper's test set exactly. A runner bootstrap over 10 runners understates uncertainty: disclosed.
+- Lövdal paper method: the exact copy runs once, as a labelled reproduction check on stand-in runners 54-63 (trained on 0-53); the label-free variant is the one compared on the 5 groups (D-021, D-023).
+- The model list is fixed (D-022, section "Models" below); every model is reported, not only the best. The model for the locked test is declared in advance: the fused model (D-021, D-023).
+- Track B: PAMAP2 4 test groups (subject 109 always in training). WESAD 5 test groups exist but WESAD is not a piece-3 baseline (D-023). Validation rotates, so nobody validates twice (D-020).
 - Track C (exploratory, D-018): SoccerMon and PMData leave-one-person-out, predictions pooled, fixed default settings (no tuning: there is no validation person).
 ## Primary metrics
-- Track A injury detection (5 development groups by runner, D-017; scoring fixed by D-022):
-  - HEADLINE: PR-AUC computed as average precision, mean ± SD over the 5 groups (and seeds 0, 1, 2), each shown with that group's injury rate (the chance level). ROC-AUC alongside, for the paper comparison.
-  - ALERT LEVEL: smallest |sensitivity - specificity| on the group's validation runners (the Lövdal rule), applied to that group's test runners. At that level: sensitivity, specificity, precision, false alarms per caught injury, alerts per 100 runner-days, MCC.
-  - CALIBRATION: Brier score, ECE with 10 equal-count bins, calibration slope and intercept. Platt scaling fitted on validation runners if calibration is needed.
-  - EXPLORATORY: decision curve (net benefit) on calibrated risks over 0.5-10 %.
+- Track A injury detection (5 development groups by runner; scoring fixed by D-022 and D-023):
+  - HEADLINE: PR-AUC computed as average precision, on raw scores, each group shown with its injury rate (the chance level). ROC-AUC alongside, for the paper comparison.
+  - ALERT LEVEL: smallest |sensitivity - specificity| on the group's validation runners (the Lövdal rule), applied to that group's test runners. Candidates = the distinct validation scores; alert if score >= threshold; ties broken by the larger sensitivity + specificity, then the higher threshold. At that level: sensitivity, specificity, precision, false alarms per caught injury, alerts per 100 scored events, MCC. Undefined values (0/0) are reported as n/a, never 0.
+  - CALIBRATION: Platt scaling always fitted on the group's validation runners. Brier score, ECE with 10 equal-count bins, calibration slope and intercept, reported raw and after Platt; a Platt slope of 0 or below is flagged.
+  - EXPLORATORY: decision curve (net benefit) on Platt-calibrated risks over 0.5-10 %. The event sample's injury rate is not real incidence, so this is not clinical utility.
   - Not used: a fixed-precision target (precision depends on the injury rate); accuracy.
   - Limitation stated with every result: healthy days near injuries were removed by the authors, so alert rates are not real daily rates.
-- Track B: macro-F1 for activity (and stress, if WESAD is included) classification on the subject-grouped splits above (PAMAP2 4 folds, WESAD 5 folds).
-- Track C (proposed; confirm in piece 4): pooled leave-one-person-out predictions, so threshold-free metrics only (PR-AUC, ROC-AUC).
+- Track B: macro-F1 for PAMAP2 activity classification (4 subject groups).
+- Track C (proposed; confirm before any Track C run): pooled leave-one-person-out predictions, so threshold-free metrics only (PR-AUC, ROC-AUC).
   - SoccerMon: also scored within its main team (almost all reports come from one team), with a team-only baseline.
   - PMData: reported with and without p12 ("without" = p12 removed from training and scoring).
   - Statistics computed across people (for example scaling) use training people only.
   - Caveat: pooled AUC mixes ranking between people with ranking within a person. Most people have no episode (daily_meta.json: 14 of 50 SoccerMon players and 6 of 15 PMData people have one), so a model can score well just by telling people apart. The team view and a person-level baseline guard against that.
-## Fitting rules
-- Scalers, imputers, generators and resamplers are fitted on each fold's training people only.
-- Fusion stacker (proposed; confirm in piece 7): trained on inner out-of-fold predictions from the training runners. Validation runners are used only for calibration, threshold choice and early stopping.
-- Tuning rules (D-021):
-  - Settings, alert level, calibration and early stopping are chosen inside each group on that group's validation runners only; never one setting by averaging validation scores across groups. The final model's settings are chosen on its own validation group (13 runners).
-  - Every model gets the same pre-declared tuning budget per group.
-  - Our models: one scaler fitted on the group's training runners; per-runner scaling on that runner's own earlier events only, as a tuned setting. Never labels, never later days.
-  - Lövdal method: the exact copy (label-reading test scaling) only once, as a labelled reproduction check on runners 54-63 (trained on 0-53); never used to choose anything. Comparisons use the label-free variant.
-  - Class balancing and resampling on training runners only.
-## Models (D-022; all reported)
-- Injury (Lövdal, 5 groups): majority class; ACWR-style 3-week rule (D-015); logistic regression, random forest and CatBoost on the day file (70 inputs) and the week file (69 inputs); GRU on the day file; Lövdal bagged XGBoost (label-free variant; exact copy only as the reproduction check).
+## Fitting rules (D-021, D-023)
+- Scalers, imputers, generators and resamplers are fitted on each group's training people only.
+- Scaling: one z-score scaler fitted on the group's training-runner rows, for every model. No per-runner statistics anywhere: in this event design a runner's own event history reveals the label (data/processed/lovdal/event_design_check.json).
+- Never model inputs: date or day index, athlete ID, event counts, gaps, history length. Piece 3 adds a leak-canary report and a test for this.
+- Validation runners are used for settings, Platt calibration, the alert level and early stopping, inside their own group only; never one setting by averaging validation scores across groups. The final model's settings are chosen on its own validation group (13 runners).
+- Tuning budget: 8 settings per tunable model per group, drawn by seeded random search from a grid written in configs/ before the first run. Untuned: majority class (constant training injury rate), the ACWR-style rule, both Lövdal copies.
+- Class balancing and resampling on training runners only.
+- Fused model: sequence arm from {GRU, LSTM, TCN} on the day file; tabular arm from {random forest, CatBoost} on the week file; combiner = logistic regression on inner out-of-fold predictions from the training runners, on the shared days. Arms and settings are chosen inside each group on its validation runners only.
+## Models (D-022, D-023; all reported)
+- Injury (Lövdal, 5 groups):
+  - majority class;
+  - ACWR-style rule: week file, most recent week's total km / max(mean total km of the two earlier weeks, 1 km), the uncoupled ratio; higher = riskier;
+  - logistic regression, random forest and CatBoost on the day file (70 inputs) and the week file (69 inputs);
+  - GRU on the day file;
+  - Lövdal bagged XGBoost (notebook settings: 9 bags, 2,048 events per class, learning rate 0.01, depth {2, 3}, trees {256, 512}, Platt): label-free variant on the 5 groups; the exact copy only as the reproduction check on runners 54-63, with its library deviations documented.
 - Activity (PAMAP2, 4 groups): small 1D-CNN and GRU, macro-F1.
 - Later pieces: real-only vs real+augmented (piece 5); the fused model (piece 7) is the one model sent to the locked test.
 ## Generator criteria (set now, before looking at results)
@@ -42,7 +47,7 @@
 - Autocorrelation and cross-channel correlation error below ____.
 - Nearest-real-record distance: no near-duplicates (threshold ____).
 ## Statistics
-Differences between models: paired bootstrap that resamples runners, reported as effect sizes with intervals (D-022). With only 5 groups a two-sided Wilcoxon test can never go below p = 0.0625 (2/32), so it is not the main test. No claim of "better" without an interval.
+Differences between models: paired bootstrap that resamples runners within each test group and recomputes the 5-group mean difference (2,000 resamples, percentile 95 % interval), on the same rows (shared days across files; D-023). Primary comparisons, fixed now: each model vs the Lövdal label-free variant on the same file; in piece 7, the fused model vs each arm. With only 5 groups a two-sided Wilcoxon test can never go below p = 0.0625 (2/32), so it is not the main test. No claim of "better" without an interval.
 ## Explanation criteria
 - Deletion curve: removing top-k attributed inputs lowers predicted risk by at least ____ vs random removal.
 - Model-randomisation check: attribution rank correlation drops below ____.
@@ -63,3 +68,5 @@ Tag the repo with an annotated tag (`git tag -a eval-freeze`) and push it. Open 
 - Bahr 2016, Br J Sports Med, doi 10.1136/bjsports-2016-096256 (limits of individual injury prediction).
 - Bullock et al. 2022, Sports Medicine, doi 10.1007/s40279-022-01698-9 (quality of sports-injury prediction models).
 - Collins et al. 2024 (TRIPOD+AI), BMJ, doi 10.1136/bmj-2023-078378 (reporting checklist).
+- Lolli et al. 2019, Br J Sports Med 53:921-922, doi 10.1136/bjsports-2017-098110 (uncoupled acute:chronic ratio).
+- Notebook references: "cell 1" means notebook cell index 1 (the second cell) of data/raw/lovdal/main.ipynb.

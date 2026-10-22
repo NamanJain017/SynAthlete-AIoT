@@ -25,7 +25,7 @@ Draft defaults; confirm after the dataset audit (docs/DATASETS.md). Sport DB 2.0
 - Lövdal also has lockbox_ids, final, paper_split and balance; Sport DB has test_ids + test_recordings only; leave-one-person-out files (<dataset>_lopo.json) have train_ids + test_ids; SIRP-600 has train_rows + test_rows (demo only).
 - Every file's meta records seed, method, library version, git commit, data fingerprint and decision.
 - data/splits/SHA256SUMS pins every file; data/splits/superseded/ keeps the first PAMAP2/WESAD versions (D-020). Nothing in data/splits/ changes after sealing.
-- Normalisation statistics computed on training folds only and stored with each run.
+- Normalisation statistics computed on training folds only and stored with each run: one scaler per round, no per-runner statistics (a runner's own event history reveals the label in the Lövdal event design; D-023).
 
 ## Data versions
 - Every builder hashes the raw files it reads, stops if they differ from (or are missing in) data/MANIFEST.csv, and records {files_read, fingerprint} as "source" in its metadata (D-019).

@@ -17,6 +17,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import average_precision_score, roc_auc_score
 
 from src.data import manifest, readers
 
@@ -213,6 +214,53 @@ def lovdal_facts(day: RunnerData, week: RunnerData, i_day: np.ndarray) -> dict:
     }
 
 
+def own_history(athlete: np.ndarray, date: np.ndarray, days: int = 21) -> tuple[np.ndarray, ...]:
+    """Per event: number of the runner's own events in the previous `days` days, the gap to the
+    runner's previous event (NaN for the first) and whether it is the runner's first event."""
+    count = np.zeros(len(date), dtype=np.int64)
+    gap = np.full(len(date), np.nan)
+    first = np.zeros(len(date), dtype=bool)
+    for a in np.unique(athlete):
+        idx = np.flatnonzero(athlete == a)
+        idx = idx[np.argsort(date[idx], kind="mergesort")]
+        t = date[idx]
+        count[idx] = np.searchsorted(t, t, side="left") - np.searchsorted(t, t - days, side="left")
+        gap[idx[1:]] = np.diff(t)
+        first[idx[0]] = True
+    return count, gap, first
+
+
+def event_design_check(day: RunnerData, week: RunnerData) -> dict:
+    """Development runners only. Shows that a runner's own event history reveals the label in this
+    event design (the authors removed healthy days near injuries), so no per-runner history
+    statistic may be used for scaling or as an input (D-023). Also the facts D-023 relies on."""
+    count, gap, first = own_history(day.athlete_id, day.date)
+    y, has_prev = day.y, ~np.isnan(gap)
+    healthy_prev = has_prev & (y == 0)
+    km = week.feature_names.index("total kms")
+    stand_in = {k: np.isin(d.athlete_id, range(54, 64)) for k, d in (("day", day), ("week", week))}
+    return {
+        "scope": "development runners 0-63 only",
+        "events": int(len(y)), "injuries": int(y.sum()),
+        "auc_minus_own_events_previous_21_days": round(float(roc_auc_score(y, -count)), 4),
+        "ap_minus_own_events_previous_21_days": round(float(average_precision_score(y, -count)), 4),
+        "auc_gap_to_previous_event": round(float(roc_auc_score(y[has_prev], gap[has_prev])), 4),
+        "min_gap_before_injury_days": int(np.nanmin(gap[has_prev & (y == 1)])),
+        "healthy_events_with_previous_event_1_day_before_percent":
+            round(float((gap[healthy_prev] == 1).mean() * 100), 1),
+        "runners_whose_first_event_is_an_injury": int(y[first].sum()),
+        "runners": int(first.sum()),
+        "week_events_two_earlier_weeks_zero_km":
+            int(((week.X[:, 0, km] + week.X[:, 1, km]) == 0).sum()),
+        "stand_in_54_63": {
+            "day_events": int(stand_in["day"].sum()),
+            "day_injuries": int(day.y[stand_in["day"]].sum()),
+            "week_events": int(stand_in["week"].sum()),
+            "week_injuries": int(week.y[stand_in["week"]].sum()),
+        },
+    }
+
+
 def prepare_lovdal() -> dict:
     """Whole files are checked (shapes, shared days), then saved as development and locked parts."""
     files = readers.find_runner_files(RAW / "lovdal")
@@ -225,14 +273,18 @@ def prepare_lovdal() -> dict:
     facts = lovdal_facts(day, week, i_day)
     (PROCESSED / "lovdal").mkdir(parents=True, exist_ok=True)
     (PROCESSED / "lovdal" / "facts.json").write_text(json.dumps(facts, indent=2), encoding="utf-8")
+    devs = {}
     for data in (day, week):
         locked = np.isin(data.athlete_id, locked_ids)
-        dev = select(data, ~locked)
+        dev = devs[data.kind] = select(data, ~locked)
         save_runner_data(dev, PROCESSED / "lovdal", "development runners 0-63 (D-017)", source)
         save_runner_data(select(data, locked), LOCKBOX_DIR,
                          "LOCKED final-test runners 64-73: open only via lockbox.py", source)
         out[f"dev_{data.kind}"] = list(dev.X.shape)
         out[f"dev_{data.kind}_injuries"] = int(dev.y.sum())
+    check = event_design_check(devs["day"], devs["week"])
+    (PROCESSED / "lovdal" / "event_design_check.json").write_text(json.dumps(check, indent=2),
+                                                                  encoding="utf-8")
     return out
 
 
