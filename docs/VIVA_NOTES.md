@@ -125,5 +125,8 @@ In honesty, the raw file still contains them, so this is a guard rail plus an au
 **Q: In the Lövdal folds, do validation runners repeat?**
 A: Yes, and we say so. Each fold picks its validation group from its own non-test runners, so across 5 folds the 46 validation places are filled by 30 runners (a test pins these numbers). Inside one fold, validation and test never overlap, which is what matters for that fold's score. Because a runner can validate in one fold and be tested in another, settings must be chosen inside each fold. We never pick one setting by averaging across folds (rule to confirm before piece 3).
 
+**Q: How do you know your results can be reproduced?**
+A: We tested it. A fresh copy of the code from git, plus copies of exactly the 729 raw files listed in `data/MANIFEST.csv`, ran the whole audit, every data builder and every test. Everything came out identical to our working copy: the file fingerprints, the audit facts, every processed array and table, the data cards, and all 7 split files rebuilt from seed 0 (`experiments/repro/2026-10-22_0731/`). So anyone with the same raw files gets the same data.
+
 **Q: Why 21 days for SoccerMon/PMData episodes?**
 A: People report the same sore knee on many days in a row. Counting each report as a new injury would multiply one problem into ten. We copied the Lövdal authors' rule: reports within 3 weeks are the same problem. The result is 162 SoccerMon reports, falling on 156 report days, which become 27 episodes.

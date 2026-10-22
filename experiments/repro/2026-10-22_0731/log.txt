@@ -1,0 +1,45 @@
+== clone
+28dba97 Sport DB: record subject folders with identical demographics files (review N8)
+== copy audited raw files
+copied 729 files, 15.88 GB in 14 s with 12 threads
+== audit (fresh clone)
+[1] lovdal
+    ok | 2 files | subjects: 74 athletes | day: 42,766 windows; week: 42,798 windows | 0.5 s with 1 worker(s)
+[2] kaggle_runners
+    ok | 2 files | subjects: 74 athletes | day: 42,766 windows; week: 42,798 windows | 0.5 s with 1 worker(s)
+[3] pamap2
+    ok | 14 files | subjects: 9 (5 also in Optional) | Optional: 2.72 h; Protocol: 7.98 h (total labelled: 7.57 h) | 6.1 s with 5 worker(s)
+[4] wesad
+    ok | 30 files | subjects: 15 | 24.13 h | 26.5 s with 3 worker(s)
+[5] sportdb2
+    ok | 504 files | subjects: 129 subject folders + 4 recordings without one | 168 recordings; ~127.62 h of continuous HR data [VERIFY rate] | 6.5 s with 12 worker(s)
+[6] sirp600
+    ok | 1 files | subjects: no IDs | 600 rows | 1.2 s with 1 worker(s)
+[7] ziya07_wearable
+    ok | 1 files | subjects: 10 athlete IDs | 500 rows | 0.1 s with 1 worker(s)
+[8] soccermon
+    ok | 19 files | subjects: 50 (50 with injury labels) | 36,550 person-days | 1.5 s with 1 worker(s)
+[9] pmdata
+    ok | 156 files | subjects: 16 (15 with injury labels) | 2,365 person-days | 6.9 s with 1 worker(s)
+wrote experiments/audit/2026-10-22_0731 and data/MANIFEST.csv and the table in docs/DATASETS.md (50 s in total)
++ C:\Users\jainn\Documents\SynAthlete-AIoT\.venv\Scripts\python.exe -m src.data.audit
+== data builders (fresh clone)
+[lovdal] {'source_fingerprint': 'bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd', 'whole_day': [42766, 7, 10], 'whole_week': [42798, 3, 22], 'whole_shared_days': 42680, 'dev_day': [39722, 7, 10], 'dev_day_injuries': 533, 'dev_week': [39783, 3, 22], 'dev_week_injuries': 527} (0.8 s)
+[pamap2] {'shape': [10361, 128, 10], 'sampling_hz': 25, 'window': 128, 'stride': 64, 'workers': 2, 'windows_per_label': {'1': 735, '2': 704, '3': 724, '4': 914, '5': 370, '6': 626, '7': 718, '9': 325, '10': 1202, '11': 210, '12': 423, '13': 373, '16': 666, '17': 914, '18': 379, '19': 720, '20': 176, '24': 182}, 'nan_values': 0} (8.8 s)
+[wesad] {'shape': [17401, 128, 6], 'sampling_hz': 25, 'window': 128, 'stride': 64, 'workers': 2, 'windows_per_label': {'1': 6846, '2': 3861, '3': 2144, '4': 4550}, 'nan_values': 0} (28.4 s)
+[soccermon] {'episode_gap_days': 21, 'people': 50, 'people_with_labels': 50, 'person_days': 36550, 'pain_report_days': 156, 'episodes': 27, 'healthy_event_days': 32844, 'people_with_an_episode': 14} (0.8 s)
+[pmdata] {'episode_gap_days': 21, 'people': 16, 'people_with_labels': 15, 'person_days': 2365, 'pain_report_days': 72, 'episodes': 8, 'healthy_event_days': 1081, 'people_with_an_episode': 6} (2.0 s)
+[sportdb2] {'recordings_with_hr': 55, 'hr_samples': 461744, 'implied_hz_median': 1.005, 'implied_hz_note': 'rates are not stored in the files: inferred from timed notes [VERIFY]', 'hr_nan': 14, 'hr_zero_no_signal': 25707, 'hr_valid_percent': 93.91} (2.5 s)
+[sirp600] {'rows': 600, 'label': 'Injury_Risk', 'status': 'DEMO ONLY: unknown origin, never evidence (D-012)'} (0.3 s)
+[ziya07_wearable] {'rows': 500, 'label': 'Activity_Status', 'status': 'DEMO ONLY: unknown origin, never evidence (D-012)'} (0.0 s)
+wrote data/processed/ (git-ignored)
++ C:\Users\jainn\Documents\SynAthlete-AIoT\.venv\Scripts\python.exe -m src.data.loaders
+== tests (fresh clone)
+All checks passed!
+...............................                                          [100%]
+103 passed in 4.44s
+== compare with the main working copy
+checked: {'MANIFEST': 1, 'audit.json': 1, 'fingerprints': 1, 'npz': 6, 'json': 12, 'parquet': 5, 'data card': 9, 'split file': 7}
+ALL IDENTICAL
+== total 144 s
+exit 0
