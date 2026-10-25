@@ -177,6 +177,7 @@ Byte-for-byte identical to Lövdal (same sha256 fingerprints). It's the dataset 
 ### Piece 3: first real models 🔜 (started 2026-10-25)
 - **Rules and settings first (D-024).** Before any code, we wrote down how models are tuned and scored, and every setting each model may try (`configs/baselines/`). Nobody can then pick settings after seeing results.
 - **Score calculator** (`src/eval/metrics.py`): handed to another AI tool as task card WP-01 (see below).
+- **"How sure are we?" tool** (`src/eval/bootstrap.py`, task card WP-02): it re-draws the test runners 2,000 times (some twice, some not at all), recomputes the score each time, and reports the middle 95% of those scores as the uncertainty range. It draws whole **runners**, never single days, because one runner's days are alike; drawing days would pretend we have more independent evidence than we do and make the range too narrow.
 
 ### How the code is built (since 2026-10-25): task cards for other AI tools
 Claude Code's usage is limited, so some files are written by other AI tools: Antigravity (Claude Opus 4.6 Thinking until 2 Nov, then Gemini 3.8 Flash) and ChatGPT Go's Codex. To keep quality and honesty, we use the **teacher, student and answer-checker** method:
@@ -780,7 +781,7 @@ From the paper: individual features correlate only weakly with injury (r between
 - **p-value:** how surprising the data would be if "no effect" were true; small (e.g. < 0.05) means an effect is likely. We used a t-test for the heart-rate checks.
 - **Kolmogorov-Smirnov (KS) test:** checks whether values follow a given distribution. We used it to check whether SIRP-600 columns look "evenly spread" (a sign of generated data).
 - **Confidence interval:** a range likely to contain the true value.
-- **Bootstrap:** resample the test results many times to estimate the uncertainty. 🔜 We'll use it for the locked test.
+- **Bootstrap:** resample the test results many times to estimate the uncertainty. ✅ Built (`src/eval/bootstrap.py`): it resamples whole runners inside each test group (a "cluster bootstrap"), for the development rounds and later the locked test.
 - **Statistical vs practical significance:** with huge data, tiny differences become "significant" but may not matter.
 
 ## 28. Time-series and signal basics

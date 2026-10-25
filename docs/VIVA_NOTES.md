@@ -165,3 +165,12 @@ A: Because the risky parts are about honest evaluation, not just code. One leak 
 
 **Q: Did the review of AI-written code ever find a real problem?**
 A: Yes, in the very first task card (WP-01, the score calculator). The builder's code passed all of its tests, but our checks found three issues. A fit stopped slightly too early, so a slope was a little off. The calibration error changed with row order when many events had the same risk. Calibration functions accepted numbers that are not probabilities. The independent reviewer also showed that 10 plausible wrong versions passed the original 22 tests. We fixed the code, recorded the rule changes (D-025), and grew the tests to 51; they now catch all 10 wrong versions. That is why every builder change is reviewed before it joins the project.
+
+**Q: What is the runner bootstrap, and why resample runners instead of days?**
+A: To show how sure we are about a score, we re-draw the test runners 2,000 times with replacement (some runners appear twice, some not at all), recompute the score each time, and report the middle 95% as the range. We draw whole runners because one runner's days are related: the same body, the same habits. Drawing single days would treat them as independent and make the range look narrower than the evidence allows. This is the cluster bootstrap (Field & Welsh 2007), fixed in D-024.
+
+**Q: When you compare two models, why "paired"?**
+A: In every re-draw both models are scored on exactly the same runners. Then luck in which runners were drawn affects both models equally and cancels out in the difference, so the comparison is fairer and tighter than scoring them on different re-draws.
+
+**Q: What did the review of the second task card (WP-02, the bootstrap) find?**
+A: The code was correct. Compared with a private reference version on random cases, the only differences were in the last decimal digit, because the builder typed 2.5 where the card's formula gives 2.500000000000002 in computer arithmetic. The review also removed an unfinished leftover function and merged a loop that had been copied three times into one. After that, the results matched the reference exactly.

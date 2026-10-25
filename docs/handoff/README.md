@@ -40,7 +40,7 @@ This turns on the git guard (`.githooks/`). It refuses any commit that touches p
 | Card | File | Status |
 |---|---|---|
 | WP-01 | `src/eval/metrics.py` (score calculator) | **Merged** (review found 2 problems + weak tests; fixed, D-025) |
-| WP-02 | `src/eval/bootstrap.py` (uncertainty by resampling runners) | **Ready for a builder** |
+| WP-02 | `src/eval/bootstrap.py` (uncertainty by resampling runners) | **Merged** (correct; review removed dead code and a loop copied 3 times) |
 | WP-03 | `src/models/har.py` (PAMAP2 activity models) | Planned |
 
 ## If something goes wrong

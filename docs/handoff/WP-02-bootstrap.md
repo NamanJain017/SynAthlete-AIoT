@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **Ready for a builder** |
+| Status | **Merged** (2026-10-26; review: correct, cleaned up a leftover unfinished helper and a loop copied 3 times) |
 | Piece | 3 (first real models) |
 | Written by | Claude Code, 2026-10-25 |
 | Best builder | Antigravity with **Claude Opus 4.6 (Thinking)** (until 2 Nov 2026), else Gemini 3.8 Flash (High); backup: ChatGPT Go Codex |

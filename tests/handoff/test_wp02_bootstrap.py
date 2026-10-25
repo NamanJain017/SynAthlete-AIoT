@@ -3,7 +3,6 @@
 Written by Claude Code before the code exists; builders must not edit this file.
 The bootstrap resamples whole runners inside each test group (cluster bootstrap, D-024).
 Tests check properties that any correct implementation has, plus small hand-worked cases.
-Skipped until bootstrap.IMPLEMENTED is True.
 """
 
 import numpy as np
@@ -11,8 +10,6 @@ import pytest
 
 from src.eval import bootstrap
 from src.eval.metrics import average_precision, roc_auc
-
-pytestmark = pytest.mark.skipif(not bootstrap.IMPLEMENTED, reason="WP-02 not built yet")
 
 KEYS = {"estimate", "low", "high", "resamples_used", "resamples_discarded"}
 
