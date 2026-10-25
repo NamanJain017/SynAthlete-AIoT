@@ -2,7 +2,10 @@
 # Runs the protected-files guard before every commit (see .githooks/check_protected.py).
 # Enable once per clone with: python tasks.py hooks
 ROOT=$(git rev-parse --show-toplevel)
-for PY in "$ROOT/.venv/Scripts/python.exe" "$ROOT/.venv/bin/python" python3 python; do
+# A second folder (git worktree) has no .venv of its own: also try the main folder's.
+MAIN=$(dirname "$(cd "$(git rev-parse --git-common-dir)" && pwd)")
+for PY in "$ROOT/.venv/Scripts/python.exe" "$ROOT/.venv/bin/python" \
+          "$MAIN/.venv/Scripts/python.exe" "$MAIN/.venv/bin/python" python3 python; do
   if [ -x "$PY" ] || command -v "$PY" >/dev/null 2>&1; then
     exec "$PY" "$ROOT/.githooks/check_protected.py"
   fi
