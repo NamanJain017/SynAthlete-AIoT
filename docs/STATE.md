@@ -39,7 +39,8 @@ Last updated: 2026-10-22 by Claude Code (Naman's laptop): piece 2 DONE (Naman: "
 - `data/raw/soccermon/Unconfirmed 486200.crdownload` is an unfinished browser download (Naman's); ignored by all code. Delete only if Naman says so.
 
 ## Next three actions
-1. Piece 3 checkpoint 1 DONE (2026-10-25): D-024 + configs/baselines/lovdal.yaml, pamap2.yaml, configs/fused_candidates.yaml written before any model code. Next, checkpoint 2: metrics + bootstrap code with tests (still no real-data model run).
+1. Piece 3 checkpoint 1 DONE (2026-10-25): D-024 + configs/baselines/lovdal.yaml, pamap2.yaml, configs/fused_candidates.yaml written before any model code.
+   Checkpoint 2 DONE (2026-10-25): handoff kit for builder tools (docs/handoff/README.md, TASK_TEMPLATE.md, AGENTS.md builder rules, git hook .githooks/ enabled with `tasks.py hooks`, GitHub check .github/workflows/check.yml) and task card WP-01 (score calculator: stub src/eval/metrics.py + 22 tests in tests/handoff/test_wp01_metrics.py, skipped until built; the tests pass on a private reference version and catch 3 deliberately wrong versions). Next: Naman gives WP-01 to Antigravity, then "review WP-01" in Claude Code.
 2. Piece 3 after that: the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
 3. Run the eval-auditor subagent before any result goes into the Review 2 deck.
 

@@ -62,6 +62,14 @@ def splits() -> int:
     return run([sys.executable, "-m", "src.data.splits", *sys.argv[2:]])
 
 
+def hooks() -> int:
+    """Turn on the git guard that blocks commits to protected files (once per clone)."""
+    code = run(["git", "config", "core.hooksPath", ".githooks"])
+    if code == 0:
+        print("git hooks enabled: commits touching protected files are now blocked")
+    return code
+
+
 def not_implemented(piece: str):
     def _f() -> int:
         print(f"not implemented yet ({piece}, see docs/PLAN.md)")
@@ -76,6 +84,7 @@ TASKS = {
     "audit": audit,
     "data": data,
     "splits": splits,
+    "hooks": hooks,
     "baselines": not_implemented("piece 3"),
     "gen": not_implemented("piece 5"),
     "pipeline": not_implemented("piece 6"),

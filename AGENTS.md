@@ -43,20 +43,30 @@ Build in small pieces. Do not start the next piece until Naman says the current 
 ## Work loop
 read state -> plan -> implement in small steps -> `python tasks.py check` -> run it on real data -> explain to Naman + update docs/VIVA_NOTES.md -> update docs/STATE.md -> commit and push with the evidence in the message.
 
+## Builder tools and task cards (Antigravity, Codex, Copilot, any AI tool given a task card)
+Some files are built by other AI tools from task cards in docs/handoff/ (how-to: docs/handoff/README.md). If you are such a builder:
+- Do only what the task card says, and change only the files it lists. Never add new files unless the card says so.
+- Never open data/raw, data/processed or data/splits: the data is private and licensed, and task tests use made-up data.
+- Never edit tests, task cards, configs, docs/DECISIONS.md, AGENTS.md, CLAUDE.md, .githooks or .github. A git hook blocks such commits; never bypass it.
+- Never write numbers or results into documents, and never create metrics.json files.
+- Check with `.venv\Scripts\python.exe tasks.py check` (Windows) until it is green. Work on the branch named in the card, commit with the card's message, push, and add the AI_LOG line the card gives (tool and model name).
+- If the card is unclear or a test looks wrong: stop and ask. Never change a test to make it pass.
+Claude Code reviews every builder branch before it is merged into main.
+
 ## Environment
 - Windows laptop, PowerShell, Python 3.12, NVIDIA RTX 4050 (about 6 GB VRAM): small models, batch size 128 or less, checkpoint long runs, keep one run under about 2 hours, always set seeds.
 - Teammates have no GPU: everything except generator and model training must also run on CPU.
 - Code lives on GitHub (NamanJain017/SynAthlete-AIoT). Data stays local in data/raw/.
 
 ## Repo map
-- docs/: PROJECT_BRIEF, PLAN, STATE, DECISIONS, DATASETS, DATA_CONTRACT, EVAL_PROTOCOL, VIVA_NOTES, CLAIMS, AI_LOG, SETUP_WINDOWS
+- docs/: PROJECT_BRIEF, PLAN, STATE, DECISIONS, DATASETS, DATA_CONTRACT, EVAL_PROTOCOL, VIVA_NOTES, CLAIMS, AI_LOG, SETUP_WINDOWS; handoff/ (task cards for builder tools)
 - data/: raw (ignored), processed (ignored), splits, MANIFEST.csv
 - src/: data, gen, pipeline, models, xai, dashboard
 - experiments/<phase>/<run_id>/: config.yaml + metrics.json + logs
 - configs/ YAML; tests/ pytest; paper/; slides/; backups/
 
 ## Commands
-`python tasks.py check | snapshot | audit | data | splits | baselines | gen | pipeline | train | explain | demo | paper-figures`
+`python tasks.py check | snapshot | audit | data | splits | hooks | baselines | gen | pipeline | train | explain | demo | paper-figures`
 A task that prints "not implemented" is a gap to fill, not something to stub green.
 
 ## Style

@@ -1,0 +1,35 @@
+# Runs ruff + pytest on GitHub for every push and pull request, so code from any tool is checked
+# the same way. Data is not in git, so tests that need local data skip here; Claude Code runs the
+# real-data checks on the laptop before merging.
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU PyTorch and the pinned packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install "torch==2.14.1" --index-url https://download.pytorch.org/whl/cpu \
+            || pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python - <<'EOF'
+          # the lock file pins the laptop's CUDA torch builds: drop those lines for CI
+          from pathlib import Path
+          lines = Path("requirements.lock.txt").read_text(encoding="utf-8-sig").splitlines()
+          keep = [l for l in lines if l.strip() and not l.startswith(("torch==", "torchvision=="))]
+          Path("ci-requirements.txt").write_text("\n".join(keep) + "\n", encoding="utf-8")
+          EOF
+          pip install -r ci-requirements.txt
+      - name: Lint
+        run: python -m ruff check .
+      - name: Tests
+        run: python -m pytest -q

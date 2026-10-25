@@ -141,3 +141,24 @@ A: We tested it. A fresh copy of the code from git, plus copies of exactly the 7
 
 **Q: Why 21 days for SoccerMon/PMData episodes?**
 A: People report the same sore knee on many days in a row. Counting each report as a new injury would multiply one problem into ten. We copied the Lövdal authors' rule: reports within 3 weeks are the same problem. The result is 162 SoccerMon reports, falling on 156 report days, which become 27 episodes.
+
+## How the code is built: AI tools and checks (from 2026-10-25)
+**What it is.** Some project files are written by AI coding tools from **task cards** (`docs/handoff/`). Claude Code writes the card and the **tests** first; a builder tool (Antigravity or ChatGPT Go's Codex) writes the code until the tests pass; Claude Code reviews it and runs it on the real data before it joins the project. Leak-sensitive parts are not handed out.
+
+**Why.** It lets the project move faster with limited tool budgets, without lowering the quality bar. The tests and guards decide what is correct, not the tool.
+
+**The checks, in order.**
+1. The task card says exactly what to build and which files may change.
+2. The tests check the answers on small worked examples. For WP-01 they were themselves tested: all 22 pass on a reference version, and three deliberately broken versions each fail.
+3. A git hook blocks commits that touch tests, task cards, configs, data, results or the rulebook.
+4. GitHub re-runs all tests on every push.
+5. Claude Code reviews every change and runs it on the real data.
+
+**Q: Did you use AI tools to write the code?**
+A: Yes, and we say so openly. Claude Code helped design, write and review the project, and some files were written by other AI tools from task cards. Every use is logged in `docs/AI_LOG.md` with the tool and model, and that log becomes the paper's AI-use statement. Every number in the project still comes from code we can run, and we can explain every part.
+
+**Q: How do you know code written by an AI tool is correct?**
+A: We don't trust it, we test it. The tests were written first, with answers worked out by hand, and we checked that the tests catch broken code. The tool cannot change the tests (a git hook blocks it), GitHub re-runs everything on each push, and a separate review checks for leaks and rule breaks before anything is merged.
+
+**Q: Why not let one AI write the whole project?**
+A: Because the risky parts are about honest evaluation, not just code. One leak (for example, scaling with a runner's own history) can make a useless model look excellent. So the parts where a leak could hide stay with careful review, and only well-specified, testable files are handed out.

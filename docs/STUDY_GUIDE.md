@@ -170,9 +170,27 @@ Byte-for-byte identical to Lövdal (same sha256 fingerprints). It's the dataset 
 - D-016: dashboard Training-lab rules.
 - Splits re-verified (section 5).
 
-### Piece 2: loaders + splits ✅ (built 2026-10-15; waiting for Naman to say it is clear)
+### Piece 2: loaders + splits ✅ (done; Naman: "Piece 2 is clear", 2026-10-22)
 - **Easiest explanation of all 9 parts of piece 2, with everyday examples: `docs/PIECE2_EXPLAINED.md`.**
 - Loaders, splits, safeguards and the one-time re-make: section 5 below and `docs/VIVA_NOTES.md` (piece 2).
+
+### Piece 3: first real models 🔜 (started 2026-10-25)
+- **Rules and settings first (D-024).** Before any code, we wrote down how models are tuned and scored, and every setting each model may try (`configs/baselines/`). Nobody can then pick settings after seeing results.
+- **Score calculator** (`src/eval/metrics.py`): handed to another AI tool as task card WP-01 (see below).
+
+### How the code is built (since 2026-10-25): task cards for other AI tools
+Claude Code's usage is limited, so some files are written by other AI tools: Antigravity (Claude Opus 4.6 Thinking until 2 Nov, then Gemini 3.8 Flash) and ChatGPT Go's Codex. To keep quality and honesty, we use the **teacher, student and answer-checker** method:
+- **Teacher (Claude Code):** writes a **task card** for one file (`docs/handoff/WP-01-metrics.md`). The card says exactly what to build, which files may change and which rules apply. The teacher also writes the **tests**: a small program that knows the right answers on tiny made-up examples.
+- **Before handing it over, the teacher tests the tests.** Claude wrote a private version of the code and confirmed that all 22 WP-01 tests pass on it. It then tried three deliberately wrong versions (a wrong tie rule, "0" instead of "n/a", the forbidden straight-line PR-AUC), and each one was caught.
+- **Student (Antigravity / Codex):** writes the code on its own branch until the tests pass.
+- **Guards that work for every tool:**
+  - a git hook refuses commits that touch tests, task cards, configs, data, results, rulebooks or DECISIONS;
+  - GitHub re-runs ruff and all tests on every push;
+  - `AGENTS.md` tells every builder the rules (never open the data folders, never edit a test, ask when unsure).
+- **Final marking (Claude Code):** reviews the code, runs it on the real data where that matters, then merges it.
+- **What stays with Claude Code:** the leak-sensitive parts (how rounds are built, the tuning loop, the paper-method copy, the leak alarm, the combined model) and every protocol decision.
+- **Honesty:** every tool and model used is logged in `docs/AI_LOG.md`, for the paper's AI-use statement.
+- Practical how-to: `docs/handoff/README.md`.
 
 ---
 

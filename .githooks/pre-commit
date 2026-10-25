@@ -1,0 +1,11 @@
+#!/bin/sh
+# Runs the protected-files guard before every commit (see .githooks/check_protected.py).
+# Enable once per clone with: python tasks.py hooks
+ROOT=$(git rev-parse --show-toplevel)
+for PY in "$ROOT/.venv/Scripts/python.exe" "$ROOT/.venv/bin/python" python3 python; do
+  if [ -x "$PY" ] || command -v "$PY" >/dev/null 2>&1; then
+    exec "$PY" "$ROOT/.githooks/check_protected.py"
+  fi
+done
+echo "pre-commit: no Python found, commit blocked (install Python or run from the project venv)"
+exit 1
