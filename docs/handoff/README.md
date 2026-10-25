@@ -27,6 +27,19 @@ This turns on the git guard (`.githooks/`). It refuses any commit that touches p
 5. **Optional second opinion.** In Codex: *"Check branch wp-01-metrics against docs/handoff/WP-01-metrics.md and list any mistakes. Do not change files."*
 6. **Come back to Claude Code** and say **"review WP-01"**. Claude reviews the change, runs it on the real data where that matters, fixes small things, merges it into `main`, and updates the explanation docs.
 
+## Working in parallel: the second folder (since WP-03)
+Two tools must never edit the same folder at once. So each card can get its **own copy of the project** (a git *worktree*), for example `C:\Users\jainn\Documents\SynAthlete-wp03`:
+- Claude Code creates it, already on the card's branch. You open **that** folder in Antigravity, and Claude keeps working in the main folder at the same time.
+- The copy has **no data folders** (data is never in git), so the builder cannot even see the private data.
+- It uses the main folder's Python: `C:\Users\jainn\Documents\SynAthlete-AIoT\.venv\Scripts\python.exe tasks.py check`.
+- After the merge, Claude removes the copy (`git worktree remove`).
+
+## Who builds what (rule agreed 2026-10-26)
+- **Builder tools:** big, standard files that can be checked completely with made-up data (networks and training loops, the dashboard, figure scripts).
+- **Claude Code:** anything that needs the real data to debug, anything where a leak could hide, protocol decisions, and small maths files (a card would cost more than the code).
+- **Escape rule:** if a builder still fails the tests after 2-3 attempts, bring it to Claude Code instead of spending more time.
+- **Surprise final check** on every builder file: deliberate mistakes are planted in its code to prove the tests catch them, plus a real-data run (and the eval-auditor where scoring or leaks are involved).
+
 ## What the guards do
 | Guard | What it stops |
 |---|---|
@@ -41,7 +54,7 @@ This turns on the git guard (`.githooks/`). It refuses any commit that touches p
 |---|---|---|
 | WP-01 | `src/eval/metrics.py` (score calculator) | **Merged** (review found 2 problems + weak tests; fixed, D-025) |
 | WP-02 | `src/eval/bootstrap.py` (uncertainty by resampling runners) | **Merged** (correct; review removed dead code and a loop copied 3 times) |
-| WP-03 | `src/models/har.py` (PAMAP2 activity models) | Planned |
+| WP-03 | `src/models/nets.py` (neural networks + one training loop: PAMAP2 activity models, injury GRU, piece-7 LSTM/TCN) | **Ready for a builder** (second folder `SynAthlete-wp03`) |
 
 ## If something goes wrong
 - **Tests keep failing:** let the builder keep fixing its code. If it claims a test is wrong, bring that to Claude Code. Never edit the test.
