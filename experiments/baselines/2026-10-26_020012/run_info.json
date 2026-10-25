@@ -1,0 +1,29 @@
+{
+  "run_id": "2026-10-26_020012",
+  "command": "python -m src.models.run ",
+  "only": null,
+  "git_commit": "9655f62b4fd460d31f8b16c542170285ce0eb9da",
+  "git_dirty": false,
+  "python": "3.12.2",
+  "packages": {
+    "numpy": "2.5.2",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "PyYAML": "6.0.3"
+  },
+  "seeds": {
+    "search_seed_base": 1000,
+    "canary_seed_base": 2000
+  },
+  "cpu_count": 12,
+  "runtime_s": {
+    "canary": 1.1,
+    "constant_risk": 1.9,
+    "acwr_style": 2.2,
+    "logistic_regression": 13.7
+  },
+  "data_fingerprints": {
+    "lovdal_source": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "lovdal_split": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd"
+  }
+}
