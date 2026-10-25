@@ -15,7 +15,7 @@ Write the project's neural networks and ONE training loop that all of them share
 - **Change:** `src/models/nets.py` only. **First** set `IMPLEMENTED = True` at the top (the 43 tests are skipped until you do), then fill in every class and function until all tests pass.
 - **May add:** one line at the end of `docs/AI_LOG.md` (format in section 8).
 - **Never change:** anything else, especially `tests/`, `docs/handoff/`, `configs/`, `src/eval/`, `AGENTS.md`, `CLAUDE.md` and `docs/DECISIONS.md`. A git hook blocks commits to these.
-- **Never open or load data:** this folder has no data on purpose. The tests use small made-up arrays.
+- **Never open or load data:** this folder has no private data on purpose (only the split lists of person IDs). The tests use small made-up arrays.
 
 ## 3. What to write
 The docstrings in `src/models/nets.py` are the exact specification: layer order, shapes, return keys and errors.

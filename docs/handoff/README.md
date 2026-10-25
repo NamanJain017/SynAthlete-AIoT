@@ -30,7 +30,7 @@ This turns on the git guard (`.githooks/`). It refuses any commit that touches p
 ## Working in parallel: the second folder (since WP-03)
 Two tools must never edit the same folder at once. So each card can get its **own copy of the project** (a git *worktree*), for example `C:\Users\jainn\Documents\SynAthlete-wp03`:
 - Claude Code creates it, already on the card's branch. You open **that** folder in Antigravity, and Claude keeps working in the main folder at the same time.
-- The copy has **no data folders** (data is never in git), so the builder cannot even see the private data.
+- The copy has **no private data** (data is never in git; only the split lists of person IDs, which are already on GitHub), so the builder cannot even see the data.
 - It uses the main folder's Python: `C:\Users\jainn\Documents\SynAthlete-AIoT\.venv\Scripts\python.exe tasks.py check`.
 - After the merge, Claude removes the copy (`git worktree remove`).
 
