@@ -59,7 +59,7 @@ Two tools must never edit the same folder at once. So each card can get its **ow
 ## If something goes wrong
 - **Tests keep failing:** let the builder keep fixing its code. If it claims a test is wrong, bring that to Claude Code. Never edit the test.
 - **The hook blocks a commit:** the builder touched a protected file. Undo that change (`git restore --staged <file>` and `git restore <file>`), then commit only the card's files.
-- **The tool's limit ran out:** continue in the other tool on the same branch.
+- **The tool's limit ran out:** continue with the next model or tool on the same branch, and tell Claude Code which model finished the job, so `docs/AI_LOG.md` names every model used (WP-03: Opus 4.6 ran out, Gemini 3.8 Flash finished).
 - **You are unsure what changed:** run `git status` and `git diff`, or ask Claude Code.
 
 ## Small glossary
