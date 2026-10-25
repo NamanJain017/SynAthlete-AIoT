@@ -177,6 +177,9 @@ Byte-for-byte identical to Lövdal (same sha256 fingerprints). It's the dataset 
 ### Piece 3: first real models 🔜 (started 2026-10-25)
 - **Rules and settings first (D-024).** Before any code, we wrote down how models are tuned and scored, and every setting each model may try (`configs/baselines/`). Nobody can then pick settings after seeing results.
 - **Score calculator** (`src/eval/metrics.py`): handed to another AI tool as task card WP-01 (see below).
+- **Round builder** (`src/models/data.py`, by Claude Code because a leak could hide here): for each of the 5 rounds it puts every runner in exactly one role (textbook, practice test or exam), learns the scaling from the textbook runners only, and refuses any input that is an ID, a date or a runner's own history.
+- **First real results** (`experiments/baselines/2026-10-26_020012/summary.md`): the leak alarm passed; the very simple students scored as expected (constant risk = chance), and logistic regression beat chance (ROC-AUC about 0.62). Lower than the paper's 0.724, as expected, because we do not peek.
+- **Neural networks** (`src/models/nets.py`, task card WP-03, built by Antigravity): the activity models, the injury GRU and the piece-7 LSTM/TCN, with one shared training loop that stops when the practice-test score stops improving and keeps the best version.
 - **"How sure are we?" tool** (`src/eval/bootstrap.py`, task card WP-02): it re-draws the test runners 2,000 times (some twice, some not at all), recomputes the score each time, and reports the middle 95% of those scores as the uncertainty range. It draws whole **runners**, never single days, because one runner's days are alike; drawing days would pretend we have more independent evidence than we do and make the range too narrow.
 
 ### How the code is built (since 2026-10-25): task cards for other AI tools

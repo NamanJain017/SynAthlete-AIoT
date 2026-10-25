@@ -3,9 +3,9 @@
 Written by Claude Code before the code exists; builders must not edit this file.
 Network sizes are checked against parameter-count formulas from the card's layer lists;
 training is checked on small made-up data (CPU, a few seconds). No real data is used.
-Skipped until nets.IMPLEMENTED is True.
 """
 
+import copy
 import inspect
 import math
 import warnings
@@ -17,9 +17,6 @@ from torch import nn
 
 from src.eval.metrics import macro_f1
 from src.models import nets
-
-pytestmark = pytest.mark.skipif(not nets.IMPLEMENTED, reason="WP-03 not built yet")
-
 
 # ---------- parameter counts written out from the card's layer lists ----------
 
@@ -148,6 +145,47 @@ def test_rnns_read_the_whole_sequence():
         changed[:, 0, :] += 5.0  # the very first step
         with torch.no_grad():
             assert not torch.allclose(model(changed), model(x))
+
+
+def _head_input(model, x):
+    """What the network's single Linear head receives (found by layer type, not by name)."""
+    heads = [m for m in model.modules() if isinstance(m, nn.Linear)]
+    assert len(heads) == 1
+    seen = {}
+    hook = heads[0].register_forward_pre_hook(lambda m, inp: seen.setdefault("x", inp[0]))
+    with torch.no_grad():
+        model(x)
+    hook.remove()
+    return seen["x"]
+
+
+def _layer_output(model, kind, x):
+    """Output of the LAST layer of type `kind` (the recurrent layer, or the last max-pool)."""
+    layers = [m for m in model.modules() if isinstance(m, kind)]
+    seen = {}
+    hook = layers[-1].register_forward_hook(lambda m, inp, out: seen.__setitem__("out", out))
+    with torch.no_grad():
+        model(x)
+    hook.remove()
+    return seen["out"]
+
+
+@pytest.mark.parametrize("net,rnn", [(lambda: nets.GRUNet(3, 2, hidden=8, layers=2, dropout=0.0),
+                                      nn.GRU),
+                                     (lambda: nets.LSTMNet(3, 2, hidden=8, layers=1, dropout=0.0),
+                                      nn.LSTM)])
+def test_rnn_head_reads_the_last_time_step(net, rnn):
+    torch.manual_seed(0)
+    model, x = net().eval(), torch.randn(4, 9, 3)
+    out = _layer_output(model, rnn, x)[0]  # (batch, time, hidden)
+    assert torch.allclose(_head_input(model, x), out[:, -1, :], atol=1e-6)
+
+
+def test_cnn_head_reads_the_mean_over_time():
+    torch.manual_seed(0)
+    model, x = nets.CNN1D(3, 2, channels=8, kernel=3, dropout=0.0).eval(), torch.randn(4, 16, 3)
+    pooled = _layer_output(model, nn.MaxPool1d, x)  # (batch, channels, time)
+    assert torch.allclose(_head_input(model, x), pooled.mean(dim=2), atol=1e-6)
 
 
 def test_single_layer_rnn_gets_no_inner_dropout():
@@ -408,6 +446,23 @@ def test_pos_weight_and_weight_decay_are_used():
     assert not np.allclose(run(weight_decay=0.5)[1], base_pred)
 
 
+def test_every_training_row_is_used_once_per_epoch_and_the_loss_is_per_row():
+    X, y = easy_binary(33, seed=17)  # batches of 32 and 1: the last, small batch must count
+    nets.seed_everything(0)
+    model = nets.GRUNet(3, 1, hidden=4, layers=1, dropout=0.0)
+    start = copy.deepcopy(model)
+    rows = []
+    hook = model.register_forward_hook(
+        lambda m, inp, out: rows.append(len(inp[0])) if m.training else None)
+    res = fit(model, "binary", X, y, X, y, lr=0.0, max_epochs=1)  # lr 0: weights stay put
+    hook.remove()
+    assert sum(rows) == 33
+    with torch.no_grad():  # mean loss per ROW over the epoch, not the mean of batch means
+        target = torch.tensor(y, dtype=torch.float32)[:, None]
+        whole = nets.make_loss("binary")(start(torch.tensor(X)), target)
+    assert res["history"][0]["train_loss"] == pytest.approx(whole.item(), rel=1e-5)
+
+
 def test_validation_may_have_labels_missing_from_training():
     X, y = easy_multiclass(90, seed=12)
     Xv, yv = easy_multiclass(30, seed=13)
@@ -434,6 +489,7 @@ def test_training_refuses_mistakes():
         lambda: fit(multi(), "binary", Xb, yb, Xb, yb),                    # 3 outputs for binary
         lambda: fit(single(), "binary", Xb, yb + 1, Xb, yb),               # labels not 0/1
         lambda: fit(single(), "binary", Xb, yb, Xb, np.zeros_like(yb)),    # one class in val
+        lambda: fit(single(), "binary", Xb, yb, Xb, np.ones_like(yb)),     # (both ways round)
         lambda: fit(multi(), "multiclass", X, y, X, y, batch_size=0),
         lambda: fit(multi(), "multiclass", X, y, X, y, max_epochs=0),
         lambda: fit(multi(), "multiclass", X, y, X, y, patience=0),

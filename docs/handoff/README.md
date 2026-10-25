@@ -54,7 +54,7 @@ Two tools must never edit the same folder at once. So each card can get its **ow
 |---|---|---|
 | WP-01 | `src/eval/metrics.py` (score calculator) | **Merged** (review found 2 problems + weak tests; fixed, D-025) |
 | WP-02 | `src/eval/bootstrap.py` (uncertainty by resampling runners) | **Merged** (correct; review removed dead code and a loop copied 3 times) |
-| WP-03 | `src/models/nets.py` (neural networks + one training loop: PAMAP2 activity models, injury GRU, piece-7 LSTM/TCN) | **Ready for a builder** (second folder `SynAthlete-wp03`) |
+| WP-03 | `src/models/nets.py` (neural networks + one training loop: PAMAP2 activity models, injury GRU, piece-7 LSTM/TCN) | **Merged** (code correct; review closed 6 test gaps; 21/21 planted mistakes caught) |
 
 ## If something goes wrong
 - **Tests keep failing:** let the builder keep fixing its code. If it claims a test is wrong, bring that to Claude Code. Never edit the test.
