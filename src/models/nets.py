@@ -11,16 +11,22 @@ This file never reads data: it receives arrays that were already split and scale
 
 from __future__ import annotations
 
+import copy
+import math
+import os
+import random
 from collections.abc import Sequence
 
 import numpy as np
 import torch
 from torch import nn
 
+from src.eval.metrics import average_precision, macro_f1
+
 ArrayLike = Sequence | np.ndarray
 
 # Set to True only when everything below is written; the tests skip while it is False.
-IMPLEMENTED = False
+IMPLEMENTED = True
 
 NETWORKS = ("cnn1d", "gru", "lstm", "tcn")
 # Setting names that belong to training, not to the network; build_model ignores them.
@@ -37,12 +43,22 @@ def seed_everything(seed: int) -> None:
     variable CUBLAS_WORKSPACE_CONFIG to ":4096:8" if it is not set yet (PyTorch reproducibility
     notes: needed for deterministic GPU matrix maths).
     """
-    raise NotImplementedError
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True, warn_only=True)
+    if "CUBLAS_WORKSPACE_CONFIG" not in os.environ:
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 
 def pick_device(prefer_gpu: bool = True) -> torch.device:
     """torch.device("cuda") if prefer_gpu and torch.cuda.is_available(), else "cpu"."""
-    raise NotImplementedError
+    if prefer_gpu and torch.cuda.is_available():
+        return torch.device("cuda")
+    return torch.device("cpu")
 
 
 class CNN1D(nn.Module):
@@ -59,10 +75,32 @@ class CNN1D(nn.Module):
     def __init__(self, n_channels: int, n_outputs: int, channels: int, kernel: int,
                  dropout: float, conv_blocks: int = 3) -> None:
         super().__init__()
-        raise NotImplementedError
+        self._conv_blocks = conv_blocks
+        blocks = []
+        for b in range(conv_blocks):
+            in_ch = n_channels if b == 0 else channels
+            blocks.extend([
+                nn.Conv1d(in_ch, channels, kernel_size=kernel, padding="same", bias=True),
+                nn.BatchNorm1d(channels),
+                nn.ReLU(),
+                nn.MaxPool1d(2),
+            ])
+        self.conv = nn.Sequential(*blocks)
+        self.drop = nn.Dropout(dropout)
+        self.head = nn.Linear(channels, n_outputs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
+        min_time = 2 ** self._conv_blocks
+        if x.shape[1] < min_time:
+            raise ValueError(
+                f"time dimension {x.shape[1]} is too small; need at least {min_time}"
+            )
+        # (batch, time, channels) -> (batch, channels, time) for Conv1d
+        out = self.conv(x.transpose(1, 2))
+        # mean over the time axis
+        out = out.mean(dim=2)
+        out = self.drop(out)
+        return self.head(out)
 
 
 class GRUNet(nn.Module):
@@ -77,10 +115,18 @@ class GRUNet(nn.Module):
     def __init__(self, n_channels: int, n_outputs: int, hidden: int, layers: int,
                  dropout: float) -> None:
         super().__init__()
-        raise NotImplementedError
+        # PyTorch warns if dropout > 0 with num_layers=1
+        self.rnn = nn.GRU(n_channels, hidden, num_layers=layers, batch_first=True,
+                          dropout=dropout if layers > 1 else 0.0)
+        self.drop = nn.Dropout(dropout)
+        self.head = nn.Linear(hidden, n_outputs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
+        out, _ = self.rnn(x)
+        # last time step
+        out = out[:, -1, :]
+        out = self.drop(out)
+        return self.head(out)
 
 
 class LSTMNet(nn.Module):
@@ -89,10 +135,57 @@ class LSTMNet(nn.Module):
     def __init__(self, n_channels: int, n_outputs: int, hidden: int, layers: int,
                  dropout: float) -> None:
         super().__init__()
-        raise NotImplementedError
+        self.rnn = nn.LSTM(n_channels, hidden, num_layers=layers, batch_first=True,
+                           dropout=dropout if layers > 1 else 0.0)
+        self.drop = nn.Dropout(dropout)
+        self.head = nn.Linear(hidden, n_outputs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
+        out, _ = self.rnn(x)
+        out = out[:, -1, :]
+        out = self.drop(out)
+        return self.head(out)
+
+
+class _CausalConv1d(nn.Module):
+    """Conv1d with causal (left-only) padding so the output length equals the input length."""
+
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
+                 dilation: int) -> None:
+        super().__init__()
+        self._pad = (kernel_size - 1) * dilation
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size,
+                              dilation=dilation, bias=True)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # pad on the left only
+        x = nn.functional.pad(x, (self._pad, 0))
+        return self.conv(x)
+
+
+class _ResidualBlock(nn.Module):
+    """One TCN residual block: two causal convolutions with ReLU+Dropout, plus a shortcut."""
+
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
+                 dilation: int, dropout: float) -> None:
+        super().__init__()
+        self.branch = nn.Sequential(
+            _CausalConv1d(in_channels, out_channels, kernel_size, dilation),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            _CausalConv1d(out_channels, out_channels, kernel_size, dilation),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+        )
+        # 1x1 shortcut when widths differ
+        self.shortcut = (nn.Conv1d(in_channels, out_channels, kernel_size=1)
+                         if in_channels != out_channels else None)
+        self.relu = nn.ReLU()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        branch = self.branch(x)
+        shortcut = self.shortcut(x) if self.shortcut is not None else x
+        return self.relu(branch + shortcut)
 
 
 class TCN(nn.Module):
@@ -115,10 +208,29 @@ class TCN(nn.Module):
     def __init__(self, n_channels: int, n_outputs: int, channels: int, kernel: int,
                  levels: int, dropout: float) -> None:
         super().__init__()
-        raise NotImplementedError
+        blocks = []
+        for i in range(levels):
+            in_ch = n_channels if i == 0 else channels
+            dilation = 2 ** i
+            blocks.append(_ResidualBlock(in_ch, channels, kernel, dilation, dropout))
+        self.network = nn.Sequential(*blocks)
+        self.head = nn.Linear(channels, n_outputs)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError
+        # (batch, time, channels) -> (batch, channels, time) for Conv1d
+        out = self.network(x.transpose(1, 2))
+        # last time step
+        out = out[:, :, -1]
+        return self.head(out)
+
+
+# Keys each network constructor expects (excluding n_channels and n_outputs).
+_NET_KEYS: dict[str, tuple[set[str], set[str]]] = {
+    "cnn1d": ({"channels", "kernel", "dropout"}, {"conv_blocks"}),
+    "gru": ({"hidden", "layers", "dropout"}, set()),
+    "lstm": ({"hidden", "layers", "dropout"}, set()),
+    "tcn": ({"channels", "kernel", "levels", "dropout"}, set()),
+}
 
 
 def build_model(name: str, n_channels: int, n_outputs: int, params: dict) -> nn.Module:
@@ -130,7 +242,18 @@ def build_model(name: str, n_channels: int, n_outputs: int, params: dict) -> nn.
     Keys in TRAINING_KEYS are ignored. ValueError for an unknown name, a missing key or any
     other unknown key (a typo must never be silently ignored).
     """
-    raise NotImplementedError
+    if name not in _NET_KEYS:
+        raise ValueError(f"unknown network name: {name!r}")
+    required, optional = _NET_KEYS[name]
+    net_params = {k: v for k, v in params.items() if k not in TRAINING_KEYS}
+    unknown = set(net_params) - required - optional
+    if unknown:
+        raise ValueError(f"unknown keys for {name}: {unknown}")
+    missing = required - set(net_params)
+    if missing:
+        raise ValueError(f"missing keys for {name}: {missing}")
+    constructors = {"cnn1d": CNN1D, "gru": GRUNet, "lstm": LSTMNet, "tcn": TCN}
+    return constructors[name](n_channels, n_outputs, **net_params)
 
 
 class EarlyStopping:
@@ -145,10 +268,28 @@ class EarlyStopping:
     """
 
     def __init__(self, patience: int) -> None:
-        raise NotImplementedError
+        if patience < 1:
+            raise ValueError(f"patience must be >= 1, got {patience}")
+        self._patience = patience
+        self.best_score: float | None = None
+        self.best_epoch: int = -1
+        self.should_stop: bool = False
+        self._epoch: int = -1  # current epoch counter
+        self._wait: int = 0  # epochs since last improvement
 
     def update(self, score: float) -> bool:
-        raise NotImplementedError
+        if not math.isfinite(score):
+            raise ValueError(f"score must be finite, got {score}")
+        self._epoch += 1
+        if self.best_score is None or score > self.best_score:
+            self.best_score = score
+            self.best_epoch = self._epoch
+            self._wait = 0
+            return True
+        self._wait += 1
+        if self._wait >= self._patience:
+            self.should_stop = True
+        return False
 
 
 def positive_weight(y: ArrayLike, setting: float | str) -> float:
@@ -157,18 +298,30 @@ def positive_weight(y: ArrayLike, setting: float | str) -> float:
     setting "balanced" -> (number of 0s) / (number of 1s) in y; a number -> float(setting).
     ValueError if y is not all 0/1, or for "balanced" when y has no 1s.
     """
-    raise NotImplementedError
+    arr = np.asarray(y)
+    if not np.all((arr == 0) | (arr == 1)):
+        raise ValueError("y must contain only 0s and 1s")
+    if setting == "balanced":
+        n_pos = int(np.sum(arr == 1))
+        if n_pos == 0:
+            raise ValueError("y has no positive examples for balanced weighting")
+        return float(np.sum(arr == 0)) / float(n_pos)
+    return float(setting)
 
 
 def make_loss(task: str, pos_weight: float = 1.0) -> nn.Module:
     """task "binary" -> nn.BCEWithLogitsLoss(pos_weight = torch.tensor([pos_weight]));
     task "multiclass" -> nn.CrossEntropyLoss() (pos_weight unused). ValueError otherwise."""
-    raise NotImplementedError
+    if task == "binary":
+        return nn.BCEWithLogitsLoss(pos_weight=torch.tensor([pos_weight]))
+    if task == "multiclass":
+        return nn.CrossEntropyLoss()
+    raise ValueError(f"unknown task: {task!r}")
 
 
 def make_optimizer(model: nn.Module, lr: float, weight_decay: float = 0.0) -> torch.optim.Optimizer:
     """torch.optim.Adam(model.parameters(), lr = lr, weight_decay = weight_decay)."""
-    raise NotImplementedError
+    return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
 
 def predict_scores(model: nn.Module, X: ArrayLike, batch_size: int = 1024,
@@ -181,7 +334,26 @@ def predict_scores(model: nn.Module, X: ArrayLike, batch_size: int = 1024,
     Model with k > 1 outputs -> shape (N, k): softmax probabilities (each row sums to 1).
     ValueError if X is not 3-D or contains NaN or infinity.
     """
-    raise NotImplementedError
+    X = np.asarray(X, dtype=np.float32)
+    if X.ndim != 3:
+        raise ValueError(f"X must be 3-D, got {X.ndim}-D")
+    if not np.all(np.isfinite(X)):
+        raise ValueError("X contains NaN or infinity")
+
+    model = model.to(device)
+    model.eval()
+    parts = []
+    with torch.no_grad():
+        for start in range(0, len(X), batch_size):
+            batch = torch.tensor(X[start:start + batch_size], dtype=torch.float32, device=device)
+            logits = model(batch)
+            if logits.shape[1] == 1:
+                probs = torch.sigmoid(logits).squeeze(1)
+            else:
+                probs = torch.softmax(logits, dim=1)
+            parts.append(probs.cpu().numpy())
+
+    return np.concatenate(parts).astype(np.float64)
 
 
 def predict_labels(model: nn.Module, X: ArrayLike, classes: ArrayLike, batch_size: int = 1024,
@@ -192,7 +364,15 @@ def predict_labels(model: nn.Module, X: ArrayLike, classes: ArrayLike, batch_siz
     order of the model's outputs. Ties go to the lowest output index (numpy.argmax).
     ValueError for a model with 1 output or if len(classes) differs from the number of outputs.
     """
-    raise NotImplementedError
+    scores = predict_scores(model, X, batch_size=batch_size, device=device)
+    if scores.ndim == 1:
+        raise ValueError("predict_labels requires a multi-output model (got 1 output)")
+    classes = np.asarray(classes)
+    if len(classes) != scores.shape[1]:
+        raise ValueError(
+            f"len(classes)={len(classes)} differs from number of outputs={scores.shape[1]}"
+        )
+    return classes[np.argmax(scores, axis=1)]
 
 
 def train_model(model: nn.Module, task: str, X_train: ArrayLike, y_train: ArrayLike,
@@ -223,4 +403,131 @@ def train_model(model: nn.Module, task: str, X_train: ArrayLike, y_train: ArrayL
     model outputs; binary labels not 0/1 or y_val with one class only; batch_size, max_epochs
     or patience < 1.
     """
-    raise NotImplementedError
+    # --- validation of inputs ---
+    if task not in ("binary", "multiclass"):
+        raise ValueError(f"unknown task: {task!r}")
+    X_train = np.asarray(X_train, dtype=np.float32)
+    y_train = np.asarray(y_train)
+    X_val = np.asarray(X_val, dtype=np.float32)
+    y_val = np.asarray(y_val)
+    if X_train.ndim != 3:
+        raise ValueError(f"X_train must be 3-D, got {X_train.ndim}-D")
+    if not np.all(np.isfinite(X_train)):
+        raise ValueError("X_train contains NaN or infinity")
+    if len(X_train) != len(y_train):
+        raise ValueError("X_train and y_train lengths differ")
+    if len(X_val) != len(y_val):
+        raise ValueError("X_val and y_val lengths differ")
+    if batch_size < 1:
+        raise ValueError("batch_size must be >= 1")
+    if max_epochs < 1:
+        raise ValueError("max_epochs must be >= 1")
+    if patience < 1:
+        raise ValueError("patience must be >= 1")
+
+    # Determine number of model outputs by running a probe
+    model = model.to(device)
+    model.eval()
+    with torch.no_grad():
+        probe = torch.tensor(X_train[:1], dtype=torch.float32, device=device)
+        n_outputs = model(probe).shape[1]
+
+    classes = None
+    if task == "multiclass":
+        classes = np.unique(y_train)
+        if n_outputs != len(classes):
+            raise ValueError(
+                f"model has {n_outputs} outputs but training data has {len(classes)} classes"
+            )
+        # Map labels to positions
+        label_to_idx = {label: idx for idx, label in enumerate(classes)}
+        y_train_idx = np.array([label_to_idx[label] for label in y_train])
+    elif task == "binary":
+        if n_outputs != 1:
+            raise ValueError(f"binary task requires 1 output, model has {n_outputs}")
+        if not np.all((y_train == 0) | (y_train == 1)):
+            raise ValueError("binary labels must be 0 or 1")
+        if not np.all((y_val == 0) | (y_val == 1)):
+            raise ValueError("binary labels must be 0 or 1")
+        if len(np.unique(y_val)) < 2:
+            raise ValueError("y_val must contain both classes (0 and 1)")
+
+    # --- setup ---
+    loss_fn = make_loss(task, pos_weight).to(device)
+    optimizer = make_optimizer(model, lr, weight_decay)
+    es = EarlyStopping(patience)
+    gen = torch.Generator()
+    gen.manual_seed(seed)
+
+    n = len(X_train)
+    X_train_t = torch.tensor(X_train, dtype=torch.float32)
+    if task == "binary":
+        y_train_t = torch.tensor(y_train, dtype=torch.float32)
+    else:
+        y_train_t = torch.tensor(y_train_idx, dtype=torch.long)
+
+    best_weights = None
+    history = []
+
+    for epoch in range(max_epochs):
+        model.train()
+        perm = torch.randperm(n, generator=gen)
+        total_loss = 0.0
+        total_samples = 0
+
+        for start in range(0, n, batch_size):
+            idx = perm[start:start + batch_size]
+            xb = X_train_t[idx].to(device)
+            yb = y_train_t[idx].to(device)
+
+            logits = model(xb)
+            if task == "binary":
+                # targets must be (batch, 1) float for BCEWithLogitsLoss
+                loss = loss_fn(logits, yb.unsqueeze(1))
+            else:
+                loss = loss_fn(logits, yb)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            batch_len = len(idx)
+            total_loss += loss.item() * batch_len
+            total_samples += batch_len
+
+        train_loss = total_loss / total_samples
+
+        # Validation score
+        if task == "multiclass":
+            preds = predict_labels(model, X_val, classes, device=device)
+            val_score = macro_f1(y_val, preds)
+        else:
+            scores = predict_scores(model, X_val, device=device)
+            val_score = average_precision(y_val, scores)
+
+        history.append({
+            "epoch": int(epoch),
+            "train_loss": float(train_loss),
+            "val_score": float(val_score),
+        })
+
+        is_best = es.update(val_score)
+        if is_best:
+            best_weights = copy.deepcopy(model.state_dict())
+
+        if es.should_stop:
+            break
+
+    # Restore best weights
+    if best_weights is not None:
+        model.load_state_dict(best_weights)
+    model = model.to(device)
+
+    return {
+        "model": model,
+        "classes": classes,
+        "best_epoch": int(es.best_epoch),
+        "best_score": float(es.best_score),
+        "epochs_run": int(len(history)),
+        "history": history,
+    }
