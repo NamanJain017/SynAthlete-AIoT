@@ -19,3 +19,4 @@ experiments/**/*.npy
 .claude/settings.local.json
 .DS_Store
 experiments/**/predictions/
+catboost_info/

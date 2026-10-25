@@ -172,19 +172,23 @@ def run_reproduction(cfg: dict) -> dict:
     trained on runners 0-53 and tested on 54-63, day file as in the paper. Never used to choose."""
     m = cfg["models"]["lovdal_xgboost"]
     rc = m["reproduction_check"]
-    day = loaders.load_dev("day")
-    X, y, athlete = data.flatten(day), day.y.astype(np.int64), day.athlete_id
     train = range(rc["train_runners"][0], rc["train_runners"][1] + 1)
     test = range(rc["test_runners"][0], rc["test_runners"][1] + 1)
-    scores = [lovdal_method.reproduction(X, y, athlete, train, test, s, m["paper"])
-              for s in rc["seeds"]]
-    in_test = np.isin(athlete, list(test))
-    check = bootstrap.reproduction_check(y[in_test], scores, athlete[in_test], metrics.roc_auc,
-                                         resamples=cfg["procedure"]["bootstrap"]["resamples"])
-    return {"label": "exact copy incl. the paper's label-reading scaling; never used to choose",
-            "file": "day", "train_runners": rc["train_runners"], "test_runners": rc["test_runners"],
-            "test_events": int(in_test.sum()), "test_injuries": int(y[in_test].sum()),
-            "test_roc_auc_per_seed": [metrics.roc_auc(y[in_test], s) for s in scores], **check}
+    out = {"label": "exact copy incl. the paper's label-reading scaling; never used to choose",
+           "train_runners": rc["train_runners"], "test_runners": rc["test_runners"]}
+    for kind in m["files"]:  # day and week (D-023(8)); the notebook ran the day file
+        d = loaders.load_dev(kind)
+        X, y, athlete = data.flatten(d), d.y.astype(np.int64), d.athlete_id
+        scores = [lovdal_method.reproduction(X, y, athlete, train, test, s, m["paper"])
+                  for s in rc["seeds"]]
+        in_test = np.isin(athlete, list(test))
+        check = bootstrap.reproduction_check(y[in_test], scores, athlete[in_test],
+                                             metrics.roc_auc,
+                                             resamples=cfg["procedure"]["bootstrap"]["resamples"])
+        out[kind] = {"test_events": int(in_test.sum()), "test_injuries": int(y[in_test].sum()),
+                     "test_roc_auc_per_seed": [metrics.roc_auc(y[in_test], s) for s in scores],
+                     **check}
+    return out
 
 
 def run_pamap2(name: str, pcfg: dict) -> dict:
@@ -229,7 +233,11 @@ def _code_state() -> dict:
 def _fingerprints() -> dict:
     meta = json.loads((loaders.PROCESSED / "lovdal" / "day_meta.json").read_text("utf-8"))
     return {"lovdal_source": (meta.get("source") or {}).get("fingerprint"),
-            "lovdal_split": loaders.lovdal_split()["meta"]["data_fingerprint"]}
+            "lovdal_split": loaders.lovdal_split()["meta"]["data_fingerprint"],
+            "pamap2_source": json.loads((loaders.PROCESSED / "pamap2" / "windows_meta.json")
+                                        .read_text("utf-8"))["source"]["fingerprint"],
+            "pamap2_split": json.loads((loaders.SPLITS / "pamap2_folds.json")
+                                       .read_text("utf-8"))["meta"]["data_fingerprint"]}
 
 
 def _summary_md(run_id: str, results: dict) -> str:
@@ -251,11 +259,14 @@ def _summary_md(run_id: str, results: dict) -> str:
                          f"| {rate:.4f} |")
     if "lovdal_reproduction" in results:
         rc = results["lovdal_reproduction"]
-        verdict = "PASSED" if rc["passed"] else "FAILED"
         lines += ["", f"Reproduction check (exact copy, runners {rc['train_runners']} -> "
-                  f"{rc['test_runners']}, label-reading scaling, never used to choose): "
-                  f"test ROC-AUC {rc['estimate']:.3f} (95% runner bootstrap {rc['low']:.3f} "
-                  f"to {rc['high']:.3f}); {verdict} (lower bound above 0.5)."]
+                  f"{rc['test_runners']}, label-reading scaling, never used to choose; "
+                  "pass = 95% runner-bootstrap lower bound above 0.5):"]
+        for kind in ("day", "week"):
+            if kind in rc:
+                c = rc[kind]
+                lines.append(f"- {kind}: test ROC-AUC {c['estimate']:.3f} ({c['low']:.3f} to "
+                             f"{c['high']:.3f}), {'PASSED' if c['passed'] else 'FAILED'}")
     pam = [n for n in ("pamap2_cnn1d", "pamap2_gru") if n in results]
     if pam:
         lines += ["", "| PAMAP2 model | Test macro-F1 (4 rounds) |", "|---|---|"]

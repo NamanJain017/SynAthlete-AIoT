@@ -145,5 +145,7 @@ def pamap2_rounds() -> Iterator[Round]:
         X, y, subject = z["X"], z["y"].astype(np.int64), z["subject"]
     meta = json.loads((loaders.PROCESSED / "pamap2" / "windows_meta.json").read_text("utf-8"))
     split = json.loads((loaders.SPLITS / "pamap2_folds.json").read_text("utf-8"))
+    if meta["source"]["fingerprint"] != split["meta"]["data_fingerprint"]:
+        raise RuntimeError("PAMAP2 windows are not the data version the splits were made from")
     for k in sorted(split["folds"], key=int):
         yield make_round(int(k), "pamap2", X, y, subject, split["folds"][k], meta["channels"])

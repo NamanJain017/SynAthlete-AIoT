@@ -30,7 +30,7 @@ def catboost(r: Round, s: dict, seed: int) -> Predict:
                                depth=s["depth"], l2_leaf_reg=s["l2_leaf_reg"],
                                auto_class_weights=s["auto_class_weights"],
                                eval_metric=s["eval_metric"], random_seed=seed, thread_count=-1,
-                               verbose=0)
+                               verbose=0, allow_writing_files=False)
     # early stopping on this round's validation runners (D-021 allows it)
     model.fit(r.train.X, r.train.y, eval_set=(r.val.X, r.val.y),
               early_stopping_rounds=s["early_stopping_rounds"], use_best_model=True)
