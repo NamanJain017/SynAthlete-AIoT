@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | **Ready for a builder** |
+| Status | **Merged** (2026-10-25): built by Antigravity (Claude Opus 4.6 Thinking); review + eval-auditor fixes by Claude Code (D-025: tie-aware ECE, input checks, Platt on logit(p) for probabilities, exact fits); tests strengthened from 22 to 51 |
 | Piece | 3 (first real models) |
 | Written by | Claude Code, 2026-10-25 |
 | Best builder | Antigravity with **Claude Opus 4.6 (Thinking)** (until 2 Nov 2026), else Gemini 3.8 Flash (High); backup: ChatGPT Go Codex |

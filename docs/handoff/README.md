@@ -39,8 +39,8 @@ This turns on the git guard (`.githooks/`). It refuses any commit that touches p
 ## Task cards
 | Card | File | Status |
 |---|---|---|
-| WP-01 | `src/eval/metrics.py` (score calculator) | **Ready for a builder** |
-| WP-02 | `src/eval/bootstrap.py` (uncertainty by resampling runners) | Planned |
+| WP-01 | `src/eval/metrics.py` (score calculator) | **Merged** (review found 2 problems + weak tests; fixed, D-025) |
+| WP-02 | `src/eval/bootstrap.py` (uncertainty by resampling runners) | **Ready for a builder** |
 | WP-03 | `src/models/har.py` (PAMAP2 activity models) | Planned |
 
 ## If something goes wrong

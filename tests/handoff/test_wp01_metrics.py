@@ -1,8 +1,10 @@
 """Answer checker for task card WP-01 (docs/handoff/WP-01-metrics.md): src/eval/metrics.py.
 
-Written by Claude Code before the code exists; builders must not edit this file.
+Written by Claude Code before the code existed; builders must not edit this file.
 Expected values are worked out by hand on tiny examples (shown in the comments) or come from
-an independent reference (scikit-learn). Skipped until metrics.IMPLEMENTED is True.
+an independent reference (scikit-learn). Strengthened after the eval-auditor review of WP-01:
+property tests that only an exact, unpenalised fit can pass, tie cases, invalid inputs (D-025).
+The tests always run (the original "skip until built" switch was removed after the merge).
 """
 
 import math
@@ -12,8 +14,6 @@ import pytest
 from sklearn.metrics import average_precision_score, f1_score, roc_auc_score
 
 from src.eval import metrics
-
-pytestmark = pytest.mark.skipif(not metrics.IMPLEMENTED, reason="WP-01 not built yet")
 
 # Example A: 2 healthy (0) and 2 injury (1) events.
 Y_A = [0, 0, 1, 1]
@@ -221,3 +221,138 @@ def test_module_has_no_file_or_data_access():
     text = Path(metrics.__file__).read_text(encoding="utf-8")
     for forbidden in ("open(", "read_csv", "np.load", "load_dev", "data/", "Path("):
         assert forbidden not in text, f"metrics.py must not use {forbidden!r}"
+
+
+# ---------------------------------------------------------------- added after the WP-01 review
+
+
+def _sigmoid(z):
+    return 1 / (1 + np.exp(-np.asarray(z, dtype=float)))
+
+
+def _small_overlapping_set(n: int = 40, seed: int = 11):
+    rng = np.random.default_rng(seed)
+    s = rng.normal(size=n)
+    y = (rng.random(n) < _sigmoid(1.2 * s - 0.5)).astype(int)
+    y[0], y[1] = 1, 0
+    return s, y
+
+
+def test_platt_solves_its_own_equations():
+    # The exact unpenalised fit makes both score equations zero; a penalised, smoothed or
+    # early-stopped fit cannot (catches C=1, Platt target smoothing, default tol).
+    s, y = _small_overlapping_set()
+    p_hat = metrics.apply_platt(s, metrics.fit_platt(s, y))
+    assert abs(np.sum(y - p_hat)) < 1e-6
+    assert abs(np.sum(s * (y - p_hat))) < 1e-6
+
+
+def test_platt_is_accurate_far_from_zero_and_for_constant_scores():
+    s, y = _small_overlapping_set(n=400, seed=12)
+    far = s + 5000.0                                   # same data, shifted far from zero
+    slope, intercept = metrics.fit_platt(far, y)
+    p_hat = metrics.apply_platt(far, (slope, intercept))
+    assert abs(np.sum(y - p_hat)) < 1e-5 and abs(np.sum(s * (y - p_hat))) < 1e-5
+    assert slope == pytest.approx(metrics.fit_platt(s, y)[0], rel=1e-6)
+    assert metrics.fit_platt([1.0, 1.0, 1.0, 1.0], [0, 1, 0, 0]) == \
+        pytest.approx((0.0, math.log(0.25 / 0.75)))
+
+
+def test_platt_warns_on_perfectly_separated_validation_data():
+    with pytest.warns(RuntimeWarning):
+        metrics.fit_platt([0.1, 0.2, 0.8, 0.9], [0, 0, 1, 1])
+
+
+def test_platt_slope_flag_returns_a_plain_bool():
+    assert metrics.platt_slope_flag((np.float64(-1.0), 0.0)) is True
+    assert metrics.platt_slope_flag((np.float64(2.0), 0.0)) is False
+
+
+def test_calibration_intercept_uses_logit_as_an_offset():
+    # Predictions with a slope far from 1: the offset intercept a must make the mean predicted
+    # risk equal the injury rate exactly; the intercept of the joint fit does not.
+    rng = np.random.default_rng(13)
+    p_true = rng.uniform(0.05, 0.6, 3000)
+    y = (rng.random(3000) < p_true).astype(int)
+    pred = _sigmoid(2 * np.log(p_true / (1 - p_true)) + 1)
+    slope, intercept = metrics.calibration_slope_intercept(y, pred)
+    lg = metrics.logit(pred)
+    assert np.mean(_sigmoid(intercept + lg)) == pytest.approx(np.mean(y), abs=1e-10)
+    assert slope == pytest.approx(0.5, abs=0.1)
+
+
+def test_calibration_slope_solves_its_own_equations():
+    from scipy.optimize import brentq
+
+    s, y = _small_overlapping_set(n=60, seed=14)
+    prob = _sigmoid(0.7 * s)
+    b = metrics.calibration_slope_intercept(y, prob)[0]
+    lg = metrics.logit(prob)
+    c = brentq(lambda c_: np.sum(y - _sigmoid(c_ + b * lg)), -50, 50, xtol=1e-14)
+    assert abs(np.sum(lg * (y - _sigmoid(c + b * lg)))) < 1e-6   # catches a penalised slope
+
+
+def test_threshold_rule_uses_the_float_tolerance():
+    # Gaps for 0.5 and 0.9 are both 2/3 but differ in the last float digit; with the 1e-12
+    # tolerance the tie goes to the larger sensitivity + specificity -> 0.5 (exact compare: 0.9)
+    assert metrics.choose_alert_threshold([0, 1, 1, 0, 0], [0.1, 0.5, 0.5, 0.5, 0.9]) == \
+        pytest.approx(0.5)
+
+
+def test_average_precision_treats_tied_scores_as_one_step():
+    # 0.9 (injury): precision 1 at recall .5; the three tied 0.5s together: precision .5 at
+    # recall 1 -> AP = .5 * 1 + .5 * .5 = 0.75 (breaking the tie by input order would give 1.0)
+    assert metrics.average_precision([1, 0, 0, 1], [0.5, 0.5, 0.5, 0.9]) == pytest.approx(0.75)
+
+
+def test_ece_keeps_tied_probabilities_in_one_bin_so_row_order_never_matters():
+    # D-025: constant risk 0.02 with injury rate 0.02 is perfectly calibrated -> ECE 0 always
+    y = np.zeros(100, dtype=int)
+    y[:2] = 1
+    p = np.full(100, 0.02)
+    for order in (np.arange(100), np.arange(100)[::-1], np.random.default_rng(15).permutation(100)):
+        assert metrics.ece_equal_count(y[order], p[order]) == pytest.approx(0.0)
+    rng = np.random.default_rng(16)
+    p5 = rng.choice([0.01, 0.05, 0.1, 0.2, 0.4], size=300)
+    y5 = (rng.random(300) < p5).astype(int)
+    values = {round(metrics.ece_equal_count(y5[o], p5[o]), 12)
+              for o in (np.arange(300), rng.permutation(300), rng.permutation(300))}
+    assert len(values) == 1
+
+
+def test_no_injury_gives_none_not_zero():
+    assert metrics.alert_numbers([0, 0, 0], [0.1, 0.2, 0.3], 0.2)["sensitivity"] is None
+
+
+def test_net_benefit_alerts_when_risk_equals_the_threshold():
+    # both events have risk exactly 0.2 -> both alerted: 1/2 - 1/2 * 0.25 = 0.375
+    assert metrics.net_benefit([1, 0], [0.2, 0.2], [0.2]) == pytest.approx([0.375])
+
+
+def test_logit_clips_like_the_specification():
+    assert metrics.logit([0.5])[0] == pytest.approx(0.0)
+    assert metrics.logit([0.0])[0] == pytest.approx(math.log(1e-6 / (1 - 1e-6)))
+
+
+@pytest.mark.parametrize("call", [
+    lambda: metrics.roc_auc([0, 2, 1], [0.1, 0.2, 0.3]),                 # label not 0/1
+    lambda: metrics.choose_alert_threshold([0, 0.5, 1], [0.1, 0.2, 0.3]),
+    lambda: metrics.choose_alert_threshold([0, 1, 1], [0.1, float("nan"), 0.3]),
+    lambda: metrics.alert_numbers([0, 1, 1], [0.1, float("inf"), 0.3], 0.2),
+    lambda: metrics.average_precision([0, 1], [float("nan"), 0.3]),
+    lambda: metrics.brier([0, 1], [0.2, 1.5]),                           # not a probability
+    lambda: metrics.ece_equal_count([0, 1], [-0.1, 0.5]),
+    lambda: metrics.calibration_slope_intercept([0, 1, 1], [0.2, 3.0, 0.4]),
+    lambda: metrics.net_benefit([0, 1], [0.2, 1.2], [0.1]),
+    lambda: metrics.net_benefit([0, 1], [0.2, 0.4], [1.0]),              # threshold not in (0, 1)
+    lambda: metrics.net_benefit([0, 1, 1], [0.2, 0.4], [0.1]),           # lengths
+    lambda: metrics.alert_numbers([0, 1, 1], [0.2, 0.4], 0.3),
+    lambda: metrics.choose_alert_threshold([0, 1, 1], [0.2, 0.4]),
+    lambda: metrics.calibration_slope_intercept([0, 1, 1], [0.2, 0.4]),
+    lambda: metrics.fit_platt([0.2, 0.4], [0, 1, 1]),
+    lambda: metrics.macro_f1([1, 2, 2], [1, 2]),
+    lambda: metrics.brier([], []),                                       # empty
+])
+def test_invalid_inputs_raise_value_error(call):
+    with pytest.raises(ValueError):
+        call()

@@ -162,3 +162,6 @@ A: We don't trust it, we test it. The tests were written first, with answers wor
 
 **Q: Why not let one AI write the whole project?**
 A: Because the risky parts are about honest evaluation, not just code. One leak (for example, scaling with a runner's own history) can make a useless model look excellent. So the parts where a leak could hide stay with careful review, and only well-specified, testable files are handed out.
+
+**Q: Did the review of AI-written code ever find a real problem?**
+A: Yes, in the very first task card (WP-01, the score calculator). The builder's code passed all of its tests, but our checks found three issues. A fit stopped slightly too early, so a slope was a little off. The calibration error changed with row order when many events had the same risk. Calibration functions accepted numbers that are not probabilities. The independent reviewer also showed that 10 plausible wrong versions passed the original 22 tests. We fixed the code, recorded the rule changes (D-025), and grew the tests to 51; they now catch all 10 wrong versions. That is why every builder change is reviewed before it joins the project.
