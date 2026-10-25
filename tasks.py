@@ -56,6 +56,12 @@ def data() -> int:
     return run([sys.executable, "-m", "src.data.loaders", *sys.argv[2:]])
 
 
+def baselines() -> int:
+    """First real models (piece 3): writes experiments/baselines/<run_id>/.
+    Optional --only NAME,NAME, e.g. python tasks.py baselines --only canary."""
+    return run([sys.executable, "-m", "src.models.run", *sys.argv[2:]])
+
+
 def splits() -> int:
     """Person-level splits (piece 2): written once to data/splits/, never overwritten.
     --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
@@ -85,7 +91,7 @@ TASKS = {
     "data": data,
     "splits": splits,
     "hooks": hooks,
-    "baselines": not_implemented("piece 3"),
+    "baselines": baselines,
     "gen": not_implemented("piece 5"),
     "pipeline": not_implemented("piece 6"),
     "train": not_implemented("piece 7"),
