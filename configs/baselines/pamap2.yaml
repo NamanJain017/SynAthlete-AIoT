@@ -1,0 +1,33 @@
+# Piece 3: PAMAP2 activity baselines (D-022, D-024). Written BEFORE the first real-data run.
+# Activity recognition only (these people are not the runners and have no injury records).
+
+data:
+  windows: data/processed/pamap2/windows.npz   # X (N, 128, 10), y activity id, subject
+  splits: data/splits/pamap2_folds.json
+  rounds: [0, 1, 2, 3]
+
+procedure:
+  scaler: zscore_per_channel_on_training_subjects
+  selection_score: macro_f1          # validation macro-F1 picks settings and early stopping
+  metric: macro_f1_over_activities_in_test_truth
+  settings_per_round: 8
+  search: random
+  search_seed_base: 1000
+  tune_seed: 0
+  refit_seeds: [0, 1, 2]
+
+models:
+  cnn1d:
+    fixed: {conv_blocks: 3, batch_size: 128, max_epochs: 40, patience: 8, optimizer: adam}
+    grid:
+      channels: [32, 64]
+      kernel: [5, 9]
+      dropout: [0.2, 0.5]
+      lr: {loguniform: [3.0e-4, 3.0e-3]}
+  gru:
+    fixed: {batch_size: 128, max_epochs: 40, patience: 8, optimizer: adam}
+    grid:
+      hidden: [32, 64, 128]
+      layers: [1, 2]
+      dropout: [0.0, 0.3]
+      lr: {loguniform: [3.0e-4, 3.0e-3]}

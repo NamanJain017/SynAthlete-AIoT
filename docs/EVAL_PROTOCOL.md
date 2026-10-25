@@ -41,13 +41,13 @@
   - Lövdal bagged XGBoost (notebook settings: 9 bags, up to 2,048 events per class drawn per athlete with replacement, learning rate 0.01, depth {2, 3}, trees {256, 512}, Platt): label-free variant on the 5 groups; the exact copy only as the reproduction check on runners 54-63, with its library deviations documented.
 - Activity (PAMAP2, 4 groups): small 1D-CNN and GRU, macro-F1.
 - Later pieces: real-only vs real+augmented (piece 5); the fused model (piece 7) is the primary model on the locked test.
-## Still to fix before the first piece-3 run (in the piece-3 plan, for Naman's approval)
-1. The validation score that picks settings, arms and the early-stopping point (proposal: validation average precision).
-2. Every grid, written into configs/: logistic regression, random forest, CatBoost, GRU, plus the fused-model candidates (LSTM, TCN, combiner); the inner out-of-fold scheme for the combiner, grouped by runner.
-3. The fused model's total tuning budget (it chooses among arms), reported next to its score.
-4. The constant-risk (majority) model: add an 'alert nobody' candidate threshold, so it does not alert on every event; or call it the constant-risk model.
-5. The leak canary's output and failure rule.
-6. The reproduction check's pass rule: bootstrap type for the interval above 0.5.
+## Piece-3 details (D-024; settings in configs/baselines/*.yaml and configs/fused_candidates.yaml)
+- Selection score: validation average precision (ties: validation ROC-AUC); PAMAP2: validation macro-F1.
+- Budget: 8 settings per tunable model per round, seeded random search from the config grids; fused model (piece 7): 44 tries per round, declared now.
+- Constant-risk baseline: alert candidates include "alert nobody", so it raises no alerts (alert numbers n/a).
+- Leak canary: declared-input test + shuffled-label logistic regression; fails if the 5-round mean test ROC-AUC is more than 0.05 from 0.5.
+- Reproduction check passes if the runner-bootstrap (2,000) lower bound of its test ROC-AUC is above 0.5.
+- Seeds: settings tried with seed 0; the chosen one refit with seeds 0-2 on training runners only.
 Before the evaluation freeze: which runners give validation (Platt, alert level) for the Lövdal label-free variant trained on `paper_split`, which has no validation group.
 Track C (proposed; confirm before any Track C run): the same history-signal ban; features come from the full daily tables, never from the selected event rows.
 ## Generator criteria (set now, before looking at results)

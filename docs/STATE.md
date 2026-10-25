@@ -39,8 +39,8 @@ Last updated: 2026-10-22 by Claude Code (Naman's laptop): piece 2 DONE (Naman: "
 - `data/raw/soccermon/Unconfirmed 486200.crdownload` is an unfinished browser download (Naman's); ignored by all code. Delete only if Naman says so.
 
 ## Next three actions
-1. Piece 3 plan (with research) for Naman's approval, including the six open details listed in EVAL_PROTOCOL.
-2. Piece 3 after approval: the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
+1. Piece 3 checkpoint 1 DONE (2026-10-25): D-024 + configs/baselines/lovdal.yaml, pamap2.yaml, configs/fused_candidates.yaml written before any model code. Next, checkpoint 2: metrics + bootstrap code with tests (still no real-data model run).
+2. Piece 3 after that: the D-022 model list on the 5 Lövdal development groups under the D-021 rules; the paper's exact method only as the reproduction check on runners 54-63. Locked runners stay untouched.
 3. Run the eval-auditor subagent before any result goes into the Review 2 deck.
 
 ## Ideas for later
