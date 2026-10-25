@@ -190,3 +190,34 @@ def test_real_pamap2_rounds():
         assert r.train.X.shape[1:] == (128, 10)
         assert "109" in set(r.train.person.tolist())  # always in training (D-020)
         assert not set(r.train.person) & (set(r.val.person) | set(r.test.person))
+
+
+# ---------------------------------------------------------------- Lövdal method and seeds
+
+def test_athlete_balanced_bag_counts():
+    from src.models import lovdal_method
+    y = np.array([0, 0, 0, 1] * 3 + [0, 0, 0, 0])          # athletes 0-2 have both classes
+    athlete = np.repeat([0, 1, 2, 3], 4)
+    idx = lovdal_method.athlete_balanced_bag(y, athlete, np.random.default_rng(0), 30)
+    assert len(idx) == 3 * 2 * 10                          # floor(30 / 3) per class per athlete
+    assert y[idx].sum() == 30 and 3 not in set(athlete[idx])
+
+
+def test_paper_scaling_uses_each_athletes_healthy_rows():
+    from src.models import lovdal_method
+    X = np.array([[1.0], [3.0], [100.0], [10.0], [14.0], [12.0]])
+    y = np.array([0, 0, 1, 0, 0, 1])
+    athlete = np.array([0, 0, 0, 1, 1, 1])
+    z = lovdal_method.paper_scaling(X, y, athlete)
+    sd0, sd1 = np.std([1, 3], ddof=1), np.std([10, 14], ddof=1)
+    assert np.allclose(z[:, 0], [(1 - 2) / sd0, (3 - 2) / sd0, (100 - 2) / sd0,
+                                 (10 - 12) / sd1, (14 - 12) / sd1, 0.0])
+
+
+def test_mean_over_seeds():
+    base = {"test_events": 10, "test_injuries": 2, "test_injury_rate": 0.2, "val_pr_auc": 0.3,
+            "val_roc_auc": 0.6, "alert": None,
+            "calibration_platt": {"brier": 0.1, "ece": 0.0, "slope": 1.0, "intercept": 0.0}}
+    out = evaluate.mean_over_seeds([{**base, "pr_auc": 0.2, "roc_auc": 0.6},
+                                    {**base, "pr_auc": 0.4, "roc_auc": None}])
+    assert out["pr_auc"] == pytest.approx(0.3) and out["roc_auc"] is None and out["alert"] is None

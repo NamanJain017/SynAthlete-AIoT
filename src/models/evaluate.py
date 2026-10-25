@@ -57,6 +57,24 @@ def injury_scores(y_val: np.ndarray, s_val: np.ndarray, y_test: np.ndarray, s_te
     }
 
 
+def mean_over_seeds(per_seed: list[dict]) -> dict:
+    """One round's numbers averaged over seeds (D-024); a value is None if any seed lacks it."""
+    def mean(values):
+        return None if any(v is None for v in values) else float(np.mean(values))
+
+    out = {k: per_seed[0][k] for k in ("test_events", "test_injuries", "test_injury_rate")}
+    for k in ("pr_auc", "roc_auc", "val_pr_auc", "val_roc_auc"):
+        out[k] = mean([s[k] for s in per_seed])
+    out["calibration_platt"] = {k: mean([s["calibration_platt"][k] for s in per_seed])
+                                for k in ("brier", "ece", "slope", "intercept")}
+    alerts = [s["alert"] for s in per_seed]
+    out["alert"] = None if any(a is None for a in alerts) else {
+        k: mean([a[k] for a in alerts]) for k in ("sensitivity", "specificity", "precision",
+                                                  "false_alarms_per_caught_injury",
+                                                  "alerts_per_100_events", "mcc")}
+    return out
+
+
 def summarise(rounds: list[dict], keys: tuple[str, ...] = ("pr_auc", "roc_auc")) -> dict:
     """Mean and SD (ddof 1) over rounds for the headline numbers; None if any round lacks one."""
     out = {}

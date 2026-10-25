@@ -2,7 +2,7 @@
 
 Writes experiments/baselines/<run_id>/: config.yaml, run_info.json, metrics.json, summary.md,
 and git-ignored predictions/ (scores per row, for the bootstrap). Every number comes from here.
-Names: canary, constant_risk, acwr_style, logistic_regression (more models are added later).
+Names: see ORDER. One family per run keeps each run short (AGENTS.md: under about 2 hours).
 """
 
 from __future__ import annotations
@@ -22,13 +22,16 @@ import numpy as np
 import yaml
 
 from src.data import audit, loaders
-from src.eval import metrics
-from src.models import baselines, data, evaluate, tuning
+from src.eval import bootstrap, metrics
+from src.models import baselines, data, evaluate, fitters, lovdal_method, tuning
 
 ROOT = loaders.ROOT
 CONFIG = ROOT / "configs" / "baselines" / "lovdal.yaml"
+PAMAP2_CONFIG = ROOT / "configs" / "baselines" / "pamap2.yaml"
 OUT = ROOT / "experiments" / "baselines"
-ORDER = ("canary", "constant_risk", "acwr_style", "logistic_regression")
+INJURY = ("constant_risk", "acwr_style", "logistic_regression", "random_forest", "catboost", "gru",
+          "lovdal_label_free")
+ORDER = ("canary", *INJURY, "lovdal_reproduction", "pamap2_cnn1d", "pamap2_gru")
 
 
 def _save_predictions(folder: Path, name: str, r: data.Round, s_val, s_test) -> None:
@@ -113,6 +116,103 @@ def run_logistic(cfg: dict, pred: Path) -> dict:
     return out
 
 
+def _seeded(label: str, r: data.Round, pred: Path, setting: dict, seeds: list[int], fit,
+            first=None, tune_seed: int = 0) -> dict:
+    """Refit the chosen setting with every seed on the training runners (D-024) and average the
+    round's numbers over seeds. `first` reuses the tuning fit for the tuning seed."""
+    per_seed = []
+    for seed in seeds:
+        predict = first if (first is not None and seed == tune_seed) else fit(r, setting, seed)
+        s_val, s_test = predict(r.val.X), predict(r.test.X)  # the one look at this test group
+        _save_predictions(pred, f"{label}_s{seed}", r, s_val, s_test)
+        per_seed.append(evaluate.injury_scores(r.val.y, s_val, r.test.y, s_test, True))
+    return {**evaluate.mean_over_seeds(per_seed), "seeds": per_seed}
+
+
+def run_tuned(name: str, cfg: dict, pred: Path, fit, layout: str = "flat") -> dict:
+    """8 settings tried with seed 0, chosen on this round's validation runners (val AP, then
+    val ROC-AUC); the chosen one refit with seeds 0-2 (D-021, D-024)."""
+    m, proc = cfg["models"][name], cfg["procedure"]
+    out = {}
+    for kind in m["files"]:
+        rounds = []
+        for r in data.lovdal_rounds(kind, layout):
+            settings = tuning.draw_settings(m["grid"], proc["settings_per_round"],
+                                            proc["search_seed_base"] + r.k, m.get("fixed"))
+            trials, best_predict = [], None
+            for s in settings:
+                predict = fit(r, s, proc["tune_seed"])
+                p_val = predict(r.val.X)
+                trials.append({"setting": s, "val_ap": metrics.average_precision(r.val.y, p_val),
+                               "val_auc": metrics.roc_auc(r.val.y, p_val)})
+                if tuning.choose(trials) == len(trials) - 1:  # keep only the best model so far
+                    best_predict = predict
+            best = tuning.choose(trials)
+            seeded = _seeded(f"{name}_{kind}", r, pred, settings[best], proc["refit_seeds"], fit,
+                             best_predict, proc["tune_seed"])
+            rounds.append({**seeded, "chosen": best, "trials": trials})
+            print(f"  {name} {kind} round {r.k}: test PR-AUC {seeded['pr_auc']:.4f}", flush=True)
+        out[kind] = {"summary": evaluate.summarise(rounds), "rounds": rounds}
+    return out
+
+
+def run_lovdal_label_free(cfg: dict, pred: Path) -> dict:
+    """The paper's bagged XGBoost (untuned) with our training-rows scaling; seeds 0-2."""
+    m, proc = cfg["models"]["lovdal_xgboost"], cfg["procedure"]
+    out = {}
+    for kind in m["files"]:
+        rounds = [_seeded(f"lovdal_label_free_{kind}", r, pred, m["paper"], proc["refit_seeds"],
+                          fitters.lovdal_label_free) for r in data.lovdal_rounds(kind)]
+        out[kind] = {"summary": evaluate.summarise(rounds), "rounds": rounds}
+    return out
+
+
+def run_reproduction(cfg: dict) -> dict:
+    """Labelled reproduction check (D-021, D-024): the exact copy, label-reading scaling included,
+    trained on runners 0-53 and tested on 54-63, day file as in the paper. Never used to choose."""
+    m = cfg["models"]["lovdal_xgboost"]
+    rc = m["reproduction_check"]
+    day = loaders.load_dev("day")
+    X, y, athlete = data.flatten(day), day.y.astype(np.int64), day.athlete_id
+    train = range(rc["train_runners"][0], rc["train_runners"][1] + 1)
+    test = range(rc["test_runners"][0], rc["test_runners"][1] + 1)
+    scores = [lovdal_method.reproduction(X, y, athlete, train, test, s, m["paper"])
+              for s in rc["seeds"]]
+    in_test = np.isin(athlete, list(test))
+    check = bootstrap.reproduction_check(y[in_test], scores, athlete[in_test], metrics.roc_auc,
+                                         resamples=cfg["procedure"]["bootstrap"]["resamples"])
+    return {"label": "exact copy incl. the paper's label-reading scaling; never used to choose",
+            "file": "day", "train_runners": rc["train_runners"], "test_runners": rc["test_runners"],
+            "test_events": int(in_test.sum()), "test_injuries": int(y[in_test].sum()),
+            "test_roc_auc_per_seed": [metrics.roc_auc(y[in_test], s) for s in scores], **check}
+
+
+def run_pamap2(name: str, pcfg: dict) -> dict:
+    """PAMAP2 activity network: 8 settings on validation macro-F1, refit seeds 0-2, test macro-F1
+    over the activities present in the test people (D-024)."""
+    m, proc = pcfg["models"][name], pcfg["procedure"]
+    fit = fitters.pamap2_net(name)
+    rounds = []
+    for r in data.pamap2_rounds():
+        settings = tuning.draw_settings(m["grid"], proc["settings_per_round"],
+                                        proc["search_seed_base"] + r.k, m["fixed"])
+        trials = []
+        for s in settings:
+            _, val_f1 = fit(r, s, proc["tune_seed"])
+            trials.append({"setting": s, "val_macro_f1": float(val_f1)})
+        scores = [t["val_macro_f1"] for t in trials]
+        best = scores.index(max(scores))  # ties -> the earlier setting
+        test_f1 = []
+        for seed in proc["refit_seeds"]:
+            predict, _ = fit(r, settings[best], seed)
+            test_f1.append(metrics.macro_f1(r.test.y, predict(r.test.X)))
+        rounds.append({"macro_f1": float(np.mean(test_f1)), "macro_f1_per_seed": test_f1,
+                       "chosen": best, "trials": trials, "test_clips": int(len(r.test.y))})
+        print(f"  pamap2 {name} round {r.k}: test macro-F1 {rounds[-1]['macro_f1']:.3f}",
+              flush=True)
+    return {"summary": evaluate.summarise(rounds, ("macro_f1",)), "rounds": rounds}
+
+
 def _code_state() -> dict:
     """Commit and dirty flag; earlier run outputs (untracked files under experiments/) are
     results, not code, so they do not make the code 'dirty'."""
@@ -142,13 +242,26 @@ def _summary_md(run_id: str, results: dict) -> str:
                   + ", ".join(f"{k} mean test ROC-AUC {c[k]['mean']:.3f}"
                               for k in c if isinstance(c[k], dict)), ""]
     lines += ["| Model | File | PR-AUC | ROC-AUC | Test injury rate |", "|---|---|---|---|---|"]
-    for name in ORDER[1:]:
+    for name in INJURY:
         for kind, res in results.get(name, {}).items():
             s = res["summary"]
             rate = np.mean([r["test_injury_rate"] for r in res["rounds"]])
             cell = lambda v: "n/a" if v is None else f"{v['mean']:.3f} ± {v['sd']:.3f}"  # noqa: E731
             lines.append(f"| {name} | {kind} | {cell(s['pr_auc'])} | {cell(s['roc_auc'])} "
                          f"| {rate:.4f} |")
+    if "lovdal_reproduction" in results:
+        rc = results["lovdal_reproduction"]
+        verdict = "PASSED" if rc["passed"] else "FAILED"
+        lines += ["", f"Reproduction check (exact copy, runners {rc['train_runners']} -> "
+                  f"{rc['test_runners']}, label-reading scaling, never used to choose): "
+                  f"test ROC-AUC {rc['estimate']:.3f} (95% runner bootstrap {rc['low']:.3f} "
+                  f"to {rc['high']:.3f}); {verdict} (lower bound above 0.5)."]
+    pam = [n for n in ("pamap2_cnn1d", "pamap2_gru") if n in results]
+    if pam:
+        lines += ["", "| PAMAP2 model | Test macro-F1 (4 rounds) |", "|---|---|"]
+        for n in pam:
+            v = results[n]["summary"]["macro_f1"]
+            lines.append(f"| {n} | {v['mean']:.3f} ± {v['sd']:.3f} |")
     return "\n".join(lines) + "\n"
 
 
@@ -171,11 +284,21 @@ def main(argv: list[str] | None = None) -> int:
     folder.mkdir(parents=True)
     shutil.copyfile(CONFIG, folder / "config.yaml")
     cfg = yaml.safe_load(CONFIG.read_text("utf-8"))
+    pcfg = yaml.safe_load(PAMAP2_CONFIG.read_text("utf-8"))
+    if any(n.startswith("pamap2") for n in names):
+        shutil.copyfile(PAMAP2_CONFIG, folder / "config_pamap2.yaml")
 
     jobs = {"canary": lambda: run_canary(cfg),
             "constant_risk": lambda: run_constant_risk(cfg, pred),
             "acwr_style": lambda: run_acwr(cfg, pred),
-            "logistic_regression": lambda: run_logistic(cfg, pred)}
+            "logistic_regression": lambda: run_logistic(cfg, pred),
+            "random_forest": lambda: run_tuned("random_forest", cfg, pred, fitters.random_forest),
+            "catboost": lambda: run_tuned("catboost", cfg, pred, fitters.catboost),
+            "gru": lambda: run_tuned("gru", cfg, pred, fitters.gru, layout="sequence"),
+            "lovdal_label_free": lambda: run_lovdal_label_free(cfg, pred),
+            "lovdal_reproduction": lambda: run_reproduction(cfg),
+            "pamap2_cnn1d": lambda: run_pamap2("cnn1d", pcfg),
+            "pamap2_gru": lambda: run_pamap2("gru", pcfg)}
     results, runtime = {}, {}
     for name in [n for n in ORDER if n in names]:
         t0 = time.perf_counter()
@@ -189,9 +312,12 @@ def main(argv: list[str] | None = None) -> int:
     command = "python -m src.models.run " + " ".join(argv if argv is not None else sys.argv[1:])
     info = {"run_id": run_id, "command": command,
             "only": args.only, **code, "python": platform.python_version(),
-            "packages": {p: version(p) for p in ("numpy", "scikit-learn", "scipy", "PyYAML")},
+            "packages": {p: version(p) for p in ("numpy", "scikit-learn", "scipy", "PyYAML",
+                                                 "xgboost", "catboost", "torch")},
             "seeds": {"search_seed_base": cfg["procedure"]["search_seed_base"],
-                      "canary_seed_base": cfg["canary"]["seed_base"]},
+                      "canary_seed_base": cfg["canary"]["seed_base"],
+                      "refit_seeds": cfg["procedure"]["refit_seeds"],
+                      "pamap2_search_seed_base": pcfg["procedure"]["search_seed_base"]},
             "cpu_count": os.cpu_count(), "runtime_s": runtime, "data_fingerprints": _fingerprints()}
     (folder / "run_info.json").write_text(json.dumps(info, indent=2), "utf-8")
     (folder / "metrics.json").write_text(json.dumps(results, indent=2), "utf-8")
