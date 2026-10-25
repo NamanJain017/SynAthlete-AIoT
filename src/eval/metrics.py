@@ -13,7 +13,7 @@ import math
 from collections.abc import Sequence
 
 import numpy as np
-from scipy.optimize import minimize_scalar
+from scipy.optimize import brentq
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, f1_score, roc_auc_score
 
@@ -163,8 +163,9 @@ def fit_platt(score_val: ArrayLike, y_val: ArrayLike) -> tuple[float, float]:
     P(injury) = 1 / (1 + exp(-(slope * score + intercept))). Returns (slope, intercept)."""
     s = np.asarray(score_val, dtype=float).reshape(-1, 1)
     y = np.asarray(y_val, dtype=float)
-    # Unpenalised: C=inf turns off regularisation (sklearn 1.9+)
-    lr = LogisticRegression(C=np.inf, solver="lbfgs", max_iter=10000)
+    # Unpenalised: C=inf turns off regularisation (sklearn 1.9+); the tight tol makes lbfgs reach
+    # the exact optimum (the default tol=1e-4 stops early, slopes off by ~0.2 %, review of WP-01)
+    lr = LogisticRegression(C=np.inf, solver="lbfgs", max_iter=10000, tol=1e-10)
     lr.fit(s, y)
     slope = float(lr.coef_[0, 0])
     intercept = float(lr.intercept_[0])
@@ -219,26 +220,26 @@ def calibration_slope_intercept(y_true: ArrayLike, prob: ArrayLike) -> tuple[flo
     intercept: the a that solves mean(y) = mean(1 / (1 + exp(-(a + L)))), i.e. L used as a
     fixed offset (0 = perfect; below 0 = risks too high on average).
     """
-    y = np.asarray(y_true, dtype=float)
-    p = np.asarray(prob, dtype=float)
+    y, p = _to_arrays(y_true, prob)
+    if len(np.unique(y)) < 2:
+        raise ValueError("calibration needs both classes in y_true")
     p_clipped = np.clip(p, 1e-6, 1 - 1e-6)
     logit_p = np.log(p_clipped / (1 - p_clipped))
 
     # slope: unpenalised logistic regression y ~ c + b * L
-    lr = LogisticRegression(C=np.inf, solver="lbfgs", max_iter=10000)
+    lr = LogisticRegression(C=np.inf, solver="lbfgs", max_iter=10000, tol=1e-10)
     lr.fit(logit_p.reshape(-1, 1), y)
     slope = float(lr.coef_[0, 0])
 
-    # intercept: find a such that mean(y) = mean(1 / (1 + exp(-(a + L))))
-    # This is a 1-D root-finding problem. Minimise |mean(y) - mean(sigmoid(a + L))|.
+    # intercept: the a with mean(sigmoid(a + L)) = mean(y). The left side rises with a, so a
+    # root-finder on a wide bracket finds it exactly (|L| <= 13.8 after clipping, so [-50, 50]
+    # always contains the root when both classes are present).
     mean_y = float(np.mean(y))
 
-    def objective(a: float) -> float:
-        pred = 1.0 / (1.0 + np.exp(-(a + logit_p)))
-        return (float(np.mean(pred)) - mean_y) ** 2
+    def gap(a: float) -> float:
+        return float(np.mean(1.0 / (1.0 + np.exp(-(a + logit_p))))) - mean_y
 
-    result = minimize_scalar(objective, bounds=(-10, 10), method="bounded")
-    intercept = float(result.x)
+    intercept = float(brentq(gap, -50.0, 50.0, xtol=1e-12))
     return (slope, intercept)
 
 
