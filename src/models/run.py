@@ -113,6 +113,19 @@ def run_logistic(cfg: dict, pred: Path) -> dict:
     return out
 
 
+def _code_state() -> dict:
+    """Commit and dirty flag; earlier run outputs (untracked files under experiments/) are
+    results, not code, so they do not make the code 'dirty'."""
+    state = audit.code_state()
+    porcelain = audit._git("status", "--porcelain")
+    if porcelain == "unavailable":
+        return {**state, "git_dirty": True}
+    lines = [ln for ln in porcelain.splitlines() if ln.strip()]
+    state["git_dirty"] = any(not (ln.startswith("?? ") and ln[3:].startswith("experiments/"))
+                             for ln in lines)
+    return state
+
+
 def _fingerprints() -> dict:
     meta = json.loads((loaders.PROCESSED / "lovdal" / "day_meta.json").read_text("utf-8"))
     return {"lovdal_source": (meta.get("source") or {}).get("fingerprint"),
@@ -151,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    code = audit.code_state()  # before anything is written
+    code = _code_state()  # before anything is written
     run_id = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     folder = OUT / run_id
     pred = folder / "predictions"
