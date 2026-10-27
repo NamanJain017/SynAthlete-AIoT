@@ -169,7 +169,8 @@ def run_lovdal_label_free(cfg: dict, pred: Path) -> dict:
 
 def run_reproduction(cfg: dict) -> dict:
     """Labelled reproduction check (D-021, D-024): the exact copy, label-reading scaling included,
-    trained on runners 0-53 and tested on 54-63, day file as in the paper. Never used to choose."""
+    trained on runners 0-53 and tested on 54-63, day and week files (D-023(8)).
+    Never used to choose anything."""
     m = cfg["models"]["lovdal_xgboost"]
     rc = m["reproduction_check"]
     train = range(rc["train_runners"][0], rc["train_runners"][1] + 1)
