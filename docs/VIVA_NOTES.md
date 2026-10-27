@@ -175,7 +175,7 @@ A: In every re-draw both models are scored on exactly the same runners. Then luc
 **Q: What did the review of the second task card (WP-02, the bootstrap) find?**
 A: The code was correct. Compared with a private reference version on random cases, the only differences were in the last decimal digit, because the builder typed 2.5 where the card's formula gives 2.500000000000002 in computer arithmetic. The review also removed an unfinished leftover function and merged a loop that had been copied three times into one. After that, the results matched the reference exactly.
 
-## Piece 3: first real models (in progress, from 2026-10-25)
+## Piece 3: first real models (all runs done 2026-10-28)
 **What it does.** Each of the 5 development rounds trains a model on that round's training runners, tunes it on that round's validation runners only, and scores it once on that round's test runners. The round builder (`src/models/data.py`) puts every runner in exactly one role, fits the z-score scaling on training rows only, and refuses inputs that are IDs, dates or a runner's own history. Results are written by `python tasks.py baselines` into `experiments/baselines/2026-10-26_020012/` (metrics.json, summary.md, run_info.json with the commit and data fingerprint).
 
 **First numbers** (mean over the 5 rounds; `experiments/baselines/2026-10-26_020012/summary.md`):
@@ -198,3 +198,27 @@ A: No, and we never claim that. Each check covers certain kinds of leak, so we u
 
 **Q: The networks were written by an AI tool without a private answer copy. How do you know they are right?**
 A: Three checks. (1) The tests check network sizes against formulas, causality of the TCN, exact predictions, and that early stopping keeps the best version. (2) A surprise check planted 21 deliberate mistakes in the tool's code; the first tests caught 14, the other 6 showed gaps in our tests (not bugs in the code), so we added tests until all 21 were caught. (3) A sanity run on the real PAMAP2 data trained in seconds and scored far above chance on people it never saw.
+
+**All piece-3 results** (mean ± SD over the 5 development rounds; summary.md in `experiments/baselines/2026-10-26_020012`, `experiments/baselines/2026-10-26_022902`, `experiments/baselines/2026-10-28_024255`; chance PR-AUC = injury rate ≈ 0.013):
+
+| Model | Day PR-AUC | Day ROC-AUC | Week PR-AUC | Week ROC-AUC |
+|---|---|---|---|---|
+| Constant risk | 0.013 | 0.500 | 0.013 | 0.500 |
+| ACWR-style rule | – | – | 0.015 | 0.540 |
+| Logistic regression | 0.022 | 0.626 | 0.020 | 0.621 |
+| Random forest | 0.019 | 0.603 | 0.022 | 0.614 |
+| CatBoost | 0.021 | 0.598 | 0.019 | 0.606 |
+| GRU (day only) | 0.023 | 0.631 | – | – |
+| Lövdal method, label-free | 0.017 | 0.584 | 0.021 | 0.589 |
+
+Paper-copy check (exact copy incl. its label-reading scaling, trained on runners 0-53, tested on stand-in runners 54-63): ROC-AUC day 0.617 (95 % runner bootstrap 0.573 to 0.664), week 0.613 (0.546 to 0.675): both PASSED (lower bound above 0.5). PAMAP2 activity recognition (4 rounds, test macro-F1): 1D-CNN 0.632 ± 0.097, GRU 0.566 ± 0.054 (chance about 0.06).
+
+**Q: Which model is best, and is it much better than the others?**
+A: All learned models sit close together: ROC-AUC about 0.58 to 0.63 and PR-AUC about 1.3 to 1.8 times chance. The GRU and logistic regression are slightly ahead, but the differences are small compared with the round-to-round spread (SD about 0.01 to 0.07), so we do not claim a winner from piece 3. Injury prediction from training logs alone is hard; this matches what honest studies report. The model sent to the locked test was declared in advance (the fused model, piece 7), not picked from this table.
+
+**Q: Did you rebuild the paper's method correctly? Why is your copy 0.62, not their 0.724?**
+A: Our exact copy (same settings, same label-reading scaling) passed the pre-registered check: its ROC-AUC interval lies above 0.5 on both files. 0.724 was measured on the other 10 runners (64-73), which stay locked until the end, so the two numbers are not on the same people and 0.724 was never a target. Without its label-reading step (the label-free variant) the same model scores 0.584 / 0.589 on the 5 rounds.
+
+**Q: Why is PAMAP2 macro-F1 only about 0.6?**
+A: Each test person was never seen in training, and people move differently; 18 activities include similar ones (e.g. walking vs Nordic walking, ironing vs standing). Scoring on new people is the honest setting; mixing one person's clips into training and test would give much higher, misleading numbers.
+
