@@ -1,0 +1,40 @@
+{
+  "run_id": "2026-10-28_024255",
+  "command": "python -m src.models.run --only random_forest,catboost,lovdal_label_free,lovdal_reproduction",
+  "only": "random_forest,catboost,lovdal_label_free,lovdal_reproduction",
+  "git_commit": "a0e65ac5d11df401d5f5eea74969168feab970f6",
+  "git_dirty": false,
+  "python": "3.12.2",
+  "packages": {
+    "numpy": "2.5.2",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "PyYAML": "6.0.3",
+    "xgboost": "3.4.1",
+    "catboost": "1.2.10",
+    "torch": "2.14.1+cu132"
+  },
+  "seeds": {
+    "search_seed_base": 1000,
+    "canary_seed_base": 2000,
+    "refit_seeds": [
+      0,
+      1,
+      2
+    ],
+    "pamap2_search_seed_base": 1000
+  },
+  "cpu_count": 12,
+  "runtime_s": {
+    "random_forest": 3202.0,
+    "catboost": 1047.7,
+    "lovdal_label_free": 341.8,
+    "lovdal_reproduction": 208.2
+  },
+  "data_fingerprints": {
+    "lovdal_source": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "lovdal_split": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "pamap2_source": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+    "pamap2_split": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040"
+  }
+}
