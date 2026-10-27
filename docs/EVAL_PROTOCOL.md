@@ -51,16 +51,16 @@
 Before the evaluation freeze: which runners give validation (Platt, alert level) for the Lövdal label-free variant trained on `paper_split`, which has no validation group.
 Track C (proposed; confirm before any Track C run): the same history-signal ban; features come from the full daily tables, never from the selected event rows.
 ## Generator criteria (set now, before looking at results)
-- Discriminative accuracy within ____ of 50%.
-- TSTR macro-F1 within ____ of real-trained.
-- Autocorrelation and cross-channel correlation error below ____.
-- Nearest-real-record distance: no near-duplicates (threshold ____).
+- Discriminative accuracy within 0.15 of 50% (post-hoc GRU classifier, real test-people windows vs synthetic, held-out 30 %) (D-027).
+- TSTR macro-F1 within 0.15 of real-trained (piece-3 CNN, the round's chosen setting; trained on synthetic only, tested on the round's real test people).
+- Autocorrelation (lags 1-10) and cross-channel correlation error below 0.10 (mean absolute difference, synthetic vs real test-people windows).
+- Nearest-real-record distance: at most 5 % of synthetic windows closer to a real training window than the 5th percentile of real test-to-training nearest distances.
 ## Statistics
 Differences between models: paired bootstrap that resamples runners within each test group and recomputes the 5-group mean difference (2,000 resamples, percentile 95 % interval), on the same rows (shared days across files; D-023). Primary comparisons, fixed now: each model vs the Lövdal label-free variant on the same file; in piece 7, the fused model vs each arm. With only 5 groups a two-sided Wilcoxon test can never go below p = 0.0625 (2/32), so it is not the main test. No claim of "better" without an interval.
 ## Explanation criteria
-- Deletion curve: removing top-k attributed inputs lowers predicted risk by at least ____ vs random removal.
-- Model-randomisation check: attribution rank correlation drops below ____.
-- Stability: rank correlation above ____ for near-identical inputs.
+- Deletion curve: removing the top-10 attributed inputs lowers predicted risk at least 1.5 times as much as removing 10 random inputs (D-027).
+- Model-randomisation check: attribution rank correlation (Spearman) between the trained and a random-weight model below 0.5.
+- Stability: rank correlation above 0.8 for near-identical inputs (Gaussian noise of 1 % of each input's SD).
 - Prior list (written BEFORE running): high load spikes, high monotony/strain, low recovery -> expected to raise risk. ("Recent injury history" is not testable: injury history is not an input under D-023, and the event design keeps injuries at least 22 days from other events.)
 ## Evaluation freeze
 Tag the repo with an annotated tag (`git tag -a eval-freeze`) and push it. Open the lockbox only through src/data/lockbox.py (it opens at one frozen commit only). Run the matrix once, commit experiments/lockbox_access.log, and log deviations.
