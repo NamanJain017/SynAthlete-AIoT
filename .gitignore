@@ -20,3 +20,4 @@ experiments/**/*.npy
 .DS_Store
 experiments/**/predictions/
 catboost_info/
+experiments/baselines/_logs/
