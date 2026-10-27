@@ -1,0 +1,46 @@
+{
+  "run_id": "2026-10-26_022902",
+  "command": "python -m src.models.run --only gru,pamap2_cnn1d,pamap2_gru",
+  "only": "gru,pamap2_cnn1d,pamap2_gru",
+  "git_commit": "4f0e0630a33f0a8d8374b5975c18cdb09f809269",
+  "git_dirty": true,
+  "python": "3.12.2",
+  "packages": {
+    "numpy": "2.5.2",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "PyYAML": "6.0.3",
+    "xgboost": "3.4.1",
+    "catboost": "1.2.10",
+    "torch": "2.14.1+cu132"
+  },
+  "seeds": {
+    "search_seed_base": 1000,
+    "canary_seed_base": 2000,
+    "refit_seeds": [
+      0,
+      1,
+      2
+    ],
+    "pamap2_search_seed_base": 1000
+  },
+  "cpu_count": 12,
+  "runtime_s": {
+    "gru": 1022.8,
+    "pamap2_cnn1d": 213.0,
+    "pamap2_gru": 2770.2
+  },
+  "data_fingerprints": {
+    "lovdal_source": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "lovdal_split": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd"
+  },
+  "added_after_run": {
+    "date": "2026-10-28",
+    "why": "run started at 4f0e063, before 0daaa63 added PAMAP2 fingerprints to run records",
+    "pamap2_source": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+    "pamap2_split": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+    "source_of_values": "data/processed/pamap2/windows_meta.json and data/splits/pamap2_folds.json (unchanged since 2026-10-15)",
+    "config_files": "config.yaml and config_pamap2.yaml restored from git commit 4f0e063 (the run's own commit); the run's copies were deleted by a session clean-up",
+    "git_dirty_reason": "only the untracked catboost_info/ folder existed at the start; code = 4f0e063"
+  }
+}
