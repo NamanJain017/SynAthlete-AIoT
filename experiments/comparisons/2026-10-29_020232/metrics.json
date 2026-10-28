@@ -1,0 +1,281 @@
+{
+  "comparisons": [
+    {
+      "comparison": "constant_risk - lovdal_label_free (day)",
+      "runs": [
+        "2026-10-26_020012",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": -0.003995951493686336,
+        "low": -0.007823334684889716,
+        "high": -0.003119468236505842,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      },
+      "roc_auc": {
+        "estimate": -0.08417819727267017,
+        "low": -0.11157655197731983,
+        "high": -0.06363962575922898,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      }
+    },
+    {
+      "comparison": "logistic_regression - lovdal_label_free (day)",
+      "runs": [
+        "2026-10-26_020012",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": 0.004349794559314665,
+        "low": 0.0007129723379901202,
+        "high": 0.009807392199910921,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      },
+      "roc_auc": {
+        "estimate": 0.042091121870729276,
+        "low": 0.007759309169039325,
+        "high": 0.06508929166447153,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      }
+    },
+    {
+      "comparison": "random_forest - lovdal_label_free (day)",
+      "runs": [
+        "2026-10-28_024255",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": 0.001531458874312823,
+        "low": -0.0013196242685347842,
+        "high": 0.006621446129518347,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      },
+      "roc_auc": {
+        "estimate": 0.018959810678056743,
+        "low": -0.014164566309512731,
+        "high": 0.04396829441351412,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      }
+    },
+    {
+      "comparison": "catboost - lovdal_label_free (day)",
+      "runs": [
+        "2026-10-28_024255",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": 0.0033533415687855145,
+        "low": 0.00023217340807489195,
+        "high": 0.007483345925749924,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      },
+      "roc_auc": {
+        "estimate": 0.013354172547251686,
+        "low": -0.015285440124545665,
+        "high": 0.03449332364858958,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      }
+    },
+    {
+      "comparison": "gru - lovdal_label_free (day)",
+      "runs": [
+        "2026-10-28_224339",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": 0.005819730143485278,
+        "low": 0.0018294287491701527,
+        "high": 0.011961311377389835,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      },
+      "roc_auc": {
+        "estimate": 0.04729216485725285,
+        "low": 0.013049884791898137,
+        "high": 0.07127373932700308,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      }
+    },
+    {
+      "comparison": "constant_risk - lovdal_label_free (week)",
+      "runs": [
+        "2026-10-26_020012",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": -0.008089007030795625,
+        "low": -0.020649362380670264,
+        "high": -0.005573048428316636,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      },
+      "roc_auc": {
+        "estimate": -0.08918716644082669,
+        "low": -0.1324017355869554,
+        "high": -0.05552842494347078,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      }
+    },
+    {
+      "comparison": "acwr_style - lovdal_label_free (week)",
+      "runs": [
+        "2026-10-26_020012",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": -0.006428875223018845,
+        "low": -0.01837753422067487,
+        "high": -0.0018645618186266721,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      },
+      "roc_auc": {
+        "estimate": -0.04949793868136354,
+        "low": -0.10004929149299821,
+        "high": -0.008012976015235835,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      }
+    },
+    {
+      "comparison": "logistic_regression - lovdal_label_free (week)",
+      "runs": [
+        "2026-10-26_020012",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": -0.0012696343180839849,
+        "low": -0.011363901866412781,
+        "high": 0.006976706801650448,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      },
+      "roc_auc": {
+        "estimate": 0.03230341719422647,
+        "low": -0.008068285148365053,
+        "high": 0.0610027854526152,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      }
+    },
+    {
+      "comparison": "random_forest - lovdal_label_free (week)",
+      "runs": [
+        "2026-10-28_024255",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": 0.0001842685167395483,
+        "low": -0.010491833495701394,
+        "high": 0.010592265161875464,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      },
+      "roc_auc": {
+        "estimate": 0.024997306031548705,
+        "low": -0.014806662467873377,
+        "high": 0.04718113976314414,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      }
+    },
+    {
+      "comparison": "catboost - lovdal_label_free (week)",
+      "runs": [
+        "2026-10-28_024255",
+        "2026-10-28_024255"
+      ],
+      "pr_auc": {
+        "estimate": -0.002312627986307443,
+        "low": -0.012752709014596976,
+        "high": 0.0030557786919639123,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      },
+      "roc_auc": {
+        "estimate": 0.01658260160982994,
+        "low": -0.018587628131025415,
+        "high": 0.03895161047480076,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      }
+    },
+    {
+      "comparison": "fused - sequence arm (shared days)",
+      "runs": [
+        "2026-10-28_060435",
+        "2026-10-28_060435"
+      ],
+      "pr_auc": {
+        "estimate": 0.00013435111325458063,
+        "low": -0.0019701392520711297,
+        "high": 0.002781311195577772,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      },
+      "roc_auc": {
+        "estimate": 0.004915264027693489,
+        "low": 2.996443736584836e-05,
+        "high": 0.008556458407447403,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": true
+      }
+    },
+    {
+      "comparison": "fused - tabular arm (shared days)",
+      "runs": [
+        "2026-10-28_060435",
+        "2026-10-28_060435"
+      ],
+      "pr_auc": {
+        "estimate": 0.0021984059490143155,
+        "low": -0.001711019840463635,
+        "high": 0.00559967175439554,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      },
+      "roc_auc": {
+        "estimate": -0.0029211733700220677,
+        "low": -0.022051448280550015,
+        "high": 0.01177493508133882,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "interval_excludes_0": false
+      }
+    }
+  ],
+  "skipped_incomplete": []
+}
