@@ -247,10 +247,59 @@ elif page == "Results":
         if rc and "day" in rc:
             st.subheader("Paper copy check (exact method on stand-in runners 54-63)")
             st.write({k: f"ROC-AUC {rc[k]['estimate']:.3f} ({rc[k]['low']:.3f} to "
-                         f"{rc[k]['high']:.3f}) {'PASSED' if rc[k]['passed'] else 'FAILED'}"
+                         f"{rc[k]['high']:.3f}): "
+                         f"{'passed' if rc[k]['passed'] else 'failed'} its pre-registered sanity "
+                         "check (lower bound above 0.5)"
                       for k in ("day", "week") if k in rc})
-    st.subheader("Locked final test (10 newest runners)")
-    st.write("Opened once, after the evaluation freeze. Shown here when available.")
+    st.subheader("Locked final test (10 newest runners, opened once)")
+    lock = latest(results, "lockbox")
+    if lock:
+        f = lock["fused"]
+        r, p, a = f["roc_auc_ci"], f["pr_auc_ci"], f["alert"]
+        c1, c2 = st.columns(2)
+        c1.metric("Declared fused model: ROC-AUC", f"{r['estimate']:.3f}",
+                  f"interval {r['low']:.3f} to {r['high']:.3f}", delta_color="off")
+        c2.metric("PR-AUC", f"{p['estimate']:.3f}",
+                  f"chance {f['test_injury_rate']:.3f}", delta_color="off")
+        st.write(f"{f['events']:,} days, {f['injuries']} injuries in "
+                 f"{f['runners_with_injury']} of {len(lock['test_runners'])} runners. Alert level "
+                 f"(set on validation): catches {a['sensitivity']:.0%} of injuries with "
+                 f"{a['false_alarms_per_caught_injury']:.0f} false alarms per caught injury.")
+        sec = {f"{k} arm ({v['file']} file)": v["roc_auc_ci"].get("estimate")
+               for k, v in lock["arms_on_own_files"].items()}
+        sec |= {f"Lövdal label-free ({k})": v["roc_auc_ci"].get("estimate")
+                for k, v in lock["lovdal_label_free_paper_split"].items()}
+        st.dataframe(pd.DataFrame({"secondary result": list(sec),
+                                   "ROC-AUC": [round(v, 3) for v in sec.values()]}),
+                     use_container_width=True, hide_index=True)
+        st.caption("Secondary results: scored once, " + lock["not_a_comparison"] + "; no model "
+                   "was switched after the test. With 10 runners the intervals are wide.")
+    else:
+        st.write("Opened once, after the evaluation freeze. Shown here when available.")
+
+    comp = latest(results, "comparisons")
+    if comp:
+        st.subheader("Paired comparisons (same rows)")
+        rows = [{"comparison": c["comparison"],
+                 **{f"Δ {m}": f"{c[k]['estimate']:+.4f} [{c[k]['low']:+.4f}, {c[k]['high']:+.4f}]"
+                    + (" ✔" if c[k]["low"] > 0 or c[k]["high"] < 0 else "")
+                    for k, m in (("pr_auc", "PR-AUC"), ("roc_auc", "ROC-AUC"))}}
+                for c in comp["comparisons"]]
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.caption(f"Runner bootstrap, 2,000 resamples; ✔ = interval excludes 0. "
+                   f"{2 * len(rows)} intervals, not adjusted for multiple comparisons.")
+
+    fu = latest(results, "generators", "metrics_followup.json")
+    if fu:
+        st.subheader("Synthetic data beyond PAMAP2")
+        st.write("WESAD (settings from PAMAP2, no tuning): criteria met per generator")
+        st.dataframe(pd.DataFrame(fu["wesad_criteria"]).T, use_container_width=True)
+        inj = fu["injury_summary"]
+        st.write("Synthetic injury examples added to training only (GRU, 5 rounds): "
+                 + "; ".join(f"{k}: PR-AUC {v['pr_auc']['mean']:.3f}, ROC-AUC "
+                             f"{v['roc_auc']['mean']:.3f}" for k, v in inj.items()))
+        st.caption("Compare with the real-only GRU in the injury table; there is no paired "
+                   "interval, so no improvement is claimed.")
 
 # ------------------------------------------------------------------ 7 Training lab
 elif page == "Training lab":

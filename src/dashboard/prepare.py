@@ -69,7 +69,8 @@ def coach(fused: Path) -> None:
 def results() -> None:
     """Headline tables, copied from the metrics files written by code."""
     out = {}
-    for phase in ("baselines", "fused", "generators", "tiers", "track_c", "explain"):
+    for phase in ("baselines", "fused", "generators", "tiers", "track_c", "explain", "lockbox",
+                  "comparisons"):
         runs = sorted((loaders.ROOT / "experiments" / phase).glob("20*"))
         out[phase] = []
         for r in runs:
