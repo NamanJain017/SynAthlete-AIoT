@@ -222,3 +222,26 @@ A: Our exact copy (same settings, same label-reading scaling) passed the pre-reg
 **Q: Why is PAMAP2 macro-F1 only about 0.6?**
 A: Each test person was never seen in training, and people move differently; 18 activities include similar ones (e.g. walking vs Nordic walking, ironing vs standing). Scoring on new people is the honest setting; mixing one person's clips into training and test would give much higher, misleading numbers.
 
+## Pieces 4-10: rules, generators, tiers, fused model, explanations, dashboard, paper (2026-10-28)
+**What is built (code tested; results arriving from runs):**
+- **Piece 4, rules first (D-027):** pass marks for generators (real-vs-fake accuracy within 0.15 of 50 %, train-on-synthetic within 0.15 of real, shape errors below 0.10, at most 5 % too-close copies) and for explanations (deletion 1.5x random, randomisation correlation below 0.5, stability above 0.8), written before any run.
+- **Piece 5, synthetic data (`src/gen/`):** TimeGAN, WGAN-GP and TimeVAE learn from each round's training people only and make clips for a chosen activity; classic augmentation as the simple comparison. Judged on real people they never saw.
+- **Piece 6, tiers (`src/pipeline/`):** edge, fog and cloud as three separate programs passing messages; we count bytes sent and time to a decision, tiered vs cloud-only.
+- **Piece 7, fused model (`src/models/fused.py`):** the best day-by-day model (GRU/LSTM/TCN) and the best weekly-totals model (RF/CatBoost) per round, joined by a small logistic regression that only ever sees predictions made without that runner (out-of-fold).
+- **Piece 8, explanations (`src/xai/`):** SHAP, integrated gradients, an attention view and Grad-CAM, each checked by deletion, randomisation and stability tests.
+- **Piece 9, dashboard (`src/dashboard/`):** 8 pages in pipeline order; data prepared in advance so the demo is instant.
+- **Piece 10:** IEEE paper draft and project report (numbers inserted by code), Review 2 deck made by code (`slides/review2.pptx`).
+- **Track C (exploratory):** SoccerMon LR ROC-AUC 0.764 on 27 episodes; PMData 8 episodes, about chance (`experiments/track_c/2026-10-28_055034`).
+
+**Q: Why do you train generators only on training people?**
+A: If a generator saw a test person, its fake clips could copy that person, and a model trained on them would look good on that person for the wrong reason. So generators learn from each round's training people only, and synthetic data is used only for training.
+
+**Q: What does "tested on an idle machine" mean for the tiers?**
+A: The speed test measures milliseconds per message. If heavy training runs at the same time, every message waits longer and the system looks slower than it is, so the speed test runs when nothing else runs. The byte counts do not depend on load.
+
+**Q: How do you stop the combined model from cheating?**
+A: Its combiner is trained on arm predictions made by models that never trained on that runner (5-fold out-of-fold, grouped by runner), and a test proves no row is scored by a model that saw its runner.
+
+**Q: What problems did you catch while building?**
+A: Two: a real-vs-fake checker that could be under-trained (it would make every generator look perfect; now it always trains enough, proven by a test), and TimeVAE requesting 9 GB on a 6 GB GPU (fixed by letting cuDNN choose a fitting algorithm; 2x faster).
+
