@@ -1,0 +1,78 @@
+{
+  "label": "exploratory (D-018): never main injury evidence",
+  "soccermon": {
+    "logistic_regression": {
+      "all": {
+        "events": 32871,
+        "positives": 27,
+        "chance_pr_auc": 0.0008213927169845761,
+        "pr_auc": 0.005687325151477548,
+        "roc_auc": 0.7637124092793317
+      },
+      "TeamA_only": {
+        "events": 17194,
+        "positives": 24,
+        "chance_pr_auc": 0.0013958357566592997,
+        "pr_auc": 0.009587196086968694,
+        "roc_auc": 0.7349470976509416
+      }
+    },
+    "random_forest": {
+      "all": {
+        "events": 32871,
+        "positives": 27,
+        "chance_pr_auc": 0.0008213927169845761,
+        "pr_auc": 0.0028881589227137345,
+        "roc_auc": 0.6723495356274555
+      },
+      "TeamA_only": {
+        "events": 17194,
+        "positives": 24,
+        "chance_pr_auc": 0.0013958357566592997,
+        "pr_auc": 0.004413617846878872,
+        "roc_auc": 0.6419117647058824
+      }
+    },
+    "team_only_baseline": {
+      "events": 32871,
+      "positives": 27,
+      "chance_pr_auc": 0.0008213927169845761,
+      "pr_auc": 0.0008332645690802393,
+      "roc_auc": 0.4785551901920188
+    }
+  },
+  "pmdata": {
+    "logistic_regression": {
+      "with_p12": {
+        "events": 1089,
+        "positives": 8,
+        "chance_pr_auc": 0.0073461891643709825,
+        "pr_auc": 0.008424006816918659,
+        "roc_auc": 0.46889454209065684
+      },
+      "without_p12": {
+        "events": 1089,
+        "positives": 8,
+        "chance_pr_auc": 0.0073461891643709825,
+        "pr_auc": 0.008424006816918659,
+        "roc_auc": 0.46889454209065684
+      }
+    },
+    "random_forest": {
+      "with_p12": {
+        "events": 1089,
+        "positives": 8,
+        "chance_pr_auc": 0.0073461891643709825,
+        "pr_auc": 0.01031838108248442,
+        "roc_auc": 0.4504509713228492
+      },
+      "without_p12": {
+        "events": 1089,
+        "positives": 8,
+        "chance_pr_auc": 0.0073461891643709825,
+        "pr_auc": 0.01031838108248442,
+        "roc_auc": 0.4504509713228492
+      }
+    }
+  }
+}
