@@ -36,6 +36,87 @@ def _plain(v: str) -> str:
         v = v.replace(a, b)
     return v
 
+# Speaker notes: what to say on each slide, in plain words. No numbers here: the numbers are on
+# the slides themselves and come from the result files (AGENTS.md invariant 1).
+NOTES = {
+    'SynAthlete-AIoT': (
+        "Good morning. Our project is an AI system that warns a coach when a runner's injury "
+        'risk is building up, explains why, and runs on an edge-fog-cloud IoT design. Our '
+        'main rule: everything is tested honestly, and every number comes from code.'),
+    'Problem and the corrected research gap': (
+        'Coaches see injuries only after they happen. Recent AIoT frameworks describe the '
+        'system but do not build the prediction or the explanation part. Since Review 1 we '
+        'corrected our gap: a real dataset with daily logs and real injuries exists, so the '
+        'real gap is that no public dataset joins smartwatch-style sensor streams with real '
+        'injuries. We also found that many reported accuracies are inflated by leakage, so '
+        'honest testing is part of our contribution.'),
+    'Objectives from Review 1: all implemented': (
+        'These are our five objectives from Review 1. Every one is implemented; the third '
+        'column says where the code is, and the last column says what state it is in. I can '
+        'open any of these files during the demo.'),
+    'Datasets: each with one honest role': (
+        'We audited every dataset. Only the Lövdal runner logs contain real injuries, so '
+        'every injury claim comes from them. The wearable datasets drive the IoT and '
+        'synthetic-data parts. Two datasets of unknown origin are used only as labelled '
+        'demos.'),
+    'Pipeline': (
+        'This is the whole system from left to right: data, synthetic data, the watch-level '
+        'edge, the phone-level fog, the cloud model, explanations and the coach dashboard. '
+        'Green boxes are the IoT tiers, which run as separate programs.'),
+    'Methodology: honest evaluation, fixed before any result': (
+        'This slide is why our numbers can be trusted. Models are always tested on runners '
+        'they never saw. Ten runners are locked away for one final exam. Settings are chosen '
+        'on separate validation runners, never on the test. We also run a leak alarm, and we '
+        'wrote the pass marks down before running anything.'),
+    'Implementation progress': (
+        'Here is where each module stands. All code is written and tested; the long training '
+        'runs for synthetic data and the final steps are running now, and their results '
+        'update these slides automatically.'),
+    'Result: injury prediction is hard, and we report it honestly': (
+        'Each bar is one model tested on runners it never saw. The dashed line is guessing. '
+        'All real models beat guessing, but only modestly, and none is clearly best: the '
+        'differences are smaller than the variation between rounds. This is an honest result:'
+        ' training logs alone carry little warning before an injury.'),
+    'Result: we rebuilt the published method correctly': (
+        "We copied the published paper's exact method, including a step that peeks at the "
+        'labels, and it passed our pre-registered check, so our rebuild is correct. Then we '
+        'removed only the peeking step, and the same model scored like the simple baselines. '
+        'That is one of our findings.'),
+    'Result: synthetic wearable data': (
+        'Three generators learn to draw realistic sensor clips, only from training people. We'
+        ' judge the clips on real people they never saw: can a judge tell them apart, does a '
+        'model trained only on them still work, and are they copying anyone. The pass marks '
+        'were fixed in advance.'),
+    'Result: activity recognition and edge-fog-cloud': (
+        'Our activity model recognises what a person is doing from sensors, on people it '
+        'never saw, far above guessing. In the IoT system the watch-level edge sends short '
+        'summaries instead of raw data, so much less data reaches the cloud. This is '
+        'simulated on one laptop.'),
+    'Result: explanations that are tested, not assumed': (
+        'For every risk score the coach sees why: which inputs pushed the risk up. We do not '
+        'just trust these explanations: each one must pass a deletion test, a randomisation '
+        'test and a stability test.'),
+    'Live demo: coach dashboard': (
+        'Now the live demo. I start with the athletes page, open the riskiest runner, show '
+        'the reason sentence, then the live sensor page, the synthetic data page, the results'
+        ' page and finally the honesty page. The data was prepared in advance, so the demo '
+        'cannot fail.'),
+    'Code tour: where each part lives': (
+        'If you would like to see code, these are the files for each part. Every part has '
+        'tests, and one command runs all of them.'),
+    'Research paper and project report': (
+        'Our IEEE-style paper draft and project report are written; all their numbers are '
+        'inserted by code from the same result files, so the paper always matches the '
+        'experiments. We will confirm the target conference with our guide.'),
+    'Honesty and limitations': (
+        'We are open about the limits: injury prediction from logs is only modestly accurate;'
+        ' the dataset removed healthy days near injuries; the IoT tiers are simulated; '
+        'synthetic data is used only for training; and the locked final test is opened only '
+        'once.'),
+    'Thank you: questions?': (
+        'Thank you. We are happy to answer questions or show any part again.'),
+}
+
 
 class Deck:
     def __init__(self) -> None:
@@ -56,6 +137,8 @@ class Deck:
         self.n += 1
         self.text(s, str(self.n), Inches(12.6), Inches(7.0), Inches(0.6), Inches(0.4), 11,
                   False, GREY)
+        if title in NOTES:  # visible to the presenter in PowerPoint's presenter view
+            s.notes_slide.notes_text_frame.text = NOTES[title]
         return s
 
     @staticmethod
