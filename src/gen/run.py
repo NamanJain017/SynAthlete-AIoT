@@ -366,6 +366,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("stage", choices=["pamap2", "followup"])
     p.add_argument("--from", dest="src", help="run id of the pamap2 stage (for followup)")
     p.add_argument("--resume", help="run id to continue after a crash (finished parts are kept)")
+    p.add_argument("--workers", type=int, default=4, help="jobs at once (GPU memory share each)")
     args = p.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -392,7 +393,7 @@ def main(argv: list[str] | None = None) -> int:
         folder = OUT / args.src
         prev = json.loads((folder / "metrics_pamap2.json").read_text("utf-8"))["pamap2_rounds"]
         settings = {g: _consensus(prev, g) for g in GENERATORS}
-        with ProcessPoolExecutor(max_workers=4) as ex:
+        with ProcessPoolExecutor(max_workers=args.workers) as ex:
             wesad = list(ex.map(wesad_fold, range(5), [settings] * 5, [str(folder)] * 5))
             injury = list(ex.map(injury_round, range(5), [settings["timegan"]] * 5,
                                  [str(folder)] * 5))
