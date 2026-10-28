@@ -1,0 +1,147 @@
+{
+ "label": "DRY RUN on development round 1 (not the lockbox)",
+ "quick_budget": true,
+ "seeds": [
+  0
+ ],
+ "combiner": [
+  {
+   "seed": 0,
+   "C": 0.01,
+   "coef": [
+    0.21564443435509056,
+    0.16641984346433164
+   ],
+   "trials": [
+    {
+     "C": 0.01,
+     "val_ap": 0.04747352813278354,
+     "val_auc": 0.7085793872942467
+    },
+    {
+     "C": 0.1,
+     "val_ap": 0.04655448301994787,
+     "val_auc": 0.7095085488659785
+    },
+    {
+     "C": 1.0,
+     "val_ap": 0.046131320451796985,
+     "val_auc": 0.7094969584929425
+    },
+    {
+     "C": 10.0,
+     "val_ap": 0.04603384326661077,
+     "val_auc": 0.7095394565274082
+    }
+   ]
+  }
+ ],
+ "sequence_arm": {
+  "model": "lstm",
+  "setting": {
+   "batch_size": 128,
+   "max_epochs": 60,
+   "patience": 10,
+   "optimizer": "adam",
+   "dropout": 0.2,
+   "hidden": 16,
+   "layers": 2,
+   "lr": 0.0005813066391371799,
+   "pos_weight": "balanced",
+   "weight_decay": 0.0
+  },
+  "trials": [
+   {
+    "model": "gru",
+    "setting": {
+     "batch_size": 128,
+     "max_epochs": 60,
+     "patience": 10,
+     "optimizer": "adam",
+     "dropout": 0.2,
+     "hidden": 16,
+     "layers": 2,
+     "lr": 0.0005813066391371799,
+     "pos_weight": "balanced",
+     "weight_decay": 0.0
+    },
+    "val_ap": 0.044205153253997355,
+    "val_auc": 0.6944594153429495
+   },
+   {
+    "model": "lstm",
+    "setting": {
+     "batch_size": 128,
+     "max_epochs": 60,
+     "patience": 10,
+     "optimizer": "adam",
+     "dropout": 0.2,
+     "hidden": 16,
+     "layers": 2,
+     "lr": 0.0005813066391371799,
+     "pos_weight": "balanced",
+     "weight_decay": 0.0
+    },
+    "val_ap": 0.04684992428802815,
+    "val_auc": 0.7044406582559193
+   },
+   {
+    "model": "tcn",
+    "setting": {
+     "batch_size": 128,
+     "max_epochs": 60,
+     "patience": 10,
+     "optimizer": "adam",
+     "pos_weight": 1,
+     "weight_decay": 0.0,
+     "channels": 32,
+     "dropout": 0.0,
+     "kernel": 3,
+     "levels": 3,
+     "lr": 0.0005813066391371799
+    },
+    "val_ap": 0.03288813694674048,
+    "val_auc": 0.6023140179766686
+   }
+  ]
+ },
+ "tabular_arm": {
+  "model": "random_forest",
+  "setting": {
+   "n_estimators": 500,
+   "class_weight": null,
+   "max_depth": 4,
+   "max_features": 0.5,
+   "min_samples_leaf": 50
+  },
+  "trials": [
+   {
+    "model": "random_forest",
+    "setting": {
+     "n_estimators": 500,
+     "class_weight": null,
+     "max_depth": 4,
+     "max_features": 0.5,
+     "min_samples_leaf": 50
+    },
+    "val_ap": 0.030960286488473186,
+    "val_auc": 0.6656882460095311
+   },
+   {
+    "model": "catboost",
+    "setting": {
+     "iterations": 2000,
+     "early_stopping_rounds": 100,
+     "eval_metric": "PRAUC",
+     "auto_class_weights": null,
+     "depth": 4,
+     "l2_leaf_reg": 8.52240251918126,
+     "learning_rate": 0.01937688797123933
+    },
+    "val_ap": 0.029075348327634178,
+    "val_auc": 0.6376772119744007
+   }
+  ]
+ },
+ "tries": 9
+}

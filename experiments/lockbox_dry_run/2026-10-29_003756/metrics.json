@@ -1,0 +1,393 @@
+{
+  "label": "DRY RUN on development round 1 (not the lockbox)",
+  "quick_budget": true,
+  "sequence_arm": {
+    "model": "lstm",
+    "setting": {
+      "batch_size": 128,
+      "max_epochs": 60,
+      "patience": 10,
+      "optimizer": "adam",
+      "dropout": 0.2,
+      "hidden": 16,
+      "layers": 2,
+      "lr": 0.0005813066391371799,
+      "pos_weight": "balanced",
+      "weight_decay": 0.0
+    },
+    "trials": [
+      {
+        "model": "gru",
+        "setting": {
+          "batch_size": 128,
+          "max_epochs": 60,
+          "patience": 10,
+          "optimizer": "adam",
+          "dropout": 0.2,
+          "hidden": 16,
+          "layers": 2,
+          "lr": 0.0005813066391371799,
+          "pos_weight": "balanced",
+          "weight_decay": 0.0
+        },
+        "val_ap": 0.044205153253997355,
+        "val_auc": 0.6944594153429495
+      },
+      {
+        "model": "lstm",
+        "setting": {
+          "batch_size": 128,
+          "max_epochs": 60,
+          "patience": 10,
+          "optimizer": "adam",
+          "dropout": 0.2,
+          "hidden": 16,
+          "layers": 2,
+          "lr": 0.0005813066391371799,
+          "pos_weight": "balanced",
+          "weight_decay": 0.0
+        },
+        "val_ap": 0.04684992428802815,
+        "val_auc": 0.7044406582559193
+      },
+      {
+        "model": "tcn",
+        "setting": {
+          "batch_size": 128,
+          "max_epochs": 60,
+          "patience": 10,
+          "optimizer": "adam",
+          "pos_weight": 1,
+          "weight_decay": 0.0,
+          "channels": 32,
+          "dropout": 0.0,
+          "kernel": 3,
+          "levels": 3,
+          "lr": 0.0005813066391371799
+        },
+        "val_ap": 0.03288813694674048,
+        "val_auc": 0.6023140179766686
+      }
+    ]
+  },
+  "tabular_arm": {
+    "model": "random_forest",
+    "setting": {
+      "n_estimators": 500,
+      "class_weight": null,
+      "max_depth": 4,
+      "max_features": 0.5,
+      "min_samples_leaf": 50
+    },
+    "trials": [
+      {
+        "model": "random_forest",
+        "setting": {
+          "n_estimators": 500,
+          "class_weight": null,
+          "max_depth": 4,
+          "max_features": 0.5,
+          "min_samples_leaf": 50
+        },
+        "val_ap": 0.030960286488473186,
+        "val_auc": 0.6656882460095311
+      },
+      {
+        "model": "catboost",
+        "setting": {
+          "iterations": 2000,
+          "early_stopping_rounds": 100,
+          "eval_metric": "PRAUC",
+          "auto_class_weights": null,
+          "depth": 4,
+          "l2_leaf_reg": 8.52240251918126,
+          "learning_rate": 0.01937688797123933
+        },
+        "val_ap": 0.029075348327634178,
+        "val_auc": 0.6376772119744007
+      }
+    ]
+  },
+  "tries": 9,
+  "test_runners": [
+    7,
+    14,
+    20,
+    27,
+    44,
+    45,
+    50,
+    52,
+    53,
+    56,
+    57,
+    60
+  ],
+  "fused": {
+    "role": "primary: the model declared for the locked test (D-021, D-023)",
+    "test_events": 7915,
+    "test_injuries": 107,
+    "test_injury_rate": 0.013518635502210993,
+    "pr_auc": 0.02465247785270286,
+    "roc_auc": 0.6505991937337215,
+    "val_pr_auc": 0.04747352813278354,
+    "val_roc_auc": 0.7085793872942467,
+    "calibration_platt": {
+      "brier": 0.013312581126387503,
+      "ece": 0.005093045797583083,
+      "slope": 0.7171437211828274,
+      "intercept": -0.2674933841619764
+    },
+    "alert": {
+      "sensitivity": 0.7383177570093458,
+      "specificity": 0.4546618852459016,
+      "precision": 0.018215356237030206,
+      "false_alarms_per_caught_injury": 53.89873417721519,
+      "alerts_per_100_events": 54.79469361970941,
+      "mcc": 0.0447773521900204
+    },
+    "seeds": [
+      {
+        "test_events": 7915,
+        "test_injuries": 107,
+        "test_injury_rate": 0.013518635502210993,
+        "pr_auc": 0.02465247785270286,
+        "roc_auc": 0.6505991937337215,
+        "val_pr_auc": 0.04747352813278354,
+        "val_roc_auc": 0.7085793872942467,
+        "alert_nobody": false,
+        "alert_threshold": 0.01276075706404575,
+        "alert": {
+          "tp": 79,
+          "fp": 4258,
+          "tn": 3550,
+          "fn": 28,
+          "alerts": 4337,
+          "sensitivity": 0.7383177570093458,
+          "specificity": 0.4546618852459016,
+          "precision": 0.018215356237030206,
+          "false_alarms_per_caught_injury": 53.89873417721519,
+          "alerts_per_100_events": 54.79469361970941,
+          "mcc": 0.0447773521900204
+        },
+        "platt": {
+          "slope": 2.5651690901568234,
+          "intercept": 7.078322029995581,
+          "slope_flag": false
+        },
+        "calibration_raw": {
+          "brier": 0.013303527329702957,
+          "ece": 0.004765299441528475,
+          "slope": 1.8395949067782322,
+          "intercept": 0.09574851586294102
+        },
+        "calibration_platt": {
+          "brier": 0.013312581126387503,
+          "ece": 0.005093045797583083,
+          "slope": 0.7171437211828274,
+          "intercept": -0.2674933841619764
+        },
+        "net_benefit": {
+          "risks": [
+            0.005,
+            0.01,
+            0.015,
+            0.02,
+            0.025,
+            0.03,
+            0.035,
+            0.04,
+            0.045,
+            0.05,
+            0.055,
+            0.06,
+            0.065,
+            0.07,
+            0.075,
+            0.08,
+            0.085,
+            0.09,
+            0.095,
+            0.1
+          ],
+          "model": [
+            0.008690959535517132,
+            0.004904381783724803,
+            0.0013500036876585297,
+            0.00044090914950945664,
+            5.1832774511232846e-05,
+            -0.0005053695514845233,
+            0.00016038282398148714,
+            -0.00016845651716150772,
+            -9.392994281518625e-05,
+            -3.9897596169830775e-05,
+            -7.353260669748352e-06,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "treat_all": [
+            0.008561442715789942,
+            0.003554177274960598,
+            -0.001503923348009143,
+            -0.006613637242641846,
+            -0.011775758459270778,
+            -0.016991097420401037,
+            -0.02226048134485908,
+            -0.027584754685196885,
+            -0.03296477957883666,
+            -0.038401436313462115,
+            -0.04389562380718415,
+            -0.04944826010403086,
+            -0.05506028288533582,
+            -0.060732649997622595,
+            -0.06646633999760973,
+            -0.07226235271498804,
+            -0.07812170983364919,
+            -0.08404545549207582,
+            -0.09003465690363426,
+            -0.09609040499754334
+          ]
+        },
+        "combiner_C": 0.01,
+        "combiner_coef": [
+          0.21564443435509056,
+          0.16641984346433164
+        ],
+        "arms_test": {
+          "seq": {
+            "pr_auc": 0.026633207595837375,
+            "roc_auc": 0.6473351080128696
+          },
+          "tab": {
+            "pr_auc": 0.02030070995342704,
+            "roc_auc": 0.6302175099586333
+          }
+        }
+      }
+    ],
+    "events": 7915,
+    "injuries": 107,
+    "runners_with_injury": 11,
+    "pr_auc_ci": {
+      "estimate": 0.02465247785270286,
+      "low": 0.018318052788300586,
+      "high": 0.04957600712652318,
+      "resamples_used": 2000,
+      "resamples_discarded": 0,
+      "bootstrap_seed": 0
+    },
+    "roc_auc_ci": {
+      "estimate": 0.6505991937337215,
+      "low": 0.6112612009038468,
+      "high": 0.6864526448979841,
+      "resamples_used": 2000,
+      "resamples_discarded": 0,
+      "bootstrap_seed": 0
+    }
+  },
+  "arms_on_own_files": {
+    "sequence": {
+      "role": "secondary: scored once, never used to choose anything (D-030)",
+      "file": "day",
+      "events": 7918,
+      "injuries": 108,
+      "runners_with_injury": 11,
+      "pr_auc_ci": {
+        "estimate": 0.026682006769172234,
+        "low": 0.020032879943254967,
+        "high": 0.04361580171876256,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      },
+      "roc_auc_ci": {
+        "estimate": 0.6473763456157823,
+        "low": 0.6115226175644372,
+        "high": 0.6808514699451088,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      }
+    },
+    "tabular": {
+      "role": "secondary: scored once, never used to choose anything (D-030)",
+      "file": "week",
+      "events": 7997,
+      "injuries": 107,
+      "runners_with_injury": 11,
+      "pr_auc_ci": {
+        "estimate": 0.019865526927328424,
+        "low": 0.013421037626470018,
+        "high": 0.05059878711577354,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      },
+      "roc_auc_ci": {
+        "estimate": 0.6276595240633476,
+        "low": 0.5748708404206514,
+        "high": 0.6694715681543226,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      }
+    }
+  },
+  "lovdal_label_free_paper_split": {
+    "day": {
+      "role": "secondary: scored once, never used to choose anything (D-030); threshold-free only; trained on runners 0-63 with training-rows scaling, so not the paper's own number",
+      "file": "day",
+      "events": 7918,
+      "injuries": 108,
+      "runners_with_injury": 11,
+      "pr_auc_ci": {
+        "estimate": 0.019798941415524508,
+        "low": 0.015799837502192826,
+        "high": 0.028406043800669547,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      },
+      "roc_auc_ci": {
+        "estimate": 0.614180537772087,
+        "low": 0.5827379715964816,
+        "high": 0.6574072637350379,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      }
+    },
+    "week": {
+      "role": "secondary: scored once, never used to choose anything (D-030); threshold-free only; trained on runners 0-63 with training-rows scaling, so not the paper's own number",
+      "file": "week",
+      "events": 7997,
+      "injuries": 107,
+      "runners_with_injury": 11,
+      "pr_auc_ci": {
+        "estimate": 0.029013710916723445,
+        "low": 0.01794738225211005,
+        "high": 0.045522880814479715,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      },
+      "roc_auc_ci": {
+        "estimate": 0.6467704298591616,
+        "low": 0.5929858185488367,
+        "high": 0.7004977949228122,
+        "resamples_used": 2000,
+        "resamples_discarded": 0,
+        "bootstrap_seed": 0
+      }
+    }
+  },
+  "not_a_comparison": "fused (shared days) and the secondaries (own files) are scored on different rows; no paired comparison is made here",
+  "summary_sentence": "On the 12 locked runners (7915 shared days, 107 injuries) the declared fused model reached ROC-AUC 0.651 (95% runner bootstrap 0.611-0.686) and PR-AUC 0.025; with only 12 runners this interval understates the uncertainty."
+}

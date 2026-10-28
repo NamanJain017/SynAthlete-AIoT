@@ -1,0 +1,32 @@
+# Piece 7 fused model: candidates and budget DECLARED NOW (D-023, D-024), before any piece-3
+# exam score exists, so those scores cannot shape it. Not run in piece 3.
+# Arms and settings are chosen inside each round on that round's validation runners only.
+
+rows: shared_days                    # athlete-days present in both Lövdal files (D-014)
+selection_score: average_precision   # same as piece 3 (D-024)
+settings_per_arm: 8                  # same budget as every piece-3 model
+
+sequence_arm:                        # day file, 7 steps x 10 features
+  gru: {grid: from configs/baselines/lovdal.yaml models.gru}    # reused unchanged
+  lstm: {grid: same as gru}
+  tcn:
+    fixed: {batch_size: 128, max_epochs: 60, patience: 10, optimizer: adam}
+    grid:
+      channels: [16, 32, 64]
+      kernel: [2, 3]
+      levels: [2, 3]
+      dropout: [0.0, 0.2]
+      lr: {loguniform: [3.0e-4, 3.0e-3]}
+
+tabular_arm:                         # week file, 69 inputs
+  random_forest: {grid: from configs/baselines/lovdal.yaml models.random_forest}
+  catboost: {grid: from configs/baselines/lovdal.yaml models.catboost}
+
+combiner:
+  model: logistic_regression
+  grid: {C: [0.01, 0.1, 1.0, 10.0]}
+  trained_on: inner_out_of_fold_predictions
+  inner_folds: 5                     # GroupKFold over the round's training runners (grouped by runner)
+
+total_budget_per_round: 44           # 3 sequence arms x 8 + 2 tabular arms x 8 + 4 combiner settings
+locked_test: primary model (D-021, D-023)
