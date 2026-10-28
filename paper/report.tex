@@ -1,0 +1,144 @@
+% SynAthlete-AIoT project report (Review 2 rubric: "Project report & draft of paper").
+% Same rule as the paper: every number comes from generated/*.tex (python tasks.py paper-figures).
+\documentclass[11pt,a4paper]{report}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx,booktabs,amsmath,url,xspace,hyperref}
+\input{generated/numbers.tex}
+\title{SynAthlete-AIoT\\[4pt]\large An Explainable AIoT Framework for Athlete Injury-Risk
+Prediction Using Synthesized Wearable Data\\[10pt]\normalsize Project Report (Review 2),
+21CSE292P Artificial Intelligence of Things (PBL)}
+\author{[Team names]\\ SRM Institute of Science and Technology}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\chapter{Introduction}
+\section{Problem}
+Coaches cannot see injury risk building up over days. Wearable AIoT systems promise early
+warning, but published athlete-health frameworks mostly describe the architecture and leave
+the prediction and explanation layers unimplemented~\cite{aiotframework2026}.
+\section{Research gap (corrected since Review 1)}
+L\"ovdal et al.\ published seven years of daily training logs from \lovdalRunners{} competitive
+runners with real injuries~\cite{lovdal2021data}, so the gap is narrower than first stated:
+\emph{no public dataset pairs high-frequency physiological streams with real injury outcomes}.
+\section{Objectives}
+\begin{enumerate}
+\item Bridge the data gap with synthetic wearable data (TimeGAN, WGAN-GP; TimeVAE and classic
+augmentation as comparisons).
+\item Implement simulated edge--fog--cloud tiers with measured bandwidth and latency.
+\item Build a fused model (sequence + tabular arms) producing a calibrated 0--100 risk score.
+\item Explain predictions with SHAP and attribution methods, validated by tests.
+\item Deliver a coach dashboard.
+\end{enumerate}
+\section{Honesty rules}
+Models are tested only on people they never saw; injury claims come only from real injury
+labels; synthetic data is labelled synthetic and used only for training; every number in this
+report is produced by code.
+
+\chapter{Literature Review}
+Injury prediction from training load has been studied with tree ensembles and boosting;
+L\"ovdal et al.\ used bagged XGBoost~\cite{lovdal2021,chen2016}. Tree models remain strong on
+tabular data~\cite{grinsztajn2022,breiman2001,prokhorenkova2018}, recurrent networks read
+sequences~\cite{cho2014}, and convolutional and recurrent models recognise activities from
+wearables~\cite{hammerla2016}. TimeGAN~\cite{yoon2019}, WGAN-GP~\cite{gulrajani2017} and
+TimeVAE~\cite{desai2021} generate time series. SHAP~\cite{lundberg2017} and integrated
+gradients~\cite{sundararajan2017} explain predictions, but must pass sanity
+checks~\cite{adebayo2018}. Leakage and selection outside the test loop inflate machine-learning
+results~\cite{kapoor2023,varma2006,cawley2010}.
+
+\chapter{Datasets and Their Roles}
+Every dataset was audited (origin, licence, contents) and given one role
+(Table~\ref{tab:data}). Only the L\"ovdal logs carry real injuries; the wearable datasets
+support the IoT and synthetic-data parts; datasets of unknown origin are demos only.
+\input{generated/table_datasets.tex}
+
+\chapter{Methodology}
+\section{Evaluation protocol}
+Splits are by person and were created once. The ten most recently joined runners are a sealed
+final test, opened once after an evaluation freeze. The remaining 64 runners form five
+development rounds, each with training, validation and test runners; validation runners choose
+settings, calibration, the alert level and early stopping; test runners are scored once.
+PR-AUC is the headline score (rare events~\cite{saito2015}), reported next to its chance level;
+ROC-AUC is reported for comparison. Uncertainty uses a runner-level cluster
+bootstrap~\cite{field2007}.
+\section{Leakage controls}
+One scaler fitted on training runners only; inputs never include identities, dates or a
+runner's own event history (which reveals the label in this dataset); a shuffled-label leak
+alarm~\cite{ojala2010}; and an independent code review. All rules were written in the project's
+decision log before the runs they govern.
+\section{System design}
+Data $\rightarrow$ synthetic data $\rightarrow$ edge (reflex) $\rightarrow$ fog (supervisor)
+$\rightarrow$ cloud (deep model) $\rightarrow$ explanations $\rightarrow$ coach dashboard.
+
+\chapter{Implementation}
+\section{Code structure}
+\begin{tabular}{ll}\toprule
+Part & Code \\\midrule
+Data loading and person-level splits & \texttt{src/data/}, \texttt{src/models/data.py} \\
+Scoring rules and uncertainty & \texttt{src/eval/metrics.py}, \texttt{bootstrap.py} \\
+Baselines and paper rebuild & \texttt{src/models/run.py}, \texttt{lovdal\_method.py} \\
+Generators and their checks & \texttt{src/gen/} \\
+Edge--fog--cloud tiers & \texttt{src/pipeline/} \\
+Fused model & \texttt{src/models/fused.py} \\
+Explanations and checks & \texttt{src/xai/} \\
+Dashboard & \texttt{src/dashboard/} \\\bottomrule
+\end{tabular}
+\section{Baselines}
+Constant risk, an ACWR-style rule~\cite{lolli2019}, logistic regression, random forest,
+CatBoost, a GRU, and the L\"ovdal bagged XGBoost (exact copy for a reproduction check; label-free
+variant for comparison). Eight settings per model and round by seeded random
+search~\cite{bergstra2012}; the chosen setting is refit with three seeds.
+\section{Synthetic data}
+Class-conditional TimeGAN, WGAN-GP and TimeVAE are trained only on each round's training people;
+settings are chosen by validation train-on-synthetic-test-on-real macro-F1; classic augmentation
+is the non-learned comparison. Pass marks (realism, usefulness, privacy) were fixed in advance.
+\section{Edge--fog--cloud}
+Three operating-system processes connected by queues: the edge checks each 5-second window
+(heart-rate and motion rule plus an activity CNN) and sends a short summary; the fog groups
+windows into sessions; the cloud runs the daily injury model. A cloud-only mode sends raw windows.
+\section{Fused model}
+Sequence arm (GRU, LSTM or TCN~\cite{bai2018}) and tabular arm (random forest or CatBoost),
+combined by logistic regression on out-of-fold predictions grouped by runner; the calibrated
+output is shown as a 0--100 risk score.
+\section{Explanations}
+TreeSHAP, integrated gradients, an explanation-only attention model and 1D Grad-CAM, each
+checked by deletion, model-randomisation and stability tests.
+\section{Dashboard}
+Eight Streamlit pages (home, athletes, athlete detail, live sensor, synthetic data, results,
+training lab, data and honesty), built from data prepared in advance.
+
+\chapter{Results}
+\input{generated/table_injury.tex}
+The leak alarm passed (shuffled-label ROC-AUC \canaryAuc{}). Learned injury models reach ROC-AUC
+\injuryAucRange{}. The exact copy of the published method passed its reproduction check
+(ROC-AUC \reproDayAuc{}); without its label-reading normalisation it reaches \labelFreeAuc{}.
+The fused model reaches ROC-AUC \fusedAuc{}. Activity recognition on unseen people reaches
+macro-F1 \pamapRealFone{}.
+\input{generated/table_generators.tex}
+\input{generated/table_tiers.tex}
+\explainSummary{} \lockboxSummary{}
+
+\chapter{Testing and Validation}
+The project has automated tests for every module (run with \texttt{python tasks.py check}):
+split integrity and lockbox protection, scoring rules with hand-worked examples, leak guards
+(the scaler sees training rows only; the combiner never sees predictions from models trained on
+the same runner), generator shapes and seeding, tier message flow, explanation checks and every
+dashboard page. Independent reviews of the evaluation code found no blocking problem; their
+smaller findings were fixed and logged.
+
+\chapter{Conclusion and Future Work}
+The pipeline is implemented end to end and evaluated honestly. Injury risk from training logs is
+only modestly predictable; the remaining work is the final locked test, the camera-ready paper
+and the conference submission.
+
+\appendix
+\chapter{AI-Use Statement}
+AI coding assistants (Claude Code; Antigravity with Claude Opus 4.6 and Gemini 3.8 Flash) helped
+write code and text under human direction. Every AI contribution is logged in
+\texttt{docs/AI\_LOG.md}; all numbers come from code; all claims were checked by the team.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}
