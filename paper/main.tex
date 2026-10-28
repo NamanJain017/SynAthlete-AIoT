@@ -1,0 +1,146 @@
+% SynAthlete-AIoT: IEEE conference draft (D-009). Open in Overleaf (IEEEtran class).
+% Every number comes from generated/*.tex, written by `python tasks.py paper-figures` from the
+% experiments/**/metrics.json files (AGENTS.md invariant 1). Do not type numbers by hand.
+\documentclass[conference]{IEEEtran}
+\usepackage{graphicx,booktabs,amsmath,url,xspace}
+\input{generated/numbers.tex}
+
+\begin{document}
+\title{SynAthlete-AIoT: An Honest, Explainable AIoT Pipeline for Athlete Injury-Risk Prediction
+with Synthetic Wearable Data}
+\author{\IEEEauthorblockN{[Author names: to be added]}
+\IEEEauthorblockA{[Department], SRM Institute of Science and Technology, India}}
+\maketitle
+
+\begin{abstract}
+Wearable artificial-intelligence-of-things (AIoT) systems promise early warning of athlete
+injuries, but published frameworks often stop at the design, and reported accuracies can be
+inflated by evaluation shortcuts. We implement a complete pipeline (synthetic wearable data,
+simulated edge--fog--cloud tiers, a fused sequence-plus-tabular injury model, checked
+explanations and a coach dashboard) and evaluate it under a pre-registered, person-level
+protocol on real injury data from 74 competitive runners. Learned models predict injuries only
+modestly above chance (ROC-AUC \injuryAucRange{} over five development groups); a faithful
+rebuild of a published bagged-XGBoost method reproduces its behaviour, and without its
+label-reading normalisation it performs like simple baselines. Edge processing sends
+\tiersReduction{} less data to the cloud. We report every model, failures included, and release
+the protocol and code.
+\end{abstract}
+
+\section{Introduction}
+Coaches need to see injury risk building up over days, not in single snapshots. Recent AIoT
+designs for athlete health propose wearables with edge--fog--cloud processing but leave the
+prediction and explanation layers unimplemented~\cite{aiotframework2026}. Public data make the
+problem harder: no public dataset pairs high-frequency physiological streams with real injury
+outcomes. Daily training logs with real injuries do exist~\cite{lovdal2021,lovdal2021data},
+while wearable datasets with rich physiology have no injury labels~\cite{reiss2012,schmidt2018}.
+
+A second problem is evaluation. Injury events are rare, models are tuned on small cohorts, and
+preprocessing can quietly use test labels; such leakage inflates results~\cite{kapoor2023}, and
+model selection outside the test loop biases them~\cite{varma2006,cawley2010}.
+
+\textbf{Contributions.} (1) An end-to-end, open AIoT pipeline in which each component has an
+explicit, honest role. (2) A pre-registered, person-level evaluation protocol with a sealed
+final test, a leak alarm and runner-level uncertainty. (3) A faithful reproduction of a
+published injury-prediction method, with and without its label-reading normalisation.
+(4) A generator comparison (TimeGAN, WGAN-GP, TimeVAE, classic augmentation) judged against
+criteria fixed before any run. (5) Explanations checked by deletion, randomisation and stability
+tests rather than assumed.
+
+\section{Related Work}
+\textit{Injury prediction.} L\"ovdal et al.\ predicted injuries of competitive runners from
+daily logs with bagged XGBoost~\cite{lovdal2021,chen2016}. Tree ensembles remain strong on
+tabular data~\cite{grinsztajn2022,breiman2001,prokhorenkova2018}; recurrent networks read days
+in order~\cite{cho2014}. \textit{Synthetic time series.} TimeGAN~\cite{yoon2019},
+WGAN-GP~\cite{gulrajani2017} and TimeVAE~\cite{desai2021} generate sequences; classic
+augmentation~\cite{um2017} is a strong baseline. \textit{Explanations.} SHAP~\cite{lundberg2017}
+and integrated gradients~\cite{sundararajan2017} attribute predictions to inputs; sanity checks
+show that attributions must be tested~\cite{adebayo2018}. \textit{Evaluation.} With rare events,
+PR-AUC is more informative than ROC-AUC~\cite{saito2015,davis2006}; calibration and decision
+curves complete the picture~\cite{vancalster2019,vickers2006}.
+
+\section{Data and Roles}
+Table~\ref{tab:data} lists every dataset and its single role. Injury claims come only from the
+L\"ovdal runner logs~\cite{lovdal2021data}: \lovdalRunners{} runners, a day file (7 days
+$\times$ 10 features) and a week file (3 weeks $\times$ 22 features plus 3 relative changes).
+PAMAP2~\cite{reiss2012} provides the wearable stream (heart rate and three accelerometers, 25~Hz,
+5.12-s windows); WESAD~\cite{schmidt2018} tests generator generalisation; Sport DB 2.0 checks
+heart-rate realism; SoccerMon~\cite{midoglu2024} and PMData are exploratory. Datasets of unknown
+origin appear only as labelled demos. Synthetic data is never evidence about real injuries.
+\input{generated/table_datasets.tex}
+
+\section{Evaluation Protocol}
+\textit{Splits.} All splits are by person. The ten most recently joined runners form a sealed
+final test, opened once after an evaluation freeze. The other 64 runners form five development
+rounds; in each, settings, Platt calibration, the alert level and early stopping use that
+round's validation runners only, and its test runners are scored once.
+\textit{Scoring.} The headline is PR-AUC (average precision) next to the injury rate (its
+chance level), with ROC-AUC for comparison with the literature. The alert level minimises
+$|\mathrm{sensitivity}-\mathrm{specificity}|$ on validation runners. Calibration is reported
+after Platt scaling~\cite{vancalster2019}.
+\textit{Tuning.} Eight settings per model and round by seeded random search~\cite{bergstra2012},
+written before the first run; the chosen setting is refit with three seeds.
+\textit{Leakage controls.} One z-score scaler fitted on training runners only; no identity,
+date or own-history inputs (in this dataset, a runner's own event history reveals the label);
+a shuffled-label alarm~\cite{ojala2010}; an independent code review.
+\textit{Uncertainty.} Runner-level cluster bootstrap within test groups~\cite{field2007}.
+
+\section{Methods}
+\textit{Baselines.} Constant risk, an uncoupled ACWR-style rule~\cite{lolli2019}, logistic
+regression, random forest, CatBoost and a GRU; the L\"ovdal bagged XGBoost as an exact copy
+(reproduction check on stand-in runners) and as a label-free variant.
+\textit{Fused model.} A sequence arm (GRU, LSTM or TCN~\cite{bai2018}) on day sequences and a
+tabular arm (random forest or CatBoost) on week features, chosen per round on validation runners,
+combined by logistic regression trained on out-of-fold arm predictions grouped by runner. The
+calibrated output is shown as a 0--100 risk score (its percentile among validation events).
+\textit{Generators.} Class-conditional TimeGAN, WGAN-GP and TimeVAE, trained only on each round's
+training people, with settings chosen by validation train-on-synthetic-test-on-real (TSTR)
+macro-F1; plus classic augmentation.
+\textit{Tiers.} Edge (reflex check and activity CNN per window), fog (session summaries) and
+cloud (daily injury model) run as separate processes; we compare bytes sent and decision latency
+with a cloud-only design.
+\textit{Explanations.} TreeSHAP on the tabular arm, integrated gradients on the sequence arm, an
+explanation-only attention model shown next to integrated gradients, and 1D Grad-CAM on the
+activity CNN; all checked by deletion, model-randomisation and stability tests with thresholds
+fixed in advance.
+
+\section{Results}
+\input{generated/table_injury.tex}
+\textit{Injury prediction.} Table~\ref{tab:injury} shows every model. The leak alarm passed
+(shuffled-label ROC-AUC \canaryAuc{}). Learned models reach ROC-AUC \injuryAucRange{}, with
+differences smaller than the spread between rounds. The fused model reaches ROC-AUC
+\fusedAuc{} and PR-AUC \fusedPrAuc{}. The exact copy of the published method passed its
+pre-registered check (day-file ROC-AUC \reproDayAuc{}); without its label-reading normalisation
+the same model reaches ROC-AUC \labelFreeAuc{}.
+
+\input{generated/table_generators.tex}
+\textit{Synthetic data.} Table~\ref{tab:gen} compares the generators with real-data training
+(real-only macro-F1 \pamapRealFone{}).
+
+\input{generated/table_tiers.tex}
+\textit{Tiers.} Processing at the edge reduced the data sent to the cloud by \tiersReduction{}
+(Table~\ref{tab:tiers}).
+
+\textit{Explanations.} \explainSummary{}
+
+\textit{Final test.} \lockboxSummary{}
+
+\section{Discussion and Limitations}
+Training logs alone carry little warning before an injury; honest models are only modestly
+better than chance, and selection on test data or label-reading normalisation would have hidden
+this. The dataset's authors removed healthy days close to injuries, so alert rates are not daily
+rates and net benefit is not clinical utility. The tiers are simulated on one computer, and the
+wearable streams come from different people than the runners: they demonstrate the system, not
+injury evidence. Synthetic data was used for training only.
+
+\section{Conclusion}
+We implemented and honestly evaluated a complete explainable AIoT pipeline for injury risk.
+The protocol, code and all results, including negative ones, are released for reuse.
+
+\section*{AI-Use Statement}
+AI coding assistants (Claude Code; Antigravity with Claude Opus 4.6 and Gemini 3.8 Flash) helped
+write code and text under human direction; every AI contribution is logged in the project's
+AI\_LOG, every number is produced by code, and all claims were checked by the authors.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+\end{document}

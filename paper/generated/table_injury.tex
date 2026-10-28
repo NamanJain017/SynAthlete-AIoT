@@ -1,0 +1,16 @@
+\begin{table}[t]\centering\caption{Injury prediction, mean $\pm$ SD over five development rounds (chance PR-AUC $\approx$ injury rate)}\label{tab:injury}
+\footnotesize\begin{tabular}{llcc}\toprule
+Model & File & PR-AUC & ROC-AUC \\\midrule
+Constant risk & day & 0.013 $\pm$ 0.000 & 0.500 $\pm$ 0.000 \\
+Constant risk & week & 0.013 $\pm$ 0.000 & 0.500 $\pm$ 0.000 \\
+ACWR-style rule & week & 0.015 $\pm$ 0.001 & 0.540 $\pm$ 0.021 \\
+Logistic regression & day & 0.022 $\pm$ 0.004 & 0.626 $\pm$ 0.019 \\
+Logistic regression & week & 0.020 $\pm$ 0.004 & 0.621 $\pm$ 0.029 \\
+Random forest & day & 0.019 $\pm$ 0.002 & 0.603 $\pm$ 0.024 \\
+Random forest & week & 0.022 $\pm$ 0.007 & 0.614 $\pm$ 0.042 \\
+CatBoost & day & 0.021 $\pm$ 0.004 & 0.598 $\pm$ 0.043 \\
+CatBoost & week & 0.019 $\pm$ 0.002 & 0.606 $\pm$ 0.028 \\
+GRU & day & 0.023 $\pm$ 0.006 & 0.631 $\pm$ 0.009 \\
+L\"ovdal, label-free & day & 0.017 $\pm$ 0.003 & 0.584 $\pm$ 0.044 \\
+L\"ovdal, label-free & week & 0.021 $\pm$ 0.006 & 0.589 $\pm$ 0.066 \\
+\bottomrule\end{tabular}\end{table}

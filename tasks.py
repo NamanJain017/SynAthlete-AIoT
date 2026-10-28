@@ -94,6 +94,14 @@ def demo() -> int:
     return run([sys.executable, "-m", "streamlit", "run", "src/dashboard/app.py"])
 
 
+def paper_figures() -> int:
+    """Paper numbers/tables from the metrics files; --deck also builds slides/review2.pptx."""
+    code = run([sys.executable, "-m", "src.paper.figures"])
+    if "--deck" in sys.argv[2:] and code == 0:
+        code = run([sys.executable, "-m", "src.paper.deck"])
+    return code
+
+
 def splits() -> int:
     """Person-level splits (piece 2): written once to data/splits/, never overwritten.
     --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
@@ -130,7 +138,7 @@ TASKS = {
     "track-c": track_c,
     "explain": explain,
     "demo": demo,
-    "paper-figures": not_implemented("piece 10"),
+    "paper-figures": paper_figures,
 }
 
 if __name__ == "__main__":

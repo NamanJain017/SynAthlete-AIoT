@@ -25,3 +25,4 @@ experiments/**/_logs/
 experiments/generators/*/samples/
 experiments/dashboard/
 experiments/training_lab/
+slides/preview/
