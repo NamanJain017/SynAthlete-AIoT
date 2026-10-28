@@ -131,7 +131,7 @@ def fit_pipeline(r_seq: data.Round, r_tab: data.Round, proc: dict, cands: dict,
                       "s_test": comb.predict_proba(test_f)[:, 1],
                       "seq_val": _sigmoid(val_f[:, 0]), "seq_test": _sigmoid(test_f[:, 0]),
                       "tab_val": _sigmoid(val_f[:, 1]), "tab_test": _sigmoid(test_f[:, 1]),
-                      "predict_seq": p_seq, "predict_tab": p_tab,
+                      "predict_seq": p_seq, "predict_tab": p_tab, "combiner": comb,
                       "combiner_C": tries[best]["C"],
                       "combiner_coef": [float(v) for v in comb.coef_[0]],
                       "combiner_trials": [{k2: v for k2, v in t.items() if k2 != "model"}

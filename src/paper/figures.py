@@ -97,7 +97,7 @@ def numbers(b: dict) -> dict[str, str]:
         n["explainSummary"] = "Explanation checks: n/a."
     lock = _runs("lockbox")
     n["lockboxSummary"] = ("Pending the evaluation freeze." if not lock else
-                           lock[-1][1].get("summary_sentence", NA))
+                           _tex(lock[-1][1].get("summary_sentence", NA)))
     return n
 
 

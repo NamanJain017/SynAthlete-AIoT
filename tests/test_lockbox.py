@@ -92,12 +92,59 @@ def test_dirty_rule(porcelain, dirty):
     assert lockbox.is_dirty(porcelain) is dirty
 
 
-def test_real_repository_lockbox_is_still_sealed():
-    """No eval-freeze tag and no access log exist before the evaluation freeze (D-017)."""
+TAG_COMMIT = "c" * 40
+
+
+def _entry(**changes) -> str:
+    e = {"utc": "2026-10-29T00:00:00+00:00", "kind": "day", "commit": TAG_COMMIT,
+         "tag_object": TAG_OBJECT, "reason": "final evaluation", **changes}
+    return json.dumps(e)
+
+
+OPENED = [_entry(), _entry(kind="week")]
+
+
+@pytest.mark.parametrize("listed, tag_type, log, ok", [
+    (False, "", None, True),                                  # sealed: before the freeze
+    (False, "", OPENED, False),                               # a log but no tag
+    (True, "commit", None, False),                            # lightweight tag
+    (True, "unavailable", None, False),                       # tag type unreadable
+    (True, "tag", None, True),                                # frozen, not opened yet
+    (True, "tag", OPENED, True),                              # opened once: day + week
+    (True, "tag", OPENED + OPENED, True),                     # reopened at the same commit
+    (True, "commit", OPENED, False),                          # opened, but tag not annotated
+    (True, "tag", [], False),                                 # empty log
+    (True, "tag", ["", "  "], False),                         # only blank lines
+    (True, "tag", ["{not json"], False),
+    (True, "tag", ["[1, 2]"], False),                         # JSON but not an entry
+    (True, "tag", [json.dumps({"kind": "day", "commit": TAG_COMMIT})], False),  # keys missing
+    (True, "tag", [_entry(commit=7)], False),                 # value not text
+    (True, "tag", [_entry(commit="c" * 7)], False),           # short hash
+    (True, "tag", [_entry(commit="--all")], False),           # option-like text, never run
+    (True, "tag", [_entry(kind="month")], False),             # unknown file
+    (True, "tag", [_entry(commit=HEAD)], False),              # opened at another commit
+    (True, "tag", [_entry(tag_object="u" * 40)], False),      # tag moved or re-made
+    (True, "tag", [_entry(), _entry(commit=HEAD)], False),    # one good line, one bad
+])
+def test_freeze_record_cases(listed, tag_type, log, ok):
+    problems = lockbox.freeze_record_problems(listed, tag_type, TAG_COMMIT, TAG_OBJECT, log,
+                                              in_history=lambda c: c in (TAG_COMMIT, HEAD))
+    assert (problems == []) is ok, problems
+
+
+def test_freeze_record_needs_the_commit_in_this_history():
+    seen = []
+    problems = lockbox.freeze_record_problems(True, "tag", TAG_COMMIT, TAG_OBJECT, OPENED,
+                                              in_history=lambda c: seen.append(c) or False)
+    assert len(problems) == 2 and seen == [TAG_COMMIT, TAG_COMMIT]
+
+
+def test_real_repository_freeze_record_is_consistent():
+    """Before the freeze: no tag and no access log. After: an annotated tag, and every opening
+    at the tag's commit (D-017). Needs the tags locally (CI checks out with fetch-depth 0)."""
     if lockbox.audit._git("rev-parse", "--git-dir") == "unavailable":
         pytest.skip("not a git checkout")
-    assert lockbox.audit._git("tag", "-l", lockbox.FREEZE_TAG) == ""
-    assert not lockbox.LOG.exists()
+    assert lockbox.repository_freeze_problems() == []
 
 
 def test_no_module_reads_raw_or_locked_lovdal_data_around_the_guard():
