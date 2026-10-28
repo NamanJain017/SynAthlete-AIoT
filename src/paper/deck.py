@@ -69,19 +69,26 @@ NOTES = {
         'on separate validation runners, never on the test. We also run a leak alarm, and we '
         'wrote the pass marks down before running anything.'),
     'Implementation progress': (
-        'Here is where each module stands. All code is written and tested; the long training '
-        'runs for synthetic data and the final steps are running now, and their results '
-        'update these slides automatically.'),
+        'Here is where each module stands. All code is written and tested, every run has '
+        'finished, and the slides are built from the result files.'),
     'Result: injury prediction is hard, and we report it honestly': (
         'Each bar is one model tested on runners it never saw. The dashed line is guessing. '
-        'All real models beat guessing, but only modestly, and none is clearly best: the '
-        'differences are smaller than the variation between rounds. This is an honest result:'
-        ' training logs alone carry little warning before an injury.'),
-    'Result: we rebuilt the published method correctly': (
-        "We copied the published paper's exact method, including a step that peeks at the "
-        'labels, and it passed our pre-registered check, so our rebuild is correct. Then we '
-        'removed only the peeking step, and the same model scored like the simple baselines. '
-        'That is one of our findings.'),
+        'The models are only modestly above guessing and no model is clearly best overall. '
+        'The red bar is the fused model because we declared it in advance, not because it '
+        'won. This is an honest result: training logs alone carry little warning before an '
+        'injury.'),
+    'Result: the final locked test': (
+        'Ten runners were locked away from the start and opened once, after the code was '
+        'frozen. The model we declared in advance scored about the same as in development, '
+        'which shows our development results were not over-tuned. The alert is too noisy for '
+        'real use. The other numbers are secondary: they were scored on different rows, so we '
+        'do not rank models on them and we did not switch models.'),
+    'Result: the published method, rebuilt and checked': (
+        "We copied the published paper's exact method, including a scaling step that reads "
+        'the labels, and it passed our pre-registered sanity check. The version without that '
+        'step was tested on different runners, so we do not claim how big the effect of the '
+        'step is. On the same rows, only a few of our models are clearly better than it, and '
+        'we did not adjust for testing many pairs.'),
     'Result: synthetic wearable data': (
         'Three generators learn to draw realistic sensor clips, only from training people. We'
         ' judge the clips on real people they never saw: can a judge tell them apart, does a '
@@ -209,7 +216,7 @@ def _chart_injury(b: dict) -> str | None:
                 vals.append(b[(m, k)]["roc_auc"]["mean"])
     fused = figures._runs("fused")
     if fused:
-        names.append("FUSED (shared days)")
+        names.append("FUSED (declared in advance)")
         vals.append(fused[-1][1]["fused"]["summary"]["roc_auc"]["mean"])
     if not vals:
         return None
@@ -260,30 +267,112 @@ def _published_line() -> str:
             "published 0.724 used the label-reading scaling.")
 
 
+STREAM = {"pamap2": "PAMAP2", "sportdb2_hr": "Sport DB heart rate"}
+GEN_LABEL = {"timegan": "TimeGAN", "wgan_gp": "WGAN-GP (untuned: 1 declared setting, D-029)",
+             "timevae": "TimeVAE", "classic": "Classic augmentation"}
+
+
 def _comparison_lines() -> list[str]:
-    """Which paired differences vs the Lövdal label-free variant are clear (interval > 0)."""
+    """Paired differences vs the Lövdal label-free variant and fused vs its arms, per metric
+    (PR-AUC first, the headline metric); 'clear' = the 95 % interval excludes 0."""
     runs = figures._runs("comparisons")
     if not runs:
         return []
     comps = runs[-1][1]["comparisons"]
-    better = []
+    better = {"pr_auc": [], "roc_auc": []}
+    worse = set()
     for c in comps:
         model, ref = c["comparison"].split(" - ", 1)
-        if "lovdal" in ref and c["roc_auc"]["low"] > 0:
-            better.append(f"{model.replace('_', ' ')} {ref[ref.rfind('('):]}")
-    lines = ["Paired runner bootstrap vs the label-free variant: clearly better (interval above "
-             "0) only " + (", ".join(better) if better else "none") + "."]
+        name = f"{model.replace('_', ' ')} {ref[ref.rfind('('):]}"
+        for metric in better:
+            if "lovdal" in ref and c[metric]["low"] > 0:
+                better[metric].append(name)
+            if "lovdal" in ref and c[metric]["high"] < 0:
+                worse.add(name)
+    lines = ["Paired runner bootstrap vs the label-free variant (same rows): clearly better on "
+             f"PR-AUC: {', '.join(better['pr_auc']) or 'none'}; on ROC-AUC: "
+             f"{', '.join(better['roc_auc']) or 'none'}; clearly worse: "
+             f"{', '.join(sorted(worse)) or 'none'}; the rest are not clearly different."]
     fused = []
     for c in comps:
         if c["comparison"].startswith("fused"):
-            r, p = c["roc_auc"], c["pr_auc"]
             arm = c["comparison"].split(" - ", 1)[1].split(" (")[0]
-            fused.append(f"vs {arm} ROC-AUC {r['estimate']:+.3f} [{r['low']:+.3f}, "
-                         f"{r['high']:+.3f}], PR-AUC interval "
-                         + ("above 0" if p["low"] > 0 else "includes 0"))
+            parts = []
+            for metric, label in (("pr_auc", "PR-AUC"), ("roc_auc", "ROC-AUC")):
+                r = c[metric]
+                verdict = ("excludes 0, borderline" if r["low"] > 0 and r["low"] < 0.001
+                           else "excludes 0" if r["low"] > 0 else "includes 0")
+                parts.append(f"{label} {r['estimate']:+.4f} [{r['low']:+.5f}, {r['high']:+.4f}]"
+                             f" ({verdict})")
+            fused.append(f"vs its {arm}: " + ", ".join(parts))
     if fused:
         lines.append("Fused model " + "; ".join(fused) + ".")
+    lines.append(f"{2 * len(comps)} intervals, not adjusted for multiple comparisons: read "
+                 "borderline ones with care.")
     return lines
+
+
+def _lock() -> dict | None:
+    lock = figures._runs("lockbox")
+    return lock[-1][1] if lock else None
+
+
+def _lock_lines(dev_roc: str) -> list[str]:
+    """The locked final test: primary result with its chance level and alert behaviour, and the
+    secondaries clearly labelled (D-030)."""
+    m = _lock()
+    if not m:
+        return ["The 10 locked runners are opened once, after the evaluation freeze."]
+    f = m["fused"]
+    r, p = f["roc_auc_ci"], f["pr_auc_ci"]
+    rate = f["test_injury_rate"]
+    a = f["alert"]
+    own = m["arms_on_own_files"]
+    lov = m["lovdal_label_free_paper_split"]
+
+    def est(x):
+        return f"{x['roc_auc_ci']['estimate']:.3f}"
+
+    return [
+        f"Opened once at the frozen commit: {len(m['test_runners'])} new runners, "
+        f"{f['events']:,} days, {f['injuries']} injuries in {f['runners_with_injury']} runners.",
+        f"Declared fused model: ROC-AUC {r['estimate']:.3f} ({r['low']:.3f}-{r['high']:.3f}); "
+        f"PR-AUC {p['estimate']:.3f} ({p['low']:.3f}-{p['high']:.3f}) vs chance {rate:.3f}.",
+        f"Development (5 rounds): ROC-AUC {dev_roc}.",
+        f"Alert level (set on validation): catches {a['sensitivity']:.0%} of injuries with "
+        f"{a['false_alarms_per_caught_injury']:.0f} false alarms per caught injury: too noisy "
+        "for real use.",
+        f"Secondary, scored once, not a comparison (other rows, more training runners): GRU arm "
+        f"{est(own['sequence'])} (day file), CatBoost arm {est(own['tabular'])} (week file), "
+        f"Lövdal label-free {est(lov['day'])} (day) / {est(lov['week'])} (week).",
+        "No model is clearly best; nothing was switched after the test. With 10 runners the "
+        "intervals are wide and still understate the uncertainty."]
+
+
+def _prior_line() -> str:
+    """Agreement with the prior list written before running (EVAL_PROTOCOL), per arm-round."""
+    ex = figures._runs("explain")
+    if not ex:
+        return ""
+    counts: dict[str, list[int]] = {}
+    for rd in ex[-1][1]["rounds"]:
+        for arm in ("tabular", "sequence"):
+            for prior, v in rd[arm].get("prior_agreement", {}).items():
+                if isinstance(v, dict) and "share_in_expected_direction" in v:
+                    c = counts.setdefault(prior, [0, 0])
+                    c[0] += v["share_in_expected_direction"] >= 0.5
+                    c[1] += 1
+    return ("Expectations written before running (most inputs in the expected direction): "
+            + "; ".join(f"{k.replace('_', ' ')}: {a} of {t} arm-rounds"
+                        for k, (a, t) in counts.items()) + ".")
+
+
+def _real_reason() -> str:
+    ex = figures._runs("explain")
+    if not ex:
+        return ""
+    reasons = ex[-1][1]["rounds"][0].get("reasons", [])
+    return f"Real example from round 0: \"{reasons[0]['sentence']}\"" if reasons else ""
 
 
 def _status(phase: str, waiting: str, file: str = "metrics.json") -> str:
@@ -370,23 +459,25 @@ def build() -> str:
     img = _chart_injury(b)
     if img:
         s.shapes.add_picture(img, Inches(0.4), Inches(1.15), width=Inches(8.4))
-    items = [f"Learned models: ROC-AUC {n['injuryAucRange']}", "All beat chance; no clear "
-             "winner.", "PR-AUC about 1.5x the injury rate (chance).",
-             f"Fused model: ROC-AUC {n['fusedAuc']}"]
-    lock = figures._runs("lockbox")
-    if lock:
-        r = lock[-1][1]["fused"]["roc_auc_ci"]
-        items.append(f"Locked final test, 10 unseen runners: ROC-AUC {r['estimate']:.3f} "
-                     f"({r['low']:.3f}-{r['high']:.3f}): agrees with development.")
-    d.bullets(s, items, x=Inches(8.9), y=Inches(1.4), w=Inches(4.2), size=16)
+    d.bullets(s, [f"Learned models: ROC-AUC {n['injuryAucRange']} (5 development rounds).",
+                  "Only modestly above chance (0.5); no model is clearly best overall.",
+                  f"Fused model (declared in advance): ROC-AUC {n['fusedAuc']}, PR-AUC "
+                  f"{n['fusedPrAuc']}.",
+                  "Pre-declared pairs are compared on the next slides."],
+              x=Inches(8.9), y=Inches(1.4), w=Inches(4.2), size=16)
 
-    s = d.slide("Result: we rebuilt the published method correctly", "Implementation")
-    d.bullets(s, ["Exact copy (incl. its label-reading scaling) on stand-in runners 54-63: "
-                  f"ROC-AUC {n['reproDayAuc']}: PASSED",
-                  f"Same model without the label-reading step: ROC-AUC {n['labelFreeAuc']}",
+    s = d.slide("Result: the final locked test", "Implementation")
+    d.bullets(s, _lock_lines(n["fusedAuc"]), size=17)
+
+    s = d.slide("Result: the published method, rebuilt and checked", "Implementation")
+    d.bullets(s, ["Exact copy (incl. its label-reading scaling), stand-in runners 54-63: ROC-AUC "
+                  f"{n['reproDayAuc']}: passed its pre-registered sanity check (lower bound "
+                  "above 0.5).",
+                  "Label-free variant (no peek at the labels), 5 development rounds: ROC-AUC "
+                  f"{n['labelFreeAuc']}.",
                   _published_line(),
-                  "Finding: without its peek at the labels, the method performs like simple "
-                  "baselines."] + _comparison_lines())
+                  "These were scored on different rows, so the effect of the label-reading step "
+                  "was not measured head-to-head."] + _comparison_lines(), size=15)
 
     s = d.slide("Result: synthetic wearable data", "Implementation")
     gens = figures._runs("generators", "metrics_pamap2.json")
@@ -394,7 +485,7 @@ def build() -> str:
         g = gens[-1][1]
         d.table(s, ["Generator", "Real-vs-fake acc. (0.5 = fooled)", "Train-on-synthetic F1",
                     "Real + synthetic F1", "Pass marks met"],
-                [[k, f"{m['discriminative_accuracy']['mean']:.3f}",
+                [[GEN_LABEL.get(k, k), f"{m['discriminative_accuracy']['mean']:.3f}",
                   f"{m['tstr_test_macro_f1']['mean']:.3f}",
                   f"{m['real_plus_synthetic_test_macro_f1']['mean']:.3f}",
                   f"{sum(g['criteria'][k].values())}/{len(g['criteria'][k])}"]
@@ -408,28 +499,32 @@ def build() -> str:
                       "RUNNING: results are added when the run finishes."])
 
     s = d.slide("Result: activity recognition and edge-fog-cloud", "Implementation")
-    items = [f"Activity recognition on unseen people (PAMAP2, 18 activities): macro-F1 "
-             f"{n['pamapRealFone']} (chance about 0.06)."]
+    items = [f"Activity recognition on unseen people (PAMAP2): macro-F1 {n['pamapRealFone']}."]
     tiers = figures._runs("tiers")
     if tiers:
-        t = tiers[-1][1]["streams"]["pamap2"]
-        tier_ms = t["tiered"]["decision_latency_ms_median"]
-        cloud_ms = t["cloud_only"]["decision_latency_ms_median"]
-        items += [f"Edge tier sends {t['bytes_reduction_factor']:.0f}x less data to the cloud.",
-                  f"Median decision time: tiered {tier_ms:.1f} ms vs cloud-only {cloud_ms:.1f} ms."]
+        st = tiers[-1][1]["streams"]
+        items += [", ".join(f"{STREAM.get(name, name)}: edge tier sends "
+                            f"{o['bytes_reduction_factor']:.0f}x less data to the cloud"
+                            for name, o in st.items()) + "."]
+        items += ["Median decision time, tiered vs cloud-only: " + "; ".join(
+            f"{STREAM.get(name, name)} {o['tiered']['decision_latency_ms_median']:.1f} vs "
+            f"{o['cloud_only']['decision_latency_ms_median']:.1f} ms" for name, o in st.items())
+            + " (one window every 0.1 s after all tiers were ready)."]
     else:
         items += ["Tiers benchmark runs on an idle machine after training (bytes + latency)."]
-    items += ["  Simulated on one laptop (no network delay, so latency compares processing "
-              "only); wearable people differ from the runners (systems demo)."]
+    items += ["  Simulated on one laptop: no network delay, so latency compares processing only "
+              "and the data saving is the claim; the cloud tier runs the logistic-regression "
+              "daily model; wearable people differ from the runners (systems demo)."]
     d.bullets(s, items)
 
     s = d.slide("Result: explanations that are tested, not assumed", "Implementation")
     d.bullets(s, ["TreeSHAP (weekly-totals arm) and integrated gradients (day-by-day arm).",
                   "Attention view next to integrated gradients; Grad-CAM on the activity CNN.",
                   "Each explanation must pass: deletion, randomisation and stability tests.",
-                  n["explainSummary"],
-                  "Plain-language reasons for the coach, e.g. 'risk is higher mainly because "
-                  "weekly kilometres were higher than usual'."])
+                  n["explainSummary"], _prior_line(),
+                  "Attention and integrated gradients often disagree, so attention is never "
+                  "shown alone.",
+                  _real_reason()], size=16)
 
     s = d.slide("Live demo: coach dashboard", "Implementation")
     d.bullets(s, ["python tasks.py demo   (data prepared in advance: instant, cannot fail)",

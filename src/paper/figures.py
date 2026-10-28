@@ -109,9 +109,11 @@ def numbers(b: dict) -> dict[str, str]:
                              "tuning), " + "; ".join(parts) + ".")
         inj, gru = f["injury_summary"], b.get(("gru", "day"))
         n["augmentSummary"] = (
-            "Adding synthetic injury examples to the training rows only gave the GRU ROC-AUC "
-            f"{fmt(inj['timegan'])} with TimeGAN and {fmt(inj['classic'])} with classic "
-            f"augmentation, against {fmt(gru)} real-only.")
+            "Adding synthetic injury examples to the training rows only gave the GRU PR-AUC "
+            f"{fmt(inj['timegan'], 'pr_auc')} with TimeGAN and {fmt(inj['classic'], 'pr_auc')}"
+            f" with classic augmentation, against {fmt(gru, 'pr_auc')} real-only (ROC-AUC "
+            f"{fmt(inj['timegan'])}, {fmt(inj['classic'])} and {fmt(gru)}); there is no paired "
+            "interval, so no improvement is claimed.")
     else:
         n["wesadSummary"] = n["augmentSummary"] = "n/a."
     lock = _runs("lockbox")
