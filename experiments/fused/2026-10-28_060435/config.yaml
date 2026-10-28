@@ -1,0 +1,105 @@
+# Piece 3: Lövdal injury baselines (D-021, D-022, D-023, D-024).
+# Written and committed BEFORE the first real-data model run. Changing anything here after
+# results exist needs a DECISIONS entry (D-004: no choosing settings after seeing results).
+
+data:
+  files: [day, week]                 # loaders.load_dev(): development runners 0-63 only
+  splits: data/splits/lovdal_folds.json
+  rounds: [0, 1, 2, 3, 4]
+  inputs:
+    day: 70                          # 7 days x 10 features, flattened for table models
+    week: 69                         # 3 weeks x 22 features + 3 relative changes
+
+procedure:
+  scaler: zscore_on_training_rows    # one scaler per round; no per-runner statistics (D-023)
+  selection_score: average_precision # validation PR-AUC picks settings and early stopping
+  selection_tie_break: roc_auc
+  settings_per_round: 8              # same budget for every tunable model (D-021)
+  search: random                     # seeded random search (Bergstra & Bengio 2012)
+  search_seed_base: 1000             # round k draws its 8 settings with seed 1000 + k
+  tune_seed: 0
+  refit_seeds: [0, 1, 2]             # chosen setting refit on TRAINING runners only
+  calibration: platt_on_validation   # always (D-023); metrics reported raw and after Platt
+  alert_rule:
+    candidates: distinct_validation_scores_plus_infinity
+    choose: min_abs_sensitivity_minus_specificity
+    ties: [max_sensitivity_plus_specificity, higher_threshold]
+    alert_if: score_greater_or_equal
+  ece_bins: 10                       # equal-count bins
+  decision_curve_risks: [0.005, 0.10]
+  bootstrap:
+    unit: runner_within_test_group   # cluster bootstrap (Field & Welsh 2007)
+    resamples: 2000
+    interval: percentile_95
+    primary_comparisons: each_model_vs_lovdal_label_free_same_file
+
+models:
+  constant_risk:                     # training injury rate as a constant risk
+    files: [day, week]
+    tuned: false
+  acwr_style:                        # D-015 / D-023: uncoupled acute:chronic ratio
+    files: [week]
+    tuned: false
+    km_feature: total kms
+    floor_km: 1.0                    # newest week / max(mean of the two earlier weeks, 1 km)
+  logistic_regression:
+    files: [day, week]
+    deterministic: true              # run once (no seeds)
+    fixed: {penalty: l2, solver: lbfgs, max_iter: 2000}
+    grid:
+      C: {loguniform: [1.0e-4, 1.0e+2]}
+      class_weight: [null, balanced]
+  random_forest:
+    files: [day, week]
+    fixed: {n_estimators: 500}
+    grid:
+      max_depth: [4, 6, 8, 12, null]
+      min_samples_leaf: [1, 5, 20, 50]
+      max_features: [sqrt, 0.3, 0.5]
+      class_weight: [null, balanced_subsample]
+  catboost:
+    files: [day, week]
+    fixed: {iterations: 2000, early_stopping_rounds: 100, eval_metric: PRAUC}
+    grid:
+      learning_rate: {loguniform: [0.01, 0.1]}
+      depth: [4, 6, 8]
+      l2_leaf_reg: {loguniform: [1.0, 10.0]}
+      auto_class_weights: [null, Balanced]
+  gru:
+    files: [day]                     # 7 steps x 10 features, oldest -> newest
+    fixed: {batch_size: 128, max_epochs: 60, patience: 10, optimizer: adam}
+    grid:
+      hidden: [16, 32, 64]
+      layers: [1, 2]
+      dropout: [0.0, 0.2, 0.4]
+      lr: {loguniform: [3.0e-4, 3.0e-3]}
+      weight_decay: [0.0, 1.0e-4]
+      pos_weight: [1, balanced]      # balanced = negatives / positives in the training rows
+  lovdal_xgboost:                    # Lövdal et al. 2021 (main.ipynb cell index 1, lines 360-368)
+    files: [day, week]
+    tuned: false
+    paper:
+      bags: 9
+      samples_per_class: 2048        # target: int(2048 / k) per athlete with both classes
+      learning_rate: 0.01
+      max_depth_choices: [2, 3]
+      n_estimators_choices: [256, 512]
+      calibration: platt
+    label_free_variant:              # the version compared on the 5 rounds (D-023)
+      scaler: zscore_on_training_rows
+      platt_and_alert_level_on: round_validation_runners
+    reproduction_check:              # exact copy, labelled; never used to choose anything
+      train_runners: [0, 53]
+      test_runners: [54, 63]
+      scaling: per_athlete_healthy_events_including_test   # the paper's label-reading scaling
+      validation: balanced_sample_from_training_runners    # as in the paper
+      seeds: [0, 1, 2]
+      pass_rule: runner_bootstrap_2000_percentile_lower_bound_of_test_roc_auc_above_0.5
+
+canary:                              # D-024: Ojala & Garriga (2010) label-permutation test 1
+  model: logistic_regression
+  fixed: {C: 1.0, class_weight: null, penalty: l2, solver: lbfgs, max_iter: 2000}
+  shuffle: training_labels_among_training_rows
+  seed_base: 2000                    # round k shuffles with seed 2000 + k
+  files: [day, week]
+  fail_if_abs_mean_test_roc_auc_minus_0.5_above: 0.05
