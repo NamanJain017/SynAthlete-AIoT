@@ -82,6 +82,11 @@ def track_c() -> int:
     return run([sys.executable, "-m", "src.models.track_c", *sys.argv[2:]])
 
 
+def explain() -> int:
+    """Explanations for the fused model (piece 8): python tasks.py explain --fused RUN_ID."""
+    return run([sys.executable, "-m", "src.xai.run", *sys.argv[2:]])
+
+
 def splits() -> int:
     """Person-level splits (piece 2): written once to data/splits/, never overwritten.
     --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
@@ -116,7 +121,7 @@ TASKS = {
     "pipeline": pipeline,
     "train": train,
     "track-c": track_c,
-    "explain": not_implemented("piece 8"),
+    "explain": explain,
     "demo": not_implemented("piece 9"),
     "paper-figures": not_implemented("piece 10"),
 }

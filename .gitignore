@@ -21,3 +21,5 @@ experiments/**/*.npy
 experiments/**/predictions/
 catboost_info/
 experiments/baselines/_logs/
+experiments/**/_logs/
+experiments/generators/*/samples/
