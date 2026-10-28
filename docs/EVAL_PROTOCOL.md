@@ -48,7 +48,7 @@
 - Leak canary: declared-input test + shuffled-label logistic regression; fails if the 5-round mean test ROC-AUC is more than 0.05 from 0.5.
 - Reproduction check passes if the runner-bootstrap (2,000) lower bound of its test ROC-AUC is above 0.5.
 - Seeds: settings tried with seed 0; the chosen one refit with seeds 0-2 on training runners only.
-Before the evaluation freeze: which runners give validation (Platt, alert level) for the Lövdal label-free variant trained on `paper_split`, which has no validation group.
+Lövdal label-free variant trained on `paper_split` (answered before the freeze, D-030): it has no validation group, so no runners are taken from training for one; on the locked runners it is reported threshold-free only (PR-AUC, ROC-AUC; no Platt, no alert level).
 Track C (proposed; confirm before any Track C run): the same history-signal ban; features come from the full daily tables, never from the selected event rows.
 ## Generator criteria (set now, before looking at results)
 - Discriminative accuracy within 0.15 of 50% (post-hoc GRU classifier, real test-people windows vs synthetic, held-out 30 %) (D-027).
@@ -64,6 +64,7 @@ Differences between models: paired bootstrap that resamples runners within each 
 - Prior list (written BEFORE running): high load spikes, high monotony/strain, low recovery -> expected to raise risk. ("Recent injury history" is not testable: injury history is not an input under D-023, and the event design keeps injuries at least 22 days from other events.)
 ## Evaluation freeze
 Tag the repo with an annotated tag (`git tag -a eval-freeze`) and push it. Open the lockbox only through src/data/lockbox.py (it opens at one frozen commit only). Run the matrix once, commit experiments/lockbox_access.log, and log deviations.
+The run is `python -m src.models.final` (D-030): the final fused model (final split, search seed 1000 + 5, refit seeds 0-2) and the secondaries above, each scored once. Uncertainty: mean over seeds of the metric with a runner bootstrap over the 10 locked runners (2,000 resamples, percentile 95 %). Raw scores are saved before any number is computed, so a later failure never needs a second opening.
 ## Sources for the scoring and tuning rules (checked 2026-10-22 on the page named)
 - Lövdal, den Hartigh & Azzopardi 2021, Int J Sports Physiol Perform, doi 10.1123/ijspp.2020-0518 (alert rule; main.ipynb cell index 1 line 86). Full text: https://pure.rug.nl/ws/portalfiles/portal/183763727/
 - Saito & Rehmsmeier 2015, PLoS ONE, doi 10.1371/journal.pone.0118432. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4349800/
