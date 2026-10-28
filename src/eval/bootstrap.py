@@ -182,3 +182,27 @@ def reproduction_check(y: ArrayLike, scores_by_seed: Sequence[ArrayLike], athlet
 
     result = _bootstrap(mean_over_seeds, np.asarray(athlete), group, resamples, seed, 0.95)
     return {**result, "passed": bool(result["low"] > 0.5)}
+
+
+def paired_seed_mean_difference(metric: Metric, y: ArrayLike,
+                                scores_a_by_seed: Sequence[ArrayLike],
+                                scores_b_by_seed: Sequence[ArrayLike], athlete: ArrayLike,
+                                group: ArrayLike, resamples: int = 2000, seed: int = 0,
+                                level: float = 0.95) -> dict:
+    """Paired difference of seed-averaged group means: mean over A's seeds of
+    group_mean(metric) minus the same for B, both on the SAME resampled rows (D-023(10)).
+    With one seed each this equals paired_bootstrap_difference. Same keys and ValueError rules."""
+    y = np.asarray(y, dtype=float)
+    group = np.asarray(group)
+    a = [np.asarray(s, dtype=float) for s in scores_a_by_seed]
+    b = [np.asarray(s, dtype=float) for s in scores_b_by_seed]
+
+    def mean_over(scores, idx):
+        vals = [group_mean(metric, y, s, group, idx) for s in scores]
+        return None if any(v is None for v in vals) else float(np.mean(vals))
+
+    def difference(idx: np.ndarray | None) -> float | None:
+        va, vb = mean_over(a, idx), mean_over(b, idx)
+        return None if va is None or vb is None else va - vb
+
+    return _bootstrap(difference, np.asarray(athlete), group, resamples, seed, level)

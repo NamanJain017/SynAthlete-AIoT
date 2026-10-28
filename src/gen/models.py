@@ -67,7 +67,7 @@ def _batches(X: torch.Tensor, y: torch.Tensor, batch: int, gen: torch.Generator)
 
 
 def _sample_in_chunks(make: Callable[[torch.Tensor], torch.Tensor], y: np.ndarray,
-                      device: torch.device, chunk: int = 1024) -> np.ndarray:
+                      device: torch.device, chunk: int = 256) -> np.ndarray:
     out = []
     with torch.no_grad():
         for s in range(0, len(y), chunk):

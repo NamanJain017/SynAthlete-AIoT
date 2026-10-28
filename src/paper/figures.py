@@ -176,6 +176,25 @@ def table_tiers() -> None:
         "\n\\bottomrule\\end{tabular}\\end{table}\n", "utf-8")
 
 
+def table_comparisons() -> None:
+    runs = _runs("comparisons")
+    body = r"\multicolumn{3}{c}{n/a} \\"
+    if runs:
+        rows = []
+        for c in runs[-1][1]["comparisons"]:
+            p, r = c["pr_auc"], c["roc_auc"]
+            rows.append(f"{_tex(c['comparison'])} & {p['estimate']:+.4f} [{p['low']:+.4f}, "
+                        f"{p['high']:+.4f}] & {r['estimate']:+.3f} [{r['low']:+.3f}, "
+                        f"{r['high']:+.3f}] " + r"\\")
+        body = "\n".join(rows)
+    (GEN / "table_comparisons.tex").write_text(
+        r"\begin{table}[t]\centering\caption{Paired differences (5-round mean, runner "
+        r"bootstrap 95\% interval, 2,000 resamples)}\label{tab:compare}" + "\n"
+        r"\footnotesize\begin{tabular}{lcc}\toprule" + "\n"
+        r"Comparison & $\Delta$ PR-AUC & $\Delta$ ROC-AUC \\\midrule" + "\n"
+        + body + "\n" + r"\bottomrule\end{tabular}\end{table}" + "\n", "utf-8")
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -187,6 +206,7 @@ def main() -> int:
     table_injury(b)
     table_generators()
     table_tiers()
+    table_comparisons()
     for k, v in sorted(n.items()):
         print(f"{k}: {v}")
     return 0

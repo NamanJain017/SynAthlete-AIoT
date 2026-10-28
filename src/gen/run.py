@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import gc
+import itertools
 import json
 import os
 import shutil
@@ -54,16 +56,39 @@ def _device():
     return nets.pick_device()
 
 
-def _rounds(name: str) -> list[data.Round]:
+def _rounds(name: str):
     """PAMAP2 rounds from the round builder; WESAD rounds built the same way (D-020 splits)."""
     if name == "pamap2":
-        return list(data.pamap2_rounds())
+        return data.pamap2_rounds()
     with np.load(loaders.PROCESSED / "wesad" / "windows.npz") as z:
         X, y, subject = z["X"], z["y"].astype(np.int64), z["subject"]
     meta = json.loads((loaders.PROCESSED / "wesad" / "windows_meta.json").read_text("utf-8"))
     split = json.loads((loaders.SPLITS / "wesad_folds.json").read_text("utf-8"))
-    return [data.make_round(int(k), "wesad", X, y, subject, split["folds"][k], meta["channels"])
-            for k in sorted(split["folds"], key=int)]
+    return (data.make_round(int(k), "wesad", X, y, subject, split["folds"][k], meta["channels"])
+            for k in sorted(split["folds"], key=int))  # one fold at a time
+
+
+def _free() -> None:
+    """Release finished models now: without this, old generators piled up in GPU memory, the
+    GPU spilled into RAM and Windows swapped to disk (each setting got slower; D-029)."""
+    import torch
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+GPU_SHARE = 0.23  # per worker: 4 workers stay inside the 6 GB card (no spill into RAM; D-029)
+
+
+def _limit_gpu_memory() -> None:
+    import torch
+    if torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(GPU_SHARE)
+
+
+def _round_k(rounds, k: int) -> data.Round:
+    """Only round k (the rounds are built one at a time; earlier ones are dropped)."""
+    return next(itertools.islice(rounds, k, None))
 
 
 def _progress(what: str, t0: float) -> None:
@@ -88,8 +113,9 @@ def pamap2_round(k: int, folder: str) -> dict:
 
     torch.set_num_threads(max(1, (os.cpu_count() or 4) // 4))
     cfg, device = _cfg(), _device()
+    _limit_gpu_memory()
     proc = cfg["procedure"]
-    r = _rounds("pamap2")[k]
+    r = _round_k(data.pamap2_rounds(), k)
     classes = np.unique(r.train.y)
     y_idx = np.searchsorted(classes, r.train.y)
     cnn, real_f1 = _piece3_choice("pamap2_cnn1d", k)
@@ -114,6 +140,8 @@ def pamap2_round(k: int, folder: str) -> dict:
             per_seed.append({**_fidelity(r, syn, seed, device), "tstr_test_macro_f1": tstr,
                              "real_plus_synthetic_test_macro_f1": aug})
             _progress(f"round {k} {name} seed {seed} scored", t0)
+            del sampler, syn
+            _free()
         return {key: float(np.mean([s[key] for s in per_seed])) for key in per_seed[0]} | {
             "seeds": per_seed}
 
@@ -135,6 +163,8 @@ def pamap2_round(k: int, folder: str) -> dict:
             scores = [t["val_tstr_macro_f1"] for t in trials]
             if scores.index(max(scores)) == len(trials) - 1:
                 first = sampler
+            del sampler
+            _free()
         best = [t["val_tstr_macro_f1"] for t in trials]
         best = best.index(max(best))
         chosen = settings[best]
@@ -142,6 +172,8 @@ def pamap2_round(k: int, folder: str) -> dict:
                     else models.TRAINERS[n](r.train.X, y_idx, len(classes), c, seed, device))
         out["generators"][name] = {**res, "chosen": best, "trials": trials}
         print(f"  pamap2 round {k} {name}: TSTR {res['tstr_test_macro_f1']:.3f}", flush=True)
+        del first
+        _free()
     c = cfg["generators"]["classic"]["fixed"]
     out["generators"]["classic"] = score(
         "classic", lambda seed: models.classic_sampler(r.train.X, y_idx, c, seed))
@@ -170,7 +202,8 @@ def wesad_fold(k: int, settings: dict) -> dict:
     from src.gen import models
     torch.set_num_threads(max(1, (os.cpu_count() or 4) // 5))
     device = _device()
-    r = _rounds("wesad")[k]
+    _limit_gpu_memory()
+    r = _round_k(_rounds("wesad"), k)
     classes = np.unique(r.train.y)
     y_idx = np.searchsorted(classes, r.train.y)
     out = {"fold": k, "generators": {}}
@@ -182,6 +215,8 @@ def wesad_fold(k: int, settings: dict) -> dict:
                                         device)(y_idx)
             per_seed.append(_fidelity(r, syn, seed, device))
             _progress(f"wesad fold {k} {name} seed {seed}", t0)
+            del syn
+            _free()
         out["generators"][name] = {key: float(np.mean([s[key] for s in per_seed]))
                                    for key in per_seed[0]}
     return out
@@ -195,7 +230,8 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
     from src.gen import models
     torch.set_num_threads(max(1, (os.cpu_count() or 4) // 5))
     cfg, device = _cfg(), _device()
-    r = list(data.lovdal_rounds("day", "sequence"))[k]
+    _limit_gpu_memory()
+    r = _round_k(data.lovdal_rounds("day", "sequence"), k)
     gru_setting, _ = _piece3_choice("gru", k)
     pos = r.train.y == 1
     n_pos = int(pos.sum())
@@ -217,6 +253,8 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
             per_seed.append(inj_eval.injury_scores(r.val.y, predict(r.val.X), r.test.y,
                                                    predict(r.test.X), True))
             _progress(f"injury round {k} {name} seed {seed}", t0)
+            del sampler, predict
+            _free()
         out[name] = {**inj_eval.mean_over_seeds(per_seed), "seeds": per_seed}
     return out
 

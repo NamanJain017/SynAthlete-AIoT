@@ -98,19 +98,20 @@ def _tune_arm(names, cands, rs: data.Round, proc: dict) -> dict:
     return {"model": best[0], "setting": best[1], "trials": trials}
 
 
-def fused_round(k: int, folder: str) -> dict:
-    import torch
-    torch.set_num_threads(max(1, (os.cpu_count() or 5) // 5))
-    fcfg, bcfg = yaml.safe_load(FUSED_CFG.read_text("utf-8")), yaml.safe_load(
-        BASE_CFG.read_text("utf-8"))
-    proc, cands = bcfg["procedure"], candidates(fcfg, bcfg)
-    r_seq, r_tab = list(data.lovdal_shared_rounds())[k]
+def _sigmoid(z: np.ndarray) -> np.ndarray:
+    return 1.0 / (1.0 + np.exp(-z))
+
+
+def fit_pipeline(r_seq: data.Round, r_tab: data.Round, proc: dict, cands: dict,
+                 fcfg: dict) -> dict:
+    """The whole fused procedure on one split (used by every development round AND the final
+    model, so both follow exactly the same steps): tune both arms on validation, then for each
+    refit seed the out-of-fold combiner (C chosen on validation) and the scores of the
+    validation and test rows. Test rows are scored once and never used for a choice."""
     assert np.array_equal(r_seq.train.person, r_tab.train.person)  # same rows, same order
     seq = _tune_arm(SEQ, cands, r_seq, proc)
     tab = _tune_arm(TAB, cands, r_tab, proc)
-    pred = os.path.join(folder, "predictions")
-    os.makedirs(pred, exist_ok=True)
-    per_seed, combiner_trials = [], []
+    seeds = []
     for seed in proc["refit_seeds"]:
         f_seq, f_tab = fit_fn(seq["model"]), fit_fn(tab["model"])
         oof = _features(oof_predictions(f_seq, r_seq, seq["setting"], seed),
@@ -126,32 +127,60 @@ def fused_round(k: int, folder: str) -> dict:
                           "val_auc": metrics.roc_auc(r_seq.val.y, pv), "model": comb})
         best = tuning.choose(tries)
         comb = tries[best]["model"]
-        s_val, s_test = comb.predict_proba(val_f)[:, 1], comb.predict_proba(test_f)[:, 1]
-        scores = evaluate.injury_scores(r_seq.val.y, s_val, r_seq.test.y, s_test, True)
-        arm_val = {"seq": np.exp(val_f[:, 0]) / (1 + np.exp(val_f[:, 0])),
-                   "tab": np.exp(val_f[:, 1]) / (1 + np.exp(val_f[:, 1]))}
-        arm_test = {"seq": np.exp(test_f[:, 0]) / (1 + np.exp(test_f[:, 0])),
-                    "tab": np.exp(test_f[:, 1]) / (1 + np.exp(test_f[:, 1]))}
-        params = metrics.fit_platt(metrics.logit(s_val), r_seq.val.y)
-        p_cal_val = metrics.apply_platt(metrics.logit(s_val), params)
-        p_cal_test = metrics.apply_platt(metrics.logit(s_test), params)
-        np.savez_compressed(os.path.join(pred, f"fused_s{seed}_r{k}.npz"),
+        seeds.append({"seed": seed, "s_val": comb.predict_proba(val_f)[:, 1],
+                      "s_test": comb.predict_proba(test_f)[:, 1],
+                      "seq_val": _sigmoid(val_f[:, 0]), "seq_test": _sigmoid(test_f[:, 0]),
+                      "tab_val": _sigmoid(val_f[:, 1]), "tab_test": _sigmoid(test_f[:, 1]),
+                      "predict_seq": p_seq, "predict_tab": p_tab,
+                      "combiner_C": tries[best]["C"],
+                      "combiner_coef": [float(v) for v in comb.coef_[0]],
+                      "combiner_trials": [{k2: v for k2, v in t.items() if k2 != "model"}
+                                          for t in tries]})
+    return {"sequence_arm": seq, "tabular_arm": tab, "seeds": seeds,
+            "tries": len(seq["trials"]) + len(tab["trials"]) + len(fcfg["combiner"]["grid"]["C"])}
+
+
+def score_seed(r: data.Round, sd: dict) -> dict:
+    """All reported numbers of one refit seed (validation fits Platt and the alert level)."""
+    scores = evaluate.injury_scores(r.val.y, sd["s_val"], r.test.y, sd["s_test"], True)
+    return {**scores, "combiner_C": sd["combiner_C"], "combiner_coef": sd["combiner_coef"],
+            "arms_test": {a: {"pr_auc": metrics.average_precision(r.test.y, sd[f"{a}_test"]),
+                              "roc_auc": metrics.roc_auc(r.test.y, sd[f"{a}_test"])}
+                          for a in ("seq", "tab")}}
+
+
+def configs() -> tuple[dict, dict, dict, dict]:
+    fcfg, bcfg = yaml.safe_load(FUSED_CFG.read_text("utf-8")), yaml.safe_load(
+        BASE_CFG.read_text("utf-8"))
+    return fcfg, bcfg, bcfg["procedure"], candidates(fcfg, bcfg)
+
+
+def fused_round(k: int, folder: str) -> dict:
+    import torch
+    torch.set_num_threads(max(1, (os.cpu_count() or 5) // 5))
+    fcfg, _, proc, cands = configs()
+    r_seq, r_tab = list(data.lovdal_shared_rounds())[k]
+    fit = fit_pipeline(r_seq, r_tab, proc, cands, fcfg)
+    pred = os.path.join(folder, "predictions")
+    os.makedirs(pred, exist_ok=True)
+    per_seed = []
+    for sd in fit["seeds"]:
+        params = metrics.fit_platt(metrics.logit(sd["s_val"]), r_seq.val.y)
+        p_cal_val = metrics.apply_platt(metrics.logit(sd["s_val"]), params)
+        p_cal_test = metrics.apply_platt(metrics.logit(sd["s_test"]), params)
+        np.savez_compressed(os.path.join(pred, f"fused_s{sd['seed']}_r{k}.npz"),
                             y_val=r_seq.val.y, y_test=r_seq.test.y, person_val=r_seq.val.person,
-                            person_test=r_seq.test.person, s_val=s_val, s_test=s_test,
-                            seq_val=arm_val["seq"], seq_test=arm_test["seq"],
-                            tab_val=arm_val["tab"], tab_test=arm_test["tab"],
+                            person_test=r_seq.test.person, s_val=sd["s_val"],
+                            s_test=sd["s_test"], seq_val=sd["seq_val"], seq_test=sd["seq_test"],
+                            tab_val=sd["tab_val"], tab_test=sd["tab_test"],
                             risk_test=risk_score(p_cal_val, p_cal_test))
-        per_seed.append({**scores, "combiner_C": tries[best]["C"],
-                         "combiner_coef": [float(v) for v in comb.coef_[0]],
-                         "arms_test": {a: {"pr_auc": metrics.average_precision(r_seq.test.y, s),
-                                           "roc_auc": metrics.roc_auc(r_seq.test.y, s)}
-                                       for a, s in arm_test.items()}})
-        combiner_trials.append([{k2: v for k2, v in t.items() if k2 != "model"} for t in tries])
+        per_seed.append(score_seed(r_seq, sd))
     out = {**evaluate.mean_over_seeds(per_seed), "seeds": per_seed, "round": k,
-           "sequence_arm": seq, "tabular_arm": tab, "combiner_trials": combiner_trials,
-           "tries": len(seq["trials"]) + len(tab["trials"]) + len(fcfg["combiner"]["grid"]["C"])}
+           "sequence_arm": fit["sequence_arm"], "tabular_arm": fit["tabular_arm"],
+           "combiner_trials": [sd["combiner_trials"] for sd in fit["seeds"]],
+           "tries": fit["tries"]}
     print(f"  fused round {k}: test PR-AUC {out['pr_auc']:.4f} ROC-AUC {out['roc_auc']:.3f} "
-          f"(arms {seq['model']} + {tab['model']})", flush=True)
+          f"(arms {fit['sequence_arm']['model']} + {fit['tabular_arm']['model']})", flush=True)
     return out
 
 

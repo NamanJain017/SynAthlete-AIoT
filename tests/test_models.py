@@ -250,3 +250,18 @@ def test_risk_score_is_a_validation_percentile():
     from src.models import fused
     p_val = np.array([0.01, 0.02, 0.03, 0.04])
     assert fused.risk_score(p_val, np.array([0.005, 0.025, 0.05])).tolist() == [0.0, 50.0, 100.0]
+
+
+def test_paired_seed_mean_difference():
+    from src.eval import bootstrap
+    from src.eval.metrics import roc_auc
+    rng = np.random.default_rng(0)
+    person = np.repeat(np.arange(12), 10)
+    group = person % 3
+    y = (rng.random(120) < 0.3).astype(int)
+    a, b = y + rng.normal(size=120), rng.normal(size=120)
+    one = bootstrap.paired_seed_mean_difference(roc_auc, y, [a], [b], person, group, 200, 0)
+    ref = bootstrap.paired_bootstrap_difference(roc_auc, y, a, b, person, group, 200, 0)
+    assert one == pytest.approx(ref)
+    same = bootstrap.paired_seed_mean_difference(roc_auc, y, [a, 2 * a], [a], person, group, 50)
+    assert same["estimate"] == pytest.approx(0.0) and same["low"] == pytest.approx(0.0)
