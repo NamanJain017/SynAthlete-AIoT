@@ -19,10 +19,10 @@ import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import yaml
 from scipy.stats import spearmanr
 
 from src.data import loaders
@@ -64,9 +64,20 @@ def prior_agreement(names: list[str], X: np.ndarray, A: np.ndarray) -> dict:
     return out
 
 
-def explain_round(k: int, fused_run: str) -> dict:
+def _step(k: int, what: str, t0: float) -> None:
+    print(f"  [{datetime.now():%H:%M}] explain round {k}: {what} "
+          f"({(time.perf_counter() - t0) / 60:.1f} min)", flush=True)
+
+
+def explain_round(k: int, fused_run: str, folder: str) -> dict:
+    """One round in its own process; checkpointed, so a crash never loses a finished round."""
     import torch
-    torch.set_num_threads(max(1, (os.cpu_count() or 5) // 5))
+    done = Path(folder) / "checkpoints" / f"explain_r{k}.json"
+    if done.exists():
+        print(f"  explain round {k}: resumed from checkpoint", flush=True)
+        return json.loads(done.read_text("utf-8"))
+    torch.set_num_threads(max(1, (os.cpu_count() or 4) // 2))
+    t0 = time.perf_counter()
     fused = json.loads((ROOT / "experiments" / "fused" / fused_run / "metrics.json")
                        .read_text("utf-8"))["fused"]["rounds"][k]
     seq, tab = fused["sequence_arm"], fused["tabular_arm"]
@@ -92,6 +103,7 @@ def explain_round(k: int, fused_run: str) -> dict:
         "randomisation": checks.randomisation(shap_v, shap_rand),
         "stability": checks.stability(lambda X: explain.tree_shap(model, X), Xt, shap_v),
         "prior_agreement": prior_agreement(r_tab.input_names, Xt, shap_v)}
+    _step(k, "tabular SHAP + checks done", t0)
 
     # sequence arm: integrated gradients + checks
     net, device = fitters.sequence_model(seq["model"], r_seq, seq["setting"], 0)
@@ -113,6 +125,7 @@ def explain_round(k: int, fused_run: str) -> dict:
         "stability": checks.stability(lambda X: explain.integrated_gradients(net, X, device),
                                       Xs, ig),
         "prior_agreement": prior_agreement(day_names, Xs.reshape(len(Xs), -1), flat_ig)}
+    _step(k, "sequence integrated gradients + checks done", t0)
 
     # attention view (explanation-only model), always next to IG per day (invariant 12)
     gs, _ = base_run_choice("gru", k)
@@ -137,7 +150,11 @@ def explain_round(k: int, fused_run: str) -> dict:
     out["reasons"] = [{"runner": int(person[i]), "injury": int(label[i]),
                        "sentence": explain.reason_sentence(r_tab.input_names, Xt[i], shap_v[i])}
                       for i in top]
-    print(f"  explain round {k}: done", flush=True)
+    done.parent.mkdir(parents=True, exist_ok=True)
+    tmp = done.with_suffix(".tmp")
+    tmp.write_text(json.dumps(out, indent=1, default=float), "utf-8")
+    tmp.replace(done)
+    _step(k, "all done (checkpoint saved)", t0)
     return out
 
 
@@ -194,24 +211,23 @@ def sirp600_demo() -> dict:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--fused", required=True, help="run id under experiments/fused/")
+    p.add_argument("--workers", type=int, default=2, help="rounds at once (memory-safe: 2)")
+    p.add_argument("--resume", help="run id under experiments/explain/ to continue")
     args = p.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     code = base_run._code_state()
-    run_id = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    folder = OUT / run_id
-    folder.mkdir(parents=True)
+    folder = OUT / (args.resume or datetime.now().strftime("%Y-%m-%d_%H%M%S"))
+    folder.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
-    with ProcessPoolExecutor(max_workers=5) as ex:
-        rounds = list(ex.map(explain_round, range(5), [args.fused] * 5))
-    crit = yaml.safe_load((ROOT / "configs" / "gen" / "generators.yaml").read_text("utf-8"))
+    with ProcessPoolExecutor(max_workers=args.workers) as ex:
+        rounds = list(ex.map(explain_round, range(5), [args.fused] * 5, [str(folder)] * 5))
     results = {"fused_run": args.fused, "rounds": rounds, "grad_cam_pamap2": grad_cam_pamap2(),
                "sirp600_demo": sirp600_demo(),
                "pass_counts": {arm: {c: int(sum(rd[arm][c]["passed"] for rd in rounds))
                                      for c in ("deletion", "randomisation", "stability")}
                                for arm in ("tabular", "sequence")},
-               "criteria_source": "EVAL_PROTOCOL Explanation criteria (D-027)",
-               "generator_config_checked": bool(crit)}
+               "criteria_source": "EVAL_PROTOCOL Explanation criteria (D-027)"}
     info = {**code, "runtime_s": round(time.perf_counter() - t0, 1),
             "data_fingerprints": base_run._fingerprints()}
     (folder / "run_info.json").write_text(json.dumps(info, indent=2), "utf-8")

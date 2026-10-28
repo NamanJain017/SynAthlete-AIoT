@@ -59,3 +59,14 @@ def test_reason_sentence():
                                 np.array([1.2, -0.8]), np.array([0.3, 0.1]))
     assert s == ("Risk is higher mainly because total kms [w-1] was higher than usual; "
                  "avg recovery [w-1] was lower than usual.")
+
+
+def test_explain_round_resumes_from_its_checkpoint(tmp_path):
+    import json
+
+    from src.xai import run
+    ck = tmp_path / "checkpoints"
+    ck.mkdir()
+    (ck / "explain_r3.json").write_text(json.dumps({"round": 3, "saved": True}))
+    # no data or model is touched: the finished round is read back as it was saved
+    assert run.explain_round(3, "no-such-fused-run", str(tmp_path)) == {"round": 3, "saved": True}
