@@ -189,7 +189,7 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
         per_seed = []
         for seed in cfg["procedure"]["seeds"]:
             if name == "timegan":
-                sampler = models.train_timegan(r.train.X, r.train.y, 2, setting, seed, device)
+                sampler = models.TRAINERS["timegan"](r.train.X, r.train.y, 2, setting, seed, device)
             else:
                 sampler = models.classic_sampler(r.train.X, r.train.y,
                                                  cfg["generators"]["classic"]["fixed"], seed)

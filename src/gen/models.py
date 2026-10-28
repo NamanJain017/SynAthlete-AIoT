@@ -21,6 +21,25 @@ from torch.nn import functional as F
 Sampler = Callable[[np.ndarray], np.ndarray]  # class indices -> windows
 
 
+class _FastCudnn:
+    """While a generator trains: cuDNN benchmark mode on (TimeVAE without it asked for a 9 GB
+    workspace and fell back to a very slow algorithm). Restores the previous flags after."""
+
+    def __enter__(self):
+        self.prev = (torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic)
+        torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic = True, False
+
+    def __exit__(self, *exc):
+        torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic = self.prev
+
+
+def _fast(train):
+    def wrapped(*args, **kwargs):
+        with _FastCudnn():
+            return train(*args, **kwargs)
+    return wrapped
+
+
 def _onehot(y: torch.Tensor, k: int) -> torch.Tensor:
     return F.one_hot(y, k).float()
 
@@ -292,4 +311,5 @@ def classic_sampler(X: np.ndarray, y: np.ndarray, s: dict, seed: int) -> Sampler
     return sample
 
 
-TRAINERS = {"timegan": train_timegan, "wgan_gp": train_wgan_gp, "timevae": train_timevae}
+TRAINERS = {"timegan": _fast(train_timegan), "wgan_gp": _fast(train_wgan_gp),
+            "timevae": _fast(train_timevae)}
