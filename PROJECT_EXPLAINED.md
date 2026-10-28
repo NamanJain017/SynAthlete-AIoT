@@ -46,8 +46,8 @@ The most important word is *honest*. Many published sports-AI results look good 
 
 | Dataset | What it is | Real? | Its role in our project |
 |---|---|---|---|
-| **Lövdal et al. 2021** (runners) | 74 competitive runners, about 7 years of daily training logs, with real injury labels. Day file: 42,766 windows with 583 injuries (1.36 %). Week file: 42,798 windows with 575 injuries. | Real | **The only injury evidence.** Every injury result comes from here. |
-| **PAMAP2** | 9 people wearing sensors (heart rate and 3 accelerometers), 10.7 hours, 18 activity types | Real | Activity recognition model, edge-tier stream, generator training |
+| **Lövdal et al. 2021** (runners) | 74 competitive runners, daily training logs, with real injury labels. Day file: 42,766 windows with 583 injuries (1.36 %). Week file: 42,798 windows with 575 injuries. | Real | **The only injury evidence.** Every injury result comes from here. |
+| **PAMAP2** | 9 people wearing sensors (heart rate and 3 accelerometers), 10.7 hours of labelled activities | Real | Activity recognition model, edge-tier stream, generator training |
 | **WESAD** | 15 people, chest and wrist sensors, 24.13 hours | Real | Checks whether the generators work on a second dataset |
 | **Sport DB 2.0** | 168 heart-rate recordings (55 continuous) | Real | Realism check for synthetic heart rate; second edge stream |
 | **SoccerMon / PMData** | Football players' (50) and people's (15) self-reported daily data with a few injury episodes | Real | "Track C": a small exploratory extra, not main evidence |
