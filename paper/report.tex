@@ -117,8 +117,13 @@ The leak alarm passed (shuffled-label ROC-AUC \canaryAuc{}). Learned injury mode
 The fused model reaches ROC-AUC \fusedAuc{}. Activity recognition on unseen people reaches
 macro-F1 \pamapRealFone{}.
 \input{generated/table_generators.tex}
+\wesadSummary{} \augmentSummary{}
 \input{generated/table_tiers.tex}
+Processing at the edge reduced the data sent to the cloud by \tiersReduction{}. Every tier is
+set up before the first window and windows are sent at a steady pace, so latency is decision
+time; on one computer there is no network delay, so it compares processing only.
 \input{generated/table_comparisons.tex}
+A difference between two models counts only when its bootstrap interval excludes zero.
 \explainSummary{} \lockboxSummary{}
 
 \chapter{Testing and Validation}

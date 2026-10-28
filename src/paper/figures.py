@@ -95,8 +95,27 @@ def numbers(b: dict) -> dict[str, str]:
                                f"{pc['sequence']['stability']}.")
     else:
         n["explainSummary"] = "Explanation checks: n/a."
+    fu = _runs("generators", "metrics_followup.json")
+    if fu:
+        f = fu[-1][1]
+        label = {"timegan": "TimeGAN", "wgan_gp": "WGAN-GP", "timevae": "TimeVAE"}
+        parts = []
+        for g, c in f["wesad_criteria"].items():
+            p = [k for k, ok in c.items() if ok]
+            parts.append(f"{label.get(g, _tex(g))} met "
+                         + (f"only the {' and '.join(p)} criterion" if p else "none")
+                         + f" of its {len(c)} fidelity and privacy criteria")
+        n["wesadSummary"] = ("On WESAD (five folds, settings carried over from PAMAP2 without "
+                             "tuning), " + "; ".join(parts) + ".")
+        inj, gru = f["injury_summary"], b.get(("gru", "day"))
+        n["augmentSummary"] = (
+            "Adding synthetic injury examples to the training rows only gave the GRU ROC-AUC "
+            f"{fmt(inj['timegan'])} with TimeGAN and {fmt(inj['classic'])} with classic "
+            f"augmentation, against {fmt(gru)} real-only.")
+    else:
+        n["wesadSummary"] = n["augmentSummary"] = "n/a."
     lock = _runs("lockbox")
-    n["lockboxSummary"] = ("Pending the evaluation freeze." if not lock else
+    n["lockboxSummary"] =("Pending the evaluation freeze." if not lock else
                            _tex(lock[-1][1].get("summary_sentence", NA)))
     return n
 

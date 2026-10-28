@@ -249,6 +249,43 @@ CODE_TOUR = [
 ]
 
 
+def _published_line() -> str:
+    lock = figures._runs("lockbox")
+    if not lock:
+        return ("  The published 0.724 was measured on the locked runners: compared only at the "
+                "final check.")
+    r = lock[-1][1]["lovdal_label_free_paper_split"]["day"]["roc_auc_ci"]
+    return (f"  Final check on the paper's own test runners (locked, day file): label-free "
+            f"variant ROC-AUC {r['estimate']:.3f} ({r['low']:.3f}-{r['high']:.3f}); the "
+            "published 0.724 used the label-reading scaling.")
+
+
+def _comparison_lines() -> list[str]:
+    """Which paired differences vs the Lövdal label-free variant are clear (interval > 0)."""
+    runs = figures._runs("comparisons")
+    if not runs:
+        return []
+    comps = runs[-1][1]["comparisons"]
+    better = []
+    for c in comps:
+        model, ref = c["comparison"].split(" - ", 1)
+        if "lovdal" in ref and c["roc_auc"]["low"] > 0:
+            better.append(f"{model.replace('_', ' ')} {ref[ref.rfind('('):]}")
+    lines = ["Paired runner bootstrap vs the label-free variant: clearly better (interval above "
+             "0) only " + (", ".join(better) if better else "none") + "."]
+    fused = []
+    for c in comps:
+        if c["comparison"].startswith("fused"):
+            r, p = c["roc_auc"], c["pr_auc"]
+            arm = c["comparison"].split(" - ", 1)[1].split(" (")[0]
+            fused.append(f"vs {arm} ROC-AUC {r['estimate']:+.3f} [{r['low']:+.3f}, "
+                         f"{r['high']:+.3f}], PR-AUC interval "
+                         + ("above 0" if p["low"] > 0 else "includes 0"))
+    if fused:
+        lines.append("Fused model " + "; ".join(fused) + ".")
+    return lines
+
+
 def _status(phase: str, waiting: str, file: str = "metrics.json") -> str:
     return "results" if figures._runs(phase, file) else waiting
 
@@ -327,25 +364,29 @@ def build() -> str:
         ["Fused model (+ final locked test)", "code 100%", state["3"]],
         ["Explanations + checks", "code 100%", state["4"]],
         ["Dashboard (8 pages)", "100%", "demo ready"],
-        ["Paper draft / project report", "in progress", "writing"]], size=15)
+        ["Paper draft / project report", "draft 100%", "numbers inserted by code"]], size=15)
 
     s = d.slide("Result: injury prediction is hard, and we report it honestly", "Implementation")
     img = _chart_injury(b)
     if img:
         s.shapes.add_picture(img, Inches(0.4), Inches(1.15), width=Inches(8.4))
-    d.bullets(s, [f"Learned models: ROC-AUC {n['injuryAucRange']}", "All beat chance; no clear "
-                  "winner.", "PR-AUC about 1.5x the injury rate (chance).",
-                  f"Fused model: ROC-AUC {n['fusedAuc']}"],
-              x=Inches(8.9), y=Inches(1.4), w=Inches(4.2), size=17)
+    items = [f"Learned models: ROC-AUC {n['injuryAucRange']}", "All beat chance; no clear "
+             "winner.", "PR-AUC about 1.5x the injury rate (chance).",
+             f"Fused model: ROC-AUC {n['fusedAuc']}"]
+    lock = figures._runs("lockbox")
+    if lock:
+        r = lock[-1][1]["fused"]["roc_auc_ci"]
+        items.append(f"Locked final test, 10 unseen runners: ROC-AUC {r['estimate']:.3f} "
+                     f"({r['low']:.3f}-{r['high']:.3f}): agrees with development.")
+    d.bullets(s, items, x=Inches(8.9), y=Inches(1.4), w=Inches(4.2), size=16)
 
     s = d.slide("Result: we rebuilt the published method correctly", "Implementation")
     d.bullets(s, ["Exact copy (incl. its label-reading scaling) on stand-in runners 54-63: "
                   f"ROC-AUC {n['reproDayAuc']}: PASSED",
                   f"Same model without the label-reading step: ROC-AUC {n['labelFreeAuc']}",
-                  "  The published 0.724 was measured on the locked runners: compared only at "
-                  "the final check.",
+                  _published_line(),
                   "Finding: without its peek at the labels, the method performs like simple "
-                  "baselines."])
+                  "baselines."] + _comparison_lines())
 
     s = d.slide("Result: synthetic wearable data", "Implementation")
     gens = figures._runs("generators", "metrics_pamap2.json")
@@ -358,6 +399,9 @@ def build() -> str:
                   f"{m['real_plus_synthetic_test_macro_f1']['mean']:.3f}",
                   f"{sum(g['criteria'][k].values())}/{len(g['criteria'][k])}"]
                  for k, m in g["pamap2_summary"].items()], size=14)
+        d.bullets(s, [n["wesadSummary"], n["augmentSummary"],
+                      "Synthetic data is used for training only, never as evidence."],
+                  y=Inches(4.3), size=15)
     else:
         d.bullets(s, ["Generators train only on each round's training people (4 PAMAP2 rounds).",
                       "Judged on real people they never saw: realism, usefulness, privacy.",
@@ -375,7 +419,8 @@ def build() -> str:
                   f"Median decision time: tiered {tier_ms:.1f} ms vs cloud-only {cloud_ms:.1f} ms."]
     else:
         items += ["Tiers benchmark runs on an idle machine after training (bytes + latency)."]
-    items += ["  Simulated on one laptop; wearable people differ from the runners (systems demo)."]
+    items += ["  Simulated on one laptop (no network delay, so latency compares processing "
+              "only); wearable people differ from the runners (systems demo)."]
     d.bullets(s, items)
 
     s = d.slide("Result: explanations that are tested, not assumed", "Implementation")
@@ -412,6 +457,9 @@ def build() -> str:
                   "are not daily rates.",
                   "Tiers are simulated on one laptop; wearable people differ from the runners.",
                   "Synthetic data is only for training, never evidence about injuries.",
+                  "The locked final test was opened once, after the evaluation freeze (tag "
+                  "eval-freeze); only 10 runners, so its interval is wide."
+                  if figures._runs("lockbox") else
                   "The locked final test is opened once, after the evaluation freeze."])
 
     s = d.slide("Thank you: questions?")

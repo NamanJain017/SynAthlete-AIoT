@@ -114,12 +114,16 @@ the same model reaches ROC-AUC \labelFreeAuc{}.
 
 \input{generated/table_generators.tex}
 \textit{Synthetic data.} Table~\ref{tab:gen} compares the generators with real-data training
-(real-only macro-F1 \pamapRealFone{}).
+(real-only macro-F1 \pamapRealFone{}). \wesadSummary{} \augmentSummary{}
 
 \input{generated/table_tiers.tex}
 \input{generated/table_comparisons.tex}
 \textit{Tiers.} Processing at the edge reduced the data sent to the cloud by \tiersReduction{}
-(Table~\ref{tab:tiers}).
+(Table~\ref{tab:tiers}). Every tier is set up before the first window and windows are sent at a
+steady pace, so latency is decision time; on one computer there is no network delay, so it
+compares processing only.
+\textit{Model comparisons.} Table~\ref{tab:compare} gives paired differences with runner
+bootstrap intervals; a difference counts only when its interval excludes zero.
 
 \textit{Explanations.} \explainSummary{}
 

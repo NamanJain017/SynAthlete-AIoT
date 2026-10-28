@@ -1,5 +1,8 @@
 \begin{table}[t]\centering\caption{Edge--fog--cloud vs cloud-only (simulated on one computer)}\label{tab:tiers}
 \footnotesize\begin{tabular}{llrr}\toprule
 Stream & Mode & Bytes into cloud & Median decision (ms) \\\midrule
-\multicolumn{4}{c}{n/a} \\
+pamap2 & tiered & 2,932 & 4.25 \\
+pamap2 & cloud\_only & 1,739,186 & 2.77 \\
+sportdb2\_hr & tiered & 1,600 & 0.78 \\
+sportdb2\_hr & cloud\_only & 135,619 & 1.00 \\
 \bottomrule\end{tabular}\end{table}

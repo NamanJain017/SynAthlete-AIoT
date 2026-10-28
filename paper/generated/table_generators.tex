@@ -1,5 +1,8 @@
 \begin{table}[t]\centering\caption{Generators on PAMAP2 (4 rounds): discriminative accuracy (0.5 = indistinguishable), TSTR and real+synthetic macro-F1, pre-registered criteria passed}\label{tab:gen}
 \footnotesize\begin{tabular}{lcccc}\toprule
 Generator & Disc.\ acc. & TSTR & Real+syn. & Passed \\\midrule
-\multicolumn{5}{c}{n/a} \\
+timegan & 0.956 & 0.270 & 0.639 & 0/5 \\
+wgan\_gp & 0.898 & 0.564 & 0.637 & 1/5 \\
+timevae & 0.936 & 0.525 & 0.647 & 2/5 \\
+classic & 0.860 & 0.624 & 0.636 & 2/5 \\
 \bottomrule\end{tabular}\end{table}
