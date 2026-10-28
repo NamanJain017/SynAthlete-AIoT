@@ -245,3 +245,11 @@ A: Its combiner is trained on arm predictions made by models that never trained 
 **Q: What problems did you catch while building?**
 A: Two: a real-vs-fake checker that could be under-trained (it would make every generator look perfect; now it always trains enough, proven by a test), and TimeVAE requesting 9 GB on a 6 GB GPU (fixed by letting cuDNN choose a fitting algorithm; 2x faster).
 
+**Combined (fused) model result** (`experiments/fused/2026-10-28_060435/summary.md`): ROC-AUC 0.609 ± 0.024, PR-AUC 0.022 over the 5 development rounds; its chosen day-by-day arm alone 0.604, its weekly-totals arm alone 0.612.
+
+**Q: Did combining the two models help?**
+A: Not clearly. The fused model scores about the same as its two parts, and the differences are smaller than the round-to-round spread. We report that honestly: on this data, the day-by-day view and the weekly-totals view carry largely the same information. The fused model was still declared in advance as the one sent to the final locked test, so we did not switch to whichever model looked best.
+
+**Q: Did anything go wrong while running the experiments?**
+A: Yes, and we fixed it openly (D-029). The synthetic-data training first ran far too slowly (a strict reproducibility mode and too many jobs on one laptop GPU), then ran out of memory (old models were not freed), and once crashed because results were saved only at the end. Each fault was measured, fixed, tested and logged; the runs now save after every step and resume after a crash. None of this changes any result, it only cost time.
+
