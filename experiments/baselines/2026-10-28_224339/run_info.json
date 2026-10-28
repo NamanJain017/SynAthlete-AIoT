@@ -1,0 +1,37 @@
+{
+  "run_id": "2026-10-28_224339",
+  "command": "python -m src.models.run --only gru",
+  "only": "gru",
+  "git_commit": "201e4db930a49efe6f38c4aebfb3e1e450ebb44f",
+  "git_dirty": false,
+  "python": "3.12.2",
+  "packages": {
+    "numpy": "2.5.2",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "PyYAML": "6.0.3",
+    "xgboost": "3.4.1",
+    "catboost": "1.2.10",
+    "torch": "2.14.1+cu132"
+  },
+  "seeds": {
+    "search_seed_base": 1000,
+    "canary_seed_base": 2000,
+    "refit_seeds": [
+      0,
+      1,
+      2
+    ],
+    "pamap2_search_seed_base": 1000
+  },
+  "cpu_count": 12,
+  "runtime_s": {
+    "gru": 2677.8
+  },
+  "data_fingerprints": {
+    "lovdal_source": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "lovdal_split": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "pamap2_source": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+    "pamap2_split": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040"
+  }
+}
