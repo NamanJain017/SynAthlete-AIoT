@@ -10,6 +10,7 @@ not complete for all 5 rounds is skipped and listed. Writes experiments/comparis
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from concurrent.futures import ProcessPoolExecutor
@@ -85,7 +86,10 @@ def compare(job: tuple[str, dict, dict]) -> dict:
     return out
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--workers", type=int, default=4, help="parallel processes (CPU only)")
+    args = ap.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     code = base_run._code_state()
@@ -104,7 +108,7 @@ def main() -> int:
             jobs.append((f"fused - {arm} (shared days)", fp["fused"], fp[arm]))
     else:
         skipped.append("fused vs arms")
-    with ProcessPoolExecutor(max_workers=4) as ex:
+    with ProcessPoolExecutor(max_workers=args.workers) as ex:
         results = list(ex.map(compare, jobs))
     folder = EXP / "comparisons" / datetime.now().strftime("%Y-%m-%d_%H%M%S")
     folder.mkdir(parents=True)
