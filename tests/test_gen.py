@@ -50,3 +50,36 @@ def test_fidelity_measures_on_identical_and_different_data():
     assert p["share_synthetic_closer"] == 1.0
     acc = ge.discriminative_accuracy(X, X + 5.0, 0, CPU, epochs=5)  # trivially different
     assert acc > 0.9
+
+
+def test_retry_recovers_from_a_brief_out_of_memory(monkeypatch):
+    from src.gen import run
+    monkeypatch.setattr(run.time, "sleep", lambda s: None)
+    calls = []
+
+    def flaky(x):
+        calls.append(x)
+        if len(calls) == 1:
+            raise torch.OutOfMemoryError("CUDA out of memory (simulated)")
+        return x * 2
+
+    assert run._retry(flaky, 21) == 42 and len(calls) == 2
+
+
+def test_retry_gives_up_after_the_last_attempt(monkeypatch):
+    from src.gen import run
+    monkeypatch.setattr(run.time, "sleep", lambda s: None)
+
+    def always(x):
+        raise torch.OutOfMemoryError("simulated")
+
+    with pytest.raises(torch.OutOfMemoryError):
+        run._retry(always, 1)
+
+
+def test_checkpoint_is_written_whole(tmp_path):
+    from src.gen import run
+    p = tmp_path / "pamap2_r0_timegan.json"
+    run._save_json(p, {"tstr": 0.5})
+    assert p.exists() and not p.with_suffix(".tmp").exists()
+    assert __import__("json").loads(p.read_text())["tstr"] == 0.5

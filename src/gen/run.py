@@ -77,7 +77,31 @@ def _free() -> None:
         torch.cuda.empty_cache()
 
 
-GPU_SHARE = 0.23  # per worker: 4 workers stay inside the 6 GB card (no spill into RAM; D-029)
+GPU_SHARE = 0.30  # per worker: the largest TimeGAN needs ~1.36 GB; 0.23 (1.38 GB) was too tight
+RETRIES = 4       # a brief out-of-memory moment waits and retries instead of crashing the run
+
+
+def _retry(fn, *args, **kwargs):
+    """Run fn; on a CUDA out-of-memory error free memory, wait and try again (same inputs and
+    seed, so the result is the same computation). The last attempt's error is raised."""
+    import torch
+    for attempt in range(1, RETRIES + 1):
+        try:
+            return fn(*args, **kwargs)
+        except torch.OutOfMemoryError:
+            if attempt == RETRIES:
+                raise
+            _free()
+            print(f"  [{datetime.now():%H:%M}] out of GPU memory: retry {attempt} in 60 s",
+                  flush=True)
+            time.sleep(60)
+
+
+def _save_json(path: Path, obj) -> None:
+    """Checkpoint written atomically, so a crash never leaves half a file."""
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(obj, indent=1, default=float), "utf-8")
+    tmp.replace(path)
 
 
 def _limit_gpu_memory() -> None:
@@ -127,17 +151,17 @@ def pamap2_round(k: int, folder: str) -> dict:
         per_seed = []
         for seed in proc["seeds"]:
             t0 = time.perf_counter()
-            sampler = sampler_for_seed(seed)
-            syn = sampler(y_idx)
+            sampler = _retry(sampler_for_seed, seed)
+            syn = _retry(sampler, y_idx)
             if seed == proc["seeds"][0]:
                 np.savez_compressed(samples / f"pamap2_{name}_r{k}.npz", X=syn[:, :, 0],
                                     y=classes[y_idx], hr_mean=r.scaler_mean[0],
                                     hr_sd=r.scaler_std[0])
-            _, tstr = ge.cnn_macro_f1(syn, classes[y_idx], r, cnn, seed, device)
-            _, aug = ge.cnn_macro_f1(np.concatenate([r.train.X, syn]),
-                                     np.concatenate([r.train.y, classes[y_idx]]), r, cnn, seed,
-                                     device)
-            per_seed.append({**_fidelity(r, syn, seed, device), "tstr_test_macro_f1": tstr,
+            _, tstr = _retry(ge.cnn_macro_f1, syn, classes[y_idx], r, cnn, seed, device)
+            _, aug = _retry(ge.cnn_macro_f1, np.concatenate([r.train.X, syn]),
+                            np.concatenate([r.train.y, classes[y_idx]]), r, cnn, seed, device)
+            per_seed.append({**_retry(_fidelity, r, syn, seed, device),
+                             "tstr_test_macro_f1": tstr,
                              "real_plus_synthetic_test_macro_f1": aug})
             _progress(f"round {k} {name} seed {seed} scored", t0)
             del sampler, syn
@@ -145,7 +169,15 @@ def pamap2_round(k: int, folder: str) -> dict:
         return {key: float(np.mean([s[key] for s in per_seed])) for key in per_seed[0]} | {
             "seeds": per_seed}
 
+    ckpt = Path(folder) / "checkpoints"
+    ckpt.mkdir(parents=True, exist_ok=True)
     for name in GENERATORS:
+        done = ckpt / f"pamap2_r{k}_{name}.json"
+        if done.exists():  # finished before a crash: resume instead of redoing it
+            out["generators"][name] = json.loads(done.read_text("utf-8"))
+            print(f"  [{datetime.now():%H:%M}] round {k} {name}: resumed from checkpoint",
+                  flush=True)
+            continue
         g = cfg["generators"][name]
         if g.get("tuned", True):
             settings = tuning.draw_settings(g["grid"], proc["settings_per_generator_per_round"],
@@ -155,9 +187,9 @@ def pamap2_round(k: int, folder: str) -> dict:
         trials, first = [], None
         for i, s in enumerate(settings, 1):  # choose on the REAL validation person only
             t0 = time.perf_counter()
-            sampler = models.TRAINERS[name](r.train.X, y_idx, len(classes), s, 0, device)
-            val, _ = ge.cnn_macro_f1(sampler(y_idx), classes[y_idx], r, cnn, 0, device,
-                                     score_test=False)
+            sampler = _retry(models.TRAINERS[name], r.train.X, y_idx, len(classes), s, 0, device)
+            val, _ = _retry(ge.cnn_macro_f1, _retry(sampler, y_idx), classes[y_idx], r, cnn, 0,
+                            device, score_test=False)
             trials.append({"setting": s, "val_tstr_macro_f1": val})
             _progress(f"round {k} {name} setting {i}/{len(settings)}", t0)
             scores = [t["val_tstr_macro_f1"] for t in trials]
@@ -171,12 +203,18 @@ def pamap2_round(k: int, folder: str) -> dict:
         res = score(name, lambda seed, c=chosen, f=first, n=name: f if seed == proc["seeds"][0]
                     else models.TRAINERS[n](r.train.X, y_idx, len(classes), c, seed, device))
         out["generators"][name] = {**res, "chosen": best, "trials": trials}
+        _save_json(done, out["generators"][name])
         print(f"  pamap2 round {k} {name}: TSTR {res['tstr_test_macro_f1']:.3f}", flush=True)
         del first
         _free()
-    c = cfg["generators"]["classic"]["fixed"]
-    out["generators"]["classic"] = score(
-        "classic", lambda seed: models.classic_sampler(r.train.X, y_idx, c, seed))
+    done = ckpt / f"pamap2_r{k}_classic.json"
+    if done.exists():
+        out["generators"]["classic"] = json.loads(done.read_text("utf-8"))
+    else:
+        c = cfg["generators"]["classic"]["fixed"]
+        out["generators"]["classic"] = score(
+            "classic", lambda seed: models.classic_sampler(r.train.X, y_idx, c, seed))
+        _save_json(done, out["generators"]["classic"])
     return out
 
 
@@ -196,29 +234,37 @@ def _consensus(rounds: list[dict], name: str) -> dict:
     return out
 
 
-def wesad_fold(k: int, settings: dict) -> dict:
+def wesad_fold(k: int, settings: dict, folder: str) -> dict:
     import torch
 
     from src.gen import models
-    torch.set_num_threads(max(1, (os.cpu_count() or 4) // 5))
+    torch.set_num_threads(max(1, (os.cpu_count() or 4) // 4))
     device = _device()
     _limit_gpu_memory()
     r = _round_k(_rounds("wesad"), k)
     classes = np.unique(r.train.y)
     y_idx = np.searchsorted(classes, r.train.y)
     out = {"fold": k, "generators": {}}
+    ckpt = Path(folder) / "checkpoints"
+    ckpt.mkdir(parents=True, exist_ok=True)
     for name in GENERATORS:
+        done = ckpt / f"wesad_f{k}_{name}.json"
+        if done.exists():
+            out["generators"][name] = json.loads(done.read_text("utf-8"))
+            continue
         per_seed = []
         for seed in _cfg()["procedure"]["seeds"]:
             t0 = time.perf_counter()
-            syn = models.TRAINERS[name](r.train.X, y_idx, len(classes), settings[name], seed,
-                                        device)(y_idx)
-            per_seed.append(_fidelity(r, syn, seed, device))
+            sampler = _retry(models.TRAINERS[name], r.train.X, y_idx, len(classes),
+                             settings[name], seed, device)
+            syn = _retry(sampler, y_idx)
+            per_seed.append(_retry(_fidelity, r, syn, seed, device))
             _progress(f"wesad fold {k} {name} seed {seed}", t0)
-            del syn
+            del sampler, syn
             _free()
         out["generators"][name] = {key: float(np.mean([s[key] for s in per_seed]))
                                    for key in per_seed[0]}
+        _save_json(done, out["generators"][name])
     return out
 
 
@@ -228,7 +274,7 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
     import torch
 
     from src.gen import models
-    torch.set_num_threads(max(1, (os.cpu_count() or 4) // 5))
+    torch.set_num_threads(max(1, (os.cpu_count() or 4) // 4))
     cfg, device = _cfg(), _device()
     _limit_gpu_memory()
     r = _round_k(data.lovdal_rounds("day", "sequence"), k)
@@ -236,26 +282,34 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
     pos = r.train.y == 1
     n_pos = int(pos.sum())
     out = {"round": k, "synthetic_injuries_added": n_pos}
+    ckpt = Path(folder) / "checkpoints"
+    ckpt.mkdir(parents=True, exist_ok=True)
     for name in ("timegan", "classic"):
+        done = ckpt / f"injury_r{k}_{name}.json"
+        if done.exists():
+            out[name] = json.loads(done.read_text("utf-8"))
+            continue
         per_seed = []
         for seed in cfg["procedure"]["seeds"]:
             t0 = time.perf_counter()
             if name == "timegan":
-                sampler = models.TRAINERS["timegan"](r.train.X, r.train.y, 2, setting, seed, device)
+                sampler = _retry(models.TRAINERS["timegan"], r.train.X, r.train.y, 2, setting,
+                                 seed, device)
             else:
                 sampler = models.classic_sampler(r.train.X, r.train.y,
                                                  cfg["generators"]["classic"]["fixed"], seed)
-            syn = sampler(np.ones(n_pos, dtype=np.int64))
+            syn = _retry(sampler, np.ones(n_pos, dtype=np.int64))
             train = data.Part(np.concatenate([r.train.X, syn]),
                               np.concatenate([r.train.y, np.ones(n_pos, dtype=r.train.y.dtype)]),
                               np.concatenate([r.train.person, np.full(n_pos, -1)]))
-            predict = fitters.gru(dataclasses.replace(r, train=train), gru_setting, seed)
+            predict = _retry(fitters.gru, dataclasses.replace(r, train=train), gru_setting, seed)
             per_seed.append(inj_eval.injury_scores(r.val.y, predict(r.val.X), r.test.y,
                                                    predict(r.test.X), True))
             _progress(f"injury round {k} {name} seed {seed}", t0)
             del sampler, predict
             _free()
         out[name] = {**inj_eval.mean_over_seeds(per_seed), "seeds": per_seed}
+        _save_json(done, out[name])
     return out
 
 
@@ -308,6 +362,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("stage", choices=["pamap2", "followup"])
     p.add_argument("--from", dest="src", help="run id of the pamap2 stage (for followup)")
+    p.add_argument("--resume", help="run id to continue after a crash (finished parts are kept)")
     args = p.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -315,10 +370,12 @@ def main(argv: list[str] | None = None) -> int:
     cfg = _cfg()
     t0 = time.perf_counter()
     if args.stage == "pamap2":
-        run_id = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-        folder = OUT / run_id
-        folder.mkdir(parents=True)
-        shutil.copyfile(CONFIG, folder / "config.yaml")
+        if args.resume:
+            folder = OUT / args.resume
+        else:
+            folder = OUT / datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            folder.mkdir(parents=True)
+            shutil.copyfile(CONFIG, folder / "config.yaml")
         # 4 rounds at once: measured faster than 1-3 at a time once strict mode is off (D-029)
         with ProcessPoolExecutor(max_workers=4) as ex:
             rounds = list(ex.map(pamap2_round, range(4), [str(folder)] * 4))
@@ -333,7 +390,7 @@ def main(argv: list[str] | None = None) -> int:
         prev = json.loads((folder / "metrics_pamap2.json").read_text("utf-8"))["pamap2_rounds"]
         settings = {g: _consensus(prev, g) for g in GENERATORS}
         with ProcessPoolExecutor(max_workers=4) as ex:
-            wesad = list(ex.map(wesad_fold, range(5), [settings] * 5))
+            wesad = list(ex.map(wesad_fold, range(5), [settings] * 5, [str(folder)] * 5))
             injury = list(ex.map(injury_round, range(5), [settings["timegan"]] * 5,
                                  [str(folder)] * 5))
         results = {"consensus_settings": settings, "wesad_folds": wesad,
