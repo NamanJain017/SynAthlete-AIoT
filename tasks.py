@@ -87,6 +87,13 @@ def explain() -> int:
     return run([sys.executable, "-m", "src.xai.run", *sys.argv[2:]])
 
 
+def demo() -> int:
+    """Coach dashboard (piece 9). `python tasks.py demo --prepare` builds its data first."""
+    if "--prepare" in sys.argv[2:]:
+        return run([sys.executable, "-m", "src.dashboard.prepare"])
+    return run([sys.executable, "-m", "streamlit", "run", "src/dashboard/app.py"])
+
+
 def splits() -> int:
     """Person-level splits (piece 2): written once to data/splits/, never overwritten.
     --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
@@ -122,7 +129,7 @@ TASKS = {
     "train": train,
     "track-c": track_c,
     "explain": explain,
-    "demo": not_implemented("piece 9"),
+    "demo": demo,
     "paper-figures": not_implemented("piece 10"),
 }
 

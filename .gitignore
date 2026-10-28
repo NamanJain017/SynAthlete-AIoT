@@ -23,3 +23,5 @@ catboost_info/
 experiments/baselines/_logs/
 experiments/**/_logs/
 experiments/generators/*/samples/
+experiments/dashboard/
+experiments/training_lab/
