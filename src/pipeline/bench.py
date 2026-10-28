@@ -2,7 +2,8 @@
 
 Streams: (1) a PAMAP2 test person of round 0 (heart rate + 3 accelerometers, 25 Hz, 5-s
 windows, no overlap); (2) a Sport DB 2.0 heart-rate recording (about 1 Hz, 128-sample windows).
-Each stream runs tiered (edge -> fog -> cloud) and cloud-only, 3 repetitions each.
+Each stream runs tiered (edge -> fog -> cloud) and cloud-only, 3 repetitions each, with every
+process set up before the first window and one window sent every tiers.INTERVAL_S (D-034).
 Edge uses the piece-3 activity CNN (round 0's chosen setting, trained on round 0's training
 people) on the CPU; cloud scores a round-0 test runner's days with piece-3 logistic regression.
 Writes experiments/tiers/<run_id>/{run_info.json, metrics.json, summary.md}.
@@ -116,7 +117,8 @@ def main() -> int:
     results = {"note": "simulated on one laptop; wearable person and runner are different "
                        "people (systems demo, not injury evidence)",
                "pamap2_person": person, "sportdb2_recording": recording,
-               "lovdal_runner_round0_test": runner, "repeats": REPEATS, "streams": {}}
+               "lovdal_runner_round0_test": runner, "repeats": REPEATS,
+               "send_interval_s": tiers.INTERVAL_S, "streams": {}}
     for name, (windows, rule, classify) in streams.items():
         out = {}
         for mode in ("tiered", "cloud_only"):
