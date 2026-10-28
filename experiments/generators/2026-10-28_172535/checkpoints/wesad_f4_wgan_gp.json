@@ -1,0 +1,7 @@
+{
+ "discriminative_accuracy": 0.8120239831469779,
+ "acf_error": 0.2178776373051935,
+ "correlation_error": 0.1655632412334021,
+ "real_test_p5_distance": 4.0904541015625,
+ "share_synthetic_closer": 0.05121832776301883
+}
