@@ -1,0 +1,58 @@
+# Piece 5: generators (D-003, D-012, D-027). Written BEFORE any generator run.
+# Synthetic data is only ever used for TRAINING; validation and test are always real people.
+
+data:
+  pamap2: {windows: data/processed/pamap2/windows.npz, splits: data/splits/pamap2_folds.json, rounds: [0, 1, 2, 3]}
+  wesad: {windows: data/processed/wesad/windows.npz, splits: data/splits/wesad_folds.json, rounds: [0, 1, 2, 3, 4]}
+  sportdb2: {hr: data/processed/sportdb2/hr.parquet}           # heart-rate realism check only
+  lovdal_day: {rounds: [0, 1, 2, 3, 4]}                          # injury augmentation (training only)
+
+procedure:
+  conditional_on: activity_label           # every generator is class-conditional (one-hot label)
+  synthetic_per_class: match_training_counts
+  settings_per_generator_per_round: 8      # seeded random search, round k seed 3000 + k
+  search_seed_base: 3000
+  selection_score: validation_tstr_macro_f1   # CNN trained on synthetic only, scored on the round's REAL validation person
+  tstr_classifier: pamap2_cnn1d_piece3_chosen_setting_of_the_round   # no new classifier tuning
+  seeds: [0, 1, 2]                          # chosen setting refit with 3 seeds; metrics averaged
+  wesad_setting: the_most_often_chosen_pamap2_setting   # WESAD = generalisation check, no tuning on WESAD
+  injury_augmentation:
+    model: gru_piece3_chosen_setting_of_the_round
+    synthetic_injury_examples: equal_to_real_training_injuries   # adds 1x the real training positives
+    generator: timegan_conditional          # setting = the most often chosen PAMAP2 TimeGAN setting
+    also: classic_augmentation_of_training_injuries
+
+generators:
+  timegan:                                  # Yoon, Jarrett & van der Schaar 2019 (NeurIPS)
+    fixed: {batch_size: 128, embed_steps: 1000, supervised_steps: 1000, joint_steps: 1500, gamma: 1.0}
+    grid:
+      hidden: [24, 48, 96]
+      layers: [2, 3]
+      lr: {loguniform: [5.0e-4, 2.0e-3]}
+      noise_dim: [8, 16]
+  wgan_gp:                                  # Gulrajani et al. 2017; 1D convolutional generator and critic
+    tuned: false                            # D-029: PLAN cut "WGAN-GP tuning" (Naman, 2026-10-28)
+    declared_setting: {channels: 64, noise_dim: 64, n_critic: 5, lr: 2.0e-4}   # middle of the grid
+    fixed: {batch_size: 128, steps: 3000, gp_lambda: 10.0, betas: [0.5, 0.9]}
+    grid:
+      channels: [32, 64, 128]
+      noise_dim: [32, 64]
+      n_critic: [3, 5]
+      lr: {loguniform: [5.0e-5, 5.0e-4]}
+  timevae:                                  # Desai et al. 2021 (arXiv 2111.08095) [VERIFY venue]; non-GAN baseline (D-003)
+    fixed: {batch_size: 128, steps: 3000}
+    grid:
+      latent: [8, 16, 32]
+      channels: [32, 64, 128]
+      kl_weight: [0.5, 1.0, 2.0]
+      lr: {loguniform: [3.0e-4, 3.0e-3]}
+  classic:                                  # Um et al. 2017 (ICMI) augmentation; no settings to tune
+    fixed: {jitter_sd: 0.03, scaling_sd: 0.1, time_warp_knots: 4, time_warp_sd: 0.2}
+
+criteria:                                   # EVAL_PROTOCOL "Generator criteria" (D-027)
+  discriminative_accuracy_within_of_0.5: 0.15
+  tstr_macro_f1_within_of_real: 0.15
+  acf_lags: 10
+  acf_mean_abs_diff_below: 0.10
+  correlation_mean_abs_diff_below: 0.10
+  privacy_max_share_closer_than_real_p5: 0.05

@@ -1,0 +1,57 @@
+{
+ "discriminative_accuracy": 0.9054814814814814,
+ "acf_error": 0.1551440188808677,
+ "correlation_error": 0.10467636403642465,
+ "real_test_p5_distance": 8.041667938232422,
+ "share_synthetic_closer": 0.0941238333114237,
+ "tstr_test_macro_f1": 0.6850697024820475,
+ "real_plus_synthetic_test_macro_f1": 0.7103440225391919,
+ "seeds": [
+  {
+   "discriminative_accuracy": 0.9235555555555556,
+   "acf_error": 0.14979915953008457,
+   "correlation_error": 0.11835300469678671,
+   "real_test_p5_distance": 8.041667938232422,
+   "share_synthetic_closer": 0.11555146575522544,
+   "tstr_test_macro_f1": 0.7592155877450302,
+   "real_plus_synthetic_test_macro_f1": 0.786232580721563
+  },
+  {
+   "discriminative_accuracy": 0.9137777777777778,
+   "acf_error": 0.13072281454224138,
+   "correlation_error": 0.09778262374859605,
+   "real_test_p5_distance": 8.041667938232422,
+   "share_synthetic_closer": 0.11095044038385697,
+   "tstr_test_macro_f1": 0.6394895138671782,
+   "real_plus_synthetic_test_macro_f1": 0.7186874536865074
+  },
+  {
+   "discriminative_accuracy": 0.8791111111111111,
+   "acf_error": 0.18491008257027716,
+   "correlation_error": 0.09789346366389116,
+   "real_test_p5_distance": 8.041667938232422,
+   "share_synthetic_closer": 0.05586959379518864,
+   "tstr_test_macro_f1": 0.6565040058339339,
+   "real_plus_synthetic_test_macro_f1": 0.6261120332095055
+  }
+ ],
+ "chosen": 0,
+ "trials": [
+  {
+   "setting": {
+    "batch_size": 128,
+    "steps": 3000,
+    "gp_lambda": 10.0,
+    "betas": [
+     0.5,
+     0.9
+    ],
+    "channels": 64,
+    "noise_dim": 64,
+    "n_critic": 5,
+    "lr": 0.0002
+   },
+   "val_tstr_macro_f1": 0.8588980908333763
+  }
+ ]
+}
