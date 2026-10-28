@@ -1,0 +1,200 @@
+{
+ "round": 4,
+ "sequence_arm": "tcn",
+ "tabular_arm": "catboost",
+ "explained_events": 605,
+ "explained_injuries": 105,
+ "tabular": {
+  "global_importance": {
+   "max exertion [w-1]": 0.15367655361333982,
+   "max exertion [w-2]": 0.12215894741532245,
+   "min training success [w-2]": 0.1198137889084226,
+   "max exertion [w-3]": 0.10935454079096542,
+   "nr. strength trainings [w-1]": 0.07674111404362448,
+   "avg training success [w-1]": 0.07411695859700122,
+   "total km Z3-Z4-Z5-T1-T2 [w-2]": 0.07284636973315364,
+   "nr. strength trainings [w-2]": 0.06542150282211938,
+   "total hours alternative training [w-1]": 0.0637509680333138,
+   "nr. days with interval session [w-3]": 0.06296380261065206,
+   "nr. tough sessions (effort in Z5, T1 or T2) [w-3]": 0.06253480877533667,
+   "max km Z5-T1-T2 one day [w-3]": 0.06188623413071647,
+   "total km Z3-Z4-Z5-T1-T2 [w-1]": 0.06176097373579376,
+   "total kms [w-2]": 0.05989024244265437,
+   "nr. rest days [w-1]": 0.05873276967091844
+  },
+  "deletion": {
+   "drop_top": 0.1756289088323648,
+   "drop_random": 0.0185712336295894,
+   "ratio": 9.457040514128078,
+   "passed": true
+  },
+  "randomisation": {
+   "rank_correlation": 0.021994975320620537,
+   "passed": true
+  },
+  "stability": {
+   "rank_correlation": 0.8945099448331256,
+   "passed": true
+  },
+  "prior_agreement": {
+   "recent_load_raises_risk": {
+    "features": [
+     "nr. sessions [w-1]",
+     "total kms [w-1]",
+     "max km one day [w-1]",
+     "total km Z3-Z4-Z5-T1-T2 [w-1]",
+     "nr. tough sessions (effort in Z5, T1 or T2) [w-1]",
+     "nr. days with interval session [w-1]",
+     "total km Z3-4 [w-1]",
+     "max km Z3-4 one day [w-1]",
+     "total km Z5-T1-T2 [w-1]",
+     "max km Z5-T1-T2 one day [w-1]",
+     "rel total kms week 0_1",
+     "rel total kms week 0_2",
+     "rel total kms week 1_2"
+    ],
+    "rank_correlations": [
+     0.660463898710432,
+     -0.1968529355380023,
+     0.013919835925520437,
+     0.6739454369295794,
+     0.28655735952114414,
+     0.4502573539351763,
+     0.6120242344267744,
+     0.057292388910680565,
+     -0.3251164557185202,
+     0.5547507898461752,
+     -0.7287527733436764,
+     -0.04045643962865019,
+     0.4051641293053243
+    ],
+    "share_in_expected_direction": 0.6923076923076923
+   },
+   "low_recovery_raises_risk": {
+    "features": [
+     "avg recovery [w-1]",
+     "min recovery [w-1]",
+     "max recovery [w-1]"
+    ],
+    "rank_correlations": [
+     0.48404431880449467,
+     0.512114596928455,
+     0.7347252721730778
+    ],
+    "share_in_expected_direction": 0.0
+   },
+   "monotony_strain": "not testable: no monotony or strain input in the L\u00f6vdal files"
+  }
+ },
+ "sequence": {
+  "global_importance": {
+   "km Z3-4 [d-2]": 0.11536233127117157,
+   "km Z5-T1-T2 [d-2]": 0.10191444307565689,
+   "hours alternative [d-1]": 0.0952436551451683,
+   "perceived exertion [d-1]": 0.09453941881656647,
+   "perceived exertion [d-2]": 0.08621907979249954,
+   "perceived trainingSuccess [d-3]": 0.08505120873451233,
+   "perceived exertion [d-3]": 0.08008816838264465,
+   "km Z3-4 [d-3]": 0.0796336680650711,
+   "km Z3-4 [d-5]": 0.07958047091960907,
+   "perceived trainingSuccess [d-2]": 0.07929673045873642,
+   "km Z5-T1-T2 [d-1]": 0.07756204158067703,
+   "perceived trainingSuccess [d-5]": 0.0769079253077507,
+   "km Z3-4 [d-1]": 0.07422496378421783,
+   "perceived trainingSuccess [d-1]": 0.07415291666984558,
+   "hours alternative [d-5]": 0.0730602815747261
+  },
+  "per_day_importance": [
+   0.26490986347198486,
+   0.33381688594818115,
+   0.5688923001289368,
+   0.14726728200912476,
+   0.5639855861663818,
+   0.6817182898521423,
+   0.7011443376541138
+  ],
+  "deletion": {
+   "drop_top": 0.009552014438313487,
+   "drop_random": -0.0033419579865633653,
+   "ratio": Infinity,
+   "passed": true
+  },
+  "randomisation": {
+   "rank_correlation": 0.49737982331647085,
+   "passed": true
+  },
+  "stability": {
+   "rank_correlation": 0.998682081710529,
+   "passed": true
+  },
+  "prior_agreement": {
+   "recent_load_raises_risk": {
+    "features": [
+     "nr. sessions [d-1]",
+     "total km [d-1]",
+     "km Z3-4 [d-1]",
+     "km Z5-T1-T2 [d-1]",
+     "km sprinting [d-1]"
+    ],
+    "rank_correlations": [
+     -0.842708026071654,
+     -0.8134657205130132,
+     0.4662376133978265,
+     0.2248612533101545,
+     0.3761793633234555
+    ],
+    "share_in_expected_direction": 0.6
+   },
+   "low_recovery_raises_risk": {
+    "features": [
+     "perceived recovery [d-1]"
+    ],
+    "rank_correlations": [
+     -0.41390647158106214
+    ],
+    "share_in_expected_direction": 1.0
+   },
+   "monotony_strain": "not testable: no monotony or strain input in the L\u00f6vdal files"
+  }
+ },
+ "attention": {
+  "mean_weight_per_day": [
+   0.13587111234664917,
+   0.13693879544734955,
+   0.1398991197347641,
+   0.1446591168642044,
+   0.14710870385169983,
+   0.1481916755437851,
+   0.1473316252231598
+  ],
+  "rank_correlation_with_ig_per_day": 0.08004722550177096,
+  "note": "explanation-only model, never part of the risk score"
+ },
+ "reasons": [
+  {
+   "runner": 59,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max exertion [w-1] was higher than usual; nr. strength trainings [w-1] was higher than usual; max recovery [w-3] was higher than usual."
+  },
+  {
+   "runner": 40,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max exertion [w-3] was higher than usual; max exertion [w-1] was higher than usual; min training success [w-1] was higher than usual."
+  },
+  {
+   "runner": 59,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max exertion [w-1] was higher than usual; nr. strength trainings [w-1] was higher than usual; max exertion [w-3] was higher than usual."
+  },
+  {
+   "runner": 9,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max exertion [w-1] was higher than usual; total hours alternative training [w-1] was higher than usual; max exertion [w-2] was higher than usual."
+  },
+  {
+   "runner": 40,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max exertion [w-3] was higher than usual; nr. strength trainings [w-1] was higher than usual; min training success [w-1] was higher than usual."
+  }
+ ]
+}

@@ -1,0 +1,190 @@
+{
+ "round": 3,
+ "sequence_arm": "gru",
+ "tabular_arm": "catboost",
+ "explained_events": 605,
+ "explained_injuries": 105,
+ "tabular": {
+  "global_importance": {
+   "max km Z5-T1-T2 one day [w-2]": 0.00738762972389116,
+   "nr. rest days [w-3]": 0.006308344001022015,
+   "nr. sessions [w-3]": 0.004942820166972238,
+   "nr. rest days [w-1]": 0.004570787144586659,
+   "max recovery [w-2]": 0.0044429472735267135,
+   "max training success [w-2]": 0.003217223482530308,
+   "max km Z3-4 one day [w-1]": 0.0031964145093030627,
+   "max km one day [w-1]": 0.0029730036895416023,
+   "total km Z3-4 [w-1]": 0.0027598123168768494,
+   "max km Z5-T1-T2 one day [w-3]": 0.002511008791563723,
+   "total km Z3-Z4-Z5-T1-T2 [w-1]": 0.0024449360124573017,
+   "avg recovery [w-1]": 0.002396210493487273,
+   "avg exertion [w-3]": 0.002372222981267397,
+   "max exertion [w-1]": 0.002212715141691242,
+   "nr. strength trainings [w-1]": 0.0019244999894417467
+  },
+  "deletion": {
+   "drop_top": 0.0024884924830456704,
+   "drop_random": -0.0016957302583893688,
+   "ratio": Infinity,
+   "passed": true
+  },
+  "randomisation": {
+   "rank_correlation": 0.4732455097873482,
+   "passed": true
+  },
+  "stability": {
+   "rank_correlation": 0.9463649996270317,
+   "passed": true
+  },
+  "prior_agreement": {
+   "recent_load_raises_risk": {
+    "features": [
+     "nr. sessions [w-1]",
+     "total kms [w-1]",
+     "max km one day [w-1]",
+     "total km Z3-Z4-Z5-T1-T2 [w-1]",
+     "nr. tough sessions (effort in Z5, T1 or T2) [w-1]",
+     "nr. days with interval session [w-1]",
+     "total km Z3-4 [w-1]",
+     "max km Z3-4 one day [w-1]",
+     "total km Z5-T1-T2 [w-1]",
+     "max km Z5-T1-T2 one day [w-1]",
+     "rel total kms week 0_1",
+     "rel total kms week 0_2",
+     "rel total kms week 1_2"
+    ],
+    "rank_correlations": [
+     0.42667426172628536,
+     0.6448087984492177,
+     0.5529685022818417,
+     -0.13377670814756215,
+     0.16426641482380375
+    ],
+    "share_in_expected_direction": 0.8
+   },
+   "low_recovery_raises_risk": {
+    "features": [
+     "avg recovery [w-1]",
+     "min recovery [w-1]",
+     "max recovery [w-1]"
+    ],
+    "rank_correlations": [
+     0.5493640495802153
+    ],
+    "share_in_expected_direction": 0.0
+   },
+   "monotony_strain": "not testable: no monotony or strain input in the L\u00f6vdal files"
+  }
+ },
+ "sequence": {
+  "global_importance": {
+   "total km [d-7]": 0.4596502184867859,
+   "perceived recovery [d-7]": 0.41110891103744507,
+   "perceived trainingSuccess [d-6]": 0.3404492735862732,
+   "hours alternative [d-7]": 0.3143426179885864,
+   "hours alternative [d-6]": 0.28003060817718506,
+   "strength training [d-7]": 0.25986847281455994,
+   "km Z3-4 [d-7]": 0.2545880973339081,
+   "total km [d-6]": 0.24775075912475586,
+   "perceived trainingSuccess [d-7]": 0.24383336305618286,
+   "perceived exertion [d-7]": 0.23172582685947418,
+   "perceived trainingSuccess [d-1]": 0.22650018334388733,
+   "total km [d-5]": 0.22137705981731415,
+   "perceived recovery [d-6]": 0.21748702228069305,
+   "perceived trainingSuccess [d-5]": 0.19572262465953827,
+   "nr. sessions [d-7]": 0.19162341952323914
+  },
+  "per_day_importance": [
+   2.66827130317688,
+   1.9556080102920532,
+   1.2446931600570679,
+   0.7393187880516052,
+   0.538733720779419,
+   0.7058228254318237,
+   1.016861915588379
+  ],
+  "deletion": {
+   "drop_top": 0.014109050363751055,
+   "drop_random": 0.0018108175244145788,
+   "ratio": 7.79153623903236,
+   "passed": true
+  },
+  "randomisation": {
+   "rank_correlation": -0.05911438447429096,
+   "passed": true
+  },
+  "stability": {
+   "rank_correlation": 0.9993148976503651,
+   "passed": true
+  },
+  "prior_agreement": {
+   "recent_load_raises_risk": {
+    "features": [
+     "nr. sessions [d-1]",
+     "total km [d-1]",
+     "km Z3-4 [d-1]",
+     "km Z5-T1-T2 [d-1]",
+     "km sprinting [d-1]"
+    ],
+    "rank_correlations": [
+     0.5352351410256811,
+     0.03361714329655781,
+     0.5274762185410748,
+     0.5724323488852616,
+     0.47744850173906345
+    ],
+    "share_in_expected_direction": 1.0
+   },
+   "low_recovery_raises_risk": {
+    "features": [
+     "perceived recovery [d-1]"
+    ],
+    "rank_correlations": [
+     0.9598351573663703
+    ],
+    "share_in_expected_direction": 0.0
+   },
+   "monotony_strain": "not testable: no monotony or strain input in the L\u00f6vdal files"
+  }
+ },
+ "attention": {
+  "mean_weight_per_day": [
+   0.010411014780402184,
+   0.02001860737800598,
+   0.05547637864947319,
+   0.14408238232135773,
+   0.22701720893383026,
+   0.26428911089897156,
+   0.27870529890060425
+  ],
+  "rank_correlation_with_ig_per_day": -0.6151121605667061,
+  "note": "explanation-only model, never part of the risk score"
+ },
+ "reasons": [
+  {
+   "runner": 37,
+   "injury": 1,
+   "sentence": "Risk is higher mainly because nr. sessions [w-3] was higher than usual; min recovery [w-2] was higher than usual; total km Z3-4 [w-2] was lower than usual."
+  },
+  {
+   "runner": 22,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because avg exertion [w-3] was higher than usual; nr. sessions [w-3] was higher than usual; max exertion [w-1] was higher than usual."
+  },
+  {
+   "runner": 19,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because nr. strength trainings [w-3] was higher than usual; total km Z3-4 [w-1] was higher than usual; max km Z5-T1-T2 one day [w-2] was higher than usual."
+  },
+  {
+   "runner": 19,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because nr. sessions [w-3] was lower than usual; max km Z5-T1-T2 one day [w-2] was higher than usual; max recovery [w-2] was lower than usual."
+  },
+  {
+   "runner": 19,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max km Z5-T1-T2 one day [w-2] was higher than usual; max recovery [w-2] was lower than usual; max training success [w-2] was higher than usual."
+  }
+ ]
+}

@@ -1,0 +1,198 @@
+{
+ "round": 1,
+ "sequence_arm": "lstm",
+ "tabular_arm": "catboost",
+ "explained_events": 607,
+ "explained_injuries": 107,
+ "tabular": {
+  "global_importance": {
+   "max exertion [w-1]": 0.1259537188152764,
+   "max km Z5-T1-T2 one day [w-1]": 0.07410568295891158,
+   "total km Z3-Z4-Z5-T1-T2 [w-1]": 0.07397349515731347,
+   "max recovery [w-1]": 0.05566491031490189,
+   "avg training success [w-1]": 0.05465947887754064,
+   "max exertion [w-2]": 0.04693331754866104,
+   "nr. sessions [w-1]": 0.045554190361261085,
+   "nr. rest days [w-1]": 0.04102457759300103,
+   "avg training success [w-2]": 0.031301819007456336,
+   "nr. days with interval session [w-1]": 0.029132092230459622,
+   "avg exertion [w-2]": 0.027509678508358733,
+   "rel total kms week 0_1": 0.026031377182937705,
+   "total km Z3-Z4-Z5-T1-T2 [w-2]": 0.025807398142604177,
+   "min exertion [w-1]": 0.023158273298978002,
+   "nr. sessions [w-3]": 0.021652068211847317
+  },
+  "deletion": {
+   "drop_top": 0.0872229730392139,
+   "drop_random": -0.0008409872007061272,
+   "ratio": Infinity,
+   "passed": true
+  },
+  "randomisation": {
+   "rank_correlation": 0.009397046827838495,
+   "passed": true
+  },
+  "stability": {
+   "rank_correlation": 0.9599715999901643,
+   "passed": true
+  },
+  "prior_agreement": {
+   "recent_load_raises_risk": {
+    "features": [
+     "nr. sessions [w-1]",
+     "total kms [w-1]",
+     "max km one day [w-1]",
+     "total km Z3-Z4-Z5-T1-T2 [w-1]",
+     "nr. tough sessions (effort in Z5, T1 or T2) [w-1]",
+     "nr. days with interval session [w-1]",
+     "total km Z3-4 [w-1]",
+     "max km Z3-4 one day [w-1]",
+     "total km Z5-T1-T2 [w-1]",
+     "max km Z5-T1-T2 one day [w-1]",
+     "rel total kms week 0_1",
+     "rel total kms week 0_2",
+     "rel total kms week 1_2"
+    ],
+    "rank_correlations": [
+     0.6886675559240183,
+     -0.5620077047824464,
+     -0.23624503276019332,
+     0.8637745657558169,
+     0.8206432653585581,
+     0.6834967232215959,
+     0.44537840653651684,
+     0.10353018496966056,
+     0.7710760059914208,
+     0.8187295395648987,
+     0.48591024069819916,
+     0.08257371207451324
+    ],
+    "share_in_expected_direction": 0.8333333333333334
+   },
+   "low_recovery_raises_risk": {
+    "features": [
+     "avg recovery [w-1]",
+     "min recovery [w-1]",
+     "max recovery [w-1]"
+    ],
+    "rank_correlations": [
+     -0.5545675419974119,
+     0.6673520650919608
+    ],
+    "share_in_expected_direction": 0.5
+   },
+   "monotony_strain": "not testable: no monotony or strain input in the L\u00f6vdal files"
+  }
+ },
+ "sequence": {
+  "global_importance": {
+   "total km [d-7]": 0.20698092877864838,
+   "total km [d-6]": 0.2027420550584793,
+   "total km [d-5]": 0.18399806320667267,
+   "km Z5-T1-T2 [d-7]": 0.16614840924739838,
+   "km Z5-T1-T2 [d-6]": 0.14911067485809326,
+   "total km [d-4]": 0.14809060096740723,
+   "nr. sessions [d-7]": 0.13055552542209625,
+   "km Z5-T1-T2 [d-5]": 0.12126017361879349,
+   "total km [d-3]": 0.12125451117753983,
+   "nr. sessions [d-6]": 0.11483210325241089,
+   "km Z5-T1-T2 [d-4]": 0.11440066248178482,
+   "total km [d-1]": 0.10348436236381531,
+   "nr. sessions [d-5]": 0.09972864389419556,
+   "km Z5-T1-T2 [d-3]": 0.09933126717805862,
+   "perceived trainingSuccess [d-7]": 0.09779231250286102
+  },
+  "per_day_importance": [
+   1.000563621520996,
+   0.9436977505683899,
+   0.8270806074142456,
+   0.7166770696640015,
+   0.5942888259887695,
+   0.5043315291404724,
+   0.4948124587535858
+  ],
+  "deletion": {
+   "drop_top": 0.21295610867146114,
+   "drop_random": -0.0020363364902614956,
+   "ratio": Infinity,
+   "passed": true
+  },
+  "randomisation": {
+   "rank_correlation": 0.07158587943389871,
+   "passed": true
+  },
+  "stability": {
+   "rank_correlation": 0.9989826791131432,
+   "passed": true
+  },
+  "prior_agreement": {
+   "recent_load_raises_risk": {
+    "features": [
+     "nr. sessions [d-1]",
+     "total km [d-1]",
+     "km Z3-4 [d-1]",
+     "km Z5-T1-T2 [d-1]",
+     "km sprinting [d-1]"
+    ],
+    "rank_correlations": [
+     0.4554200644526281,
+     -0.9131607776111389,
+     0.5501629045669727,
+     0.5505906528537434,
+     0.43014515843240564
+    ],
+    "share_in_expected_direction": 0.8
+   },
+   "low_recovery_raises_risk": {
+    "features": [
+     "perceived recovery [d-1]"
+    ],
+    "rank_correlations": [
+     0.8742631880515894
+    ],
+    "share_in_expected_direction": 0.0
+   },
+   "monotony_strain": "not testable: no monotony or strain input in the L\u00f6vdal files"
+  }
+ },
+ "attention": {
+  "mean_weight_per_day": [
+   0.031972598284482956,
+   0.07725214958190918,
+   0.15487225353717804,
+   0.18081828951835632,
+   0.18424968421459198,
+   0.18550826609134674,
+   0.18532691895961761
+  ],
+  "rank_correlation_with_ig_per_day": -0.34790538950341265,
+  "note": "explanation-only model, never part of the risk score"
+ },
+ "reasons": [
+  {
+   "runner": 20,
+   "injury": 1,
+   "sentence": "Risk is higher mainly because max km Z5-T1-T2 one day [w-1] was higher than usual; max exertion [w-1] was higher than usual; avg exertion [w-2] was higher than usual."
+  },
+  {
+   "runner": 56,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max km Z5-T1-T2 one day [w-1] was higher than usual; max exertion [w-1] was higher than usual; max recovery [w-2] was higher than usual."
+  },
+  {
+   "runner": 56,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max km Z5-T1-T2 one day [w-1] was higher than usual; max exertion [w-1] was higher than usual; avg training success [w-1] was higher than usual."
+  },
+  {
+   "runner": 56,
+   "injury": 0,
+   "sentence": "Risk is higher mainly because max exertion [w-1] was higher than usual; max km Z5-T1-T2 one day [w-1] was higher than usual; avg training success [w-1] was higher than usual."
+  },
+  {
+   "runner": 57,
+   "injury": 1,
+   "sentence": "Risk is higher mainly because total km Z3-Z4-Z5-T1-T2 [w-1] was higher than usual; max exertion [w-1] was higher than usual; max km Z5-T1-T2 one day [w-1] was higher than usual."
+  }
+ ]
+}
