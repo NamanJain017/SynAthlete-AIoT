@@ -66,6 +66,12 @@ def _rounds(name: str) -> list[data.Round]:
             for k in sorted(split["folds"], key=int)]
 
 
+def _progress(what: str, t0: float) -> None:
+    """One line per finished step, so the real speed is visible within minutes."""
+    print(f"  [{datetime.now():%H:%M}] {what}: {(time.perf_counter() - t0) / 60:.1f} min",
+          flush=True)
+
+
 def _fidelity(r: data.Round, syn: np.ndarray, seed: int, device) -> dict:
     from src.gen import evaluate as ge
     return {"discriminative_accuracy": ge.discriminative_accuracy(r.test.X, syn, seed, device),
@@ -94,6 +100,7 @@ def pamap2_round(k: int, folder: str) -> dict:
     def score(name, sampler_for_seed):
         per_seed = []
         for seed in proc["seeds"]:
+            t0 = time.perf_counter()
             sampler = sampler_for_seed(seed)
             syn = sampler(y_idx)
             if seed == proc["seeds"][0]:
@@ -106,19 +113,25 @@ def pamap2_round(k: int, folder: str) -> dict:
                                      device)
             per_seed.append({**_fidelity(r, syn, seed, device), "tstr_test_macro_f1": tstr,
                              "real_plus_synthetic_test_macro_f1": aug})
+            _progress(f"round {k} {name} seed {seed} scored", t0)
         return {key: float(np.mean([s[key] for s in per_seed])) for key in per_seed[0]} | {
             "seeds": per_seed}
 
     for name in GENERATORS:
         g = cfg["generators"][name]
-        settings = tuning.draw_settings(g["grid"], proc["settings_per_generator_per_round"],
-                                        proc["search_seed_base"] + k, g["fixed"])
+        if g.get("tuned", True):
+            settings = tuning.draw_settings(g["grid"], proc["settings_per_generator_per_round"],
+                                            proc["search_seed_base"] + k, g["fixed"])
+        else:  # untuned (D-029): one setting declared in the config before the run
+            settings = [{**g["fixed"], **g["declared_setting"]}]
         trials, first = [], None
-        for s in settings:  # choose on the REAL validation person only
+        for i, s in enumerate(settings, 1):  # choose on the REAL validation person only
+            t0 = time.perf_counter()
             sampler = models.TRAINERS[name](r.train.X, y_idx, len(classes), s, 0, device)
             val, _ = ge.cnn_macro_f1(sampler(y_idx), classes[y_idx], r, cnn, 0, device,
                                      score_test=False)
             trials.append({"setting": s, "val_tstr_macro_f1": val})
+            _progress(f"round {k} {name} setting {i}/{len(settings)}", t0)
             scores = [t["val_tstr_macro_f1"] for t in trials]
             if scores.index(max(scores)) == len(trials) - 1:
                 first = sampler
@@ -164,9 +177,11 @@ def wesad_fold(k: int, settings: dict) -> dict:
     for name in GENERATORS:
         per_seed = []
         for seed in _cfg()["procedure"]["seeds"]:
+            t0 = time.perf_counter()
             syn = models.TRAINERS[name](r.train.X, y_idx, len(classes), settings[name], seed,
                                         device)(y_idx)
             per_seed.append(_fidelity(r, syn, seed, device))
+            _progress(f"wesad fold {k} {name} seed {seed}", t0)
         out["generators"][name] = {key: float(np.mean([s[key] for s in per_seed]))
                                    for key in per_seed[0]}
     return out
@@ -188,6 +203,7 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
     for name in ("timegan", "classic"):
         per_seed = []
         for seed in cfg["procedure"]["seeds"]:
+            t0 = time.perf_counter()
             if name == "timegan":
                 sampler = models.TRAINERS["timegan"](r.train.X, r.train.y, 2, setting, seed, device)
             else:
@@ -200,6 +216,7 @@ def injury_round(k: int, setting: dict, folder: str) -> dict:
             predict = fitters.gru(dataclasses.replace(r, train=train), gru_setting, seed)
             per_seed.append(inj_eval.injury_scores(r.val.y, predict(r.val.X), r.test.y,
                                                    predict(r.test.X), True))
+            _progress(f"injury round {k} {name} seed {seed}", t0)
         out[name] = {**inj_eval.mean_over_seeds(per_seed), "seeds": per_seed}
     return out
 
@@ -264,6 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         folder = OUT / run_id
         folder.mkdir(parents=True)
         shutil.copyfile(CONFIG, folder / "config.yaml")
+        # 4 rounds at once: measured faster than 1-3 at a time once strict mode is off (D-029)
         with ProcessPoolExecutor(max_workers=4) as ex:
             rounds = list(ex.map(pamap2_round, range(4), [str(folder)] * 4))
         summary = _summarise(rounds, "generators", (*GENERATORS, "classic"))
@@ -276,7 +294,7 @@ def main(argv: list[str] | None = None) -> int:
         folder = OUT / args.src
         prev = json.loads((folder / "metrics_pamap2.json").read_text("utf-8"))["pamap2_rounds"]
         settings = {g: _consensus(prev, g) for g in GENERATORS}
-        with ProcessPoolExecutor(max_workers=5) as ex:
+        with ProcessPoolExecutor(max_workers=4) as ex:
             wesad = list(ex.map(wesad_fold, range(5), [settings] * 5))
             injury = list(ex.map(injury_round, range(5), [settings["timegan"]] * 5,
                                  [str(folder)] * 5))

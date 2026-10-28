@@ -31,6 +31,8 @@ generators:
       lr: {loguniform: [5.0e-4, 2.0e-3]}
       noise_dim: [8, 16]
   wgan_gp:                                  # Gulrajani et al. 2017; 1D convolutional generator and critic
+    tuned: false                            # D-029: PLAN cut "WGAN-GP tuning" (Naman, 2026-10-28)
+    declared_setting: {channels: 64, noise_dim: 64, n_critic: 5, lr: 2.0e-4}   # middle of the grid
     fixed: {batch_size: 128, steps: 3000, gp_lambda: 10.0, betas: [0.5, 0.9]}
     grid:
       channels: [32, 64, 128]

@@ -23,14 +23,23 @@ Sampler = Callable[[np.ndarray], np.ndarray]  # class indices -> windows
 
 class _FastCudnn:
     """While a generator trains: cuDNN benchmark mode on (TimeVAE without it asked for a 9 GB
-    workspace and fell back to a very slow algorithm). Restores the previous flags after."""
+    workspace and fell back to a very slow algorithm), strict deterministic mode off, and TF32
+    matrix maths. Restores the previous settings after."""
 
     def __enter__(self):
-        self.prev = (torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic)
+        self.prev = (torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic,
+                     torch.are_deterministic_algorithms_enabled())
         torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic = True, False
+        # the TSTR/discriminator checks switch strict deterministic mode on (seed_everything);
+        # it made generator training about 1.5x slower, so it is off while a generator trains
+        torch.use_deterministic_algorithms(False)
+        self.precision = torch.get_float32_matmul_precision()
+        torch.set_float32_matmul_precision("high")  # TF32 matrix maths on this GPU
 
     def __exit__(self, *exc):
-        torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic = self.prev
+        torch.backends.cudnn.benchmark, torch.backends.cudnn.deterministic = self.prev[:2]
+        torch.use_deterministic_algorithms(self.prev[2], warn_only=True)
+        torch.set_float32_matmul_precision(self.precision)
 
 
 def _fast(train):
@@ -53,7 +62,7 @@ def _batches(X: torch.Tensor, y: torch.Tensor, batch: int, gen: torch.Generator)
     """Endless random mini-batches (with replacement), from one seeded generator."""
     n = len(X)
     while True:
-        idx = torch.randint(0, n, (batch,), generator=gen).to(X.device)
+        idx = torch.randint(0, n, (batch,), generator=gen, device=X.device)
         yield X[idx], y[idx]
 
 
@@ -84,7 +93,7 @@ class _RNN(nn.Module):
 def train_timegan(X: np.ndarray, y: np.ndarray, k: int, s: dict, seed: int,
                   device: torch.device) -> Sampler:
     torch.manual_seed(seed)
-    gen = torch.Generator().manual_seed(seed)
+    gen = torch.Generator(device=device).manual_seed(seed)  # on the GPU: no copies
     T, C, H, L, Z = X.shape[1], X.shape[2], s["hidden"], s["layers"], s["noise_dim"]
     emb, rec = _RNN(C + k, H, H, L, "sigmoid").to(device), _RNN(H, H, C, L, None).to(device)
     gnet, sup = _RNN(Z + k, H, H, L, "sigmoid").to(device), _RNN(H + k, H, H, max(L - 1, 1),
@@ -100,7 +109,7 @@ def train_timegan(X: np.ndarray, y: np.ndarray, k: int, s: dict, seed: int,
         return torch.cat([x, c[:, None, :].expand(-1, x.shape[1], -1)], dim=2)
 
     def noise(n):
-        return torch.rand(n, T, Z, generator=gen).to(device)
+        return torch.rand(n, T, Z, generator=gen, device=device)
 
     for _ in range(s["embed_steps"]):  # phase 1: autoencoder
         xb, yb = next(it)
@@ -207,7 +216,7 @@ class _ConvCritic(nn.Module):
 def train_wgan_gp(X: np.ndarray, y: np.ndarray, k: int, s: dict, seed: int,
                   device: torch.device) -> Sampler:
     torch.manual_seed(seed)
-    gen = torch.Generator().manual_seed(seed)
+    gen = torch.Generator(device=device).manual_seed(seed)  # on the GPU: no copies
     T, C, Z = X.shape[1], X.shape[2], s["noise_dim"]
     g = _ConvGen(Z + k, s["channels"], T, C).to(device)
     d = _ConvCritic(C, k, s["channels"], T).to(device)
@@ -216,14 +225,14 @@ def train_wgan_gp(X: np.ndarray, y: np.ndarray, k: int, s: dict, seed: int,
     it = _batches(*_tensors(X, y, device), s["batch_size"], gen)
 
     def fake(c):
-        return g(torch.cat([torch.randn(len(c), Z, generator=gen).to(device), c], dim=1))
+        return g(torch.cat([torch.randn(len(c), Z, generator=gen, device=device), c], dim=1))
 
     for _ in range(s["steps"]):
         for _ in range(s["n_critic"]):
             xb, yb = next(it)
             c = _onehot(yb, k)
             xf = fake(c).detach()
-            eps = torch.rand(len(xb), 1, 1, generator=gen).to(device)
+            eps = torch.rand(len(xb), 1, 1, generator=gen, device=device)
             xi = (eps * xb + (1 - eps) * xf).requires_grad_(True)
             grad = torch.autograd.grad(d(xi, c).sum(), xi, create_graph=True)[0]
             gp = ((grad.flatten(1).norm(dim=1) - 1) ** 2).mean()
@@ -260,7 +269,7 @@ class _VAE(nn.Module):
 def train_timevae(X: np.ndarray, y: np.ndarray, k: int, s: dict, seed: int,
                   device: torch.device) -> Sampler:
     torch.manual_seed(seed)
-    gen = torch.Generator().manual_seed(seed)
+    gen = torch.Generator(device=device).manual_seed(seed)  # on the GPU: no copies
     T, C = X.shape[1], X.shape[2]
     vae = _VAE(C, k, s["channels"], T, s["latent"]).to(device)
     opt = torch.optim.Adam(vae.parameters(), lr=s["lr"])
@@ -277,7 +286,7 @@ def train_timevae(X: np.ndarray, y: np.ndarray, k: int, s: dict, seed: int,
     vae.eval()
 
     def make(yb: torch.Tensor) -> torch.Tensor:
-        z = torch.randn(len(yb), vae.latent, generator=gen).to(device)
+        z = torch.randn(len(yb), vae.latent, generator=gen, device=device)
         return vae.dec(torch.cat([z, _onehot(yb, k)], dim=1))
 
     return lambda y_new: _sample_in_chunks(make, y_new, device)
