@@ -139,6 +139,24 @@ def lovdal_rounds(kind: str, layout: str = "flat") -> Iterator[Round]:
                          split["folds"][k], names, split["lockbox_ids"])
 
 
+def lovdal_shared_rounds() -> Iterator[tuple[Round, Round]]:
+    """Per round: (day sequences, week features) on the SAME athlete-days, same row order
+    (the shared days, D-014), each with its own training-rows scaler."""
+    day, week = loaders.load_dev("day"), loaders.load_dev("week")
+    check_declared_inputs(input_names(day), "day")
+    check_declared_inputs(input_names(week), "week")
+    i_day, i_week = loaders.shared_days(day, week)
+    y, person = day.y[i_day].astype(np.int64), day.athlete_id[i_day]
+    X_seq, X_tab = day.X[i_day], flatten(week)[i_week]
+    split = loaders.lovdal_split()
+    for k in sorted(split["folds"], key=int):
+        fold = split["folds"][k]
+        yield (make_round(int(k), "day", X_seq, y, person, fold, input_names(day),
+                          split["lockbox_ids"]),
+               make_round(int(k), "week", X_tab, y, person, fold, input_names(week),
+                          split["lockbox_ids"]))
+
+
 def pamap2_rounds() -> Iterator[Round]:
     """The 4 PAMAP2 rounds: 128 x 10 clips, scaled per channel on training subjects (D-020)."""
     with np.load(loaders.PROCESSED / "pamap2" / "windows.npz") as z:

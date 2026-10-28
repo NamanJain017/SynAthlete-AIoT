@@ -62,6 +62,21 @@ def baselines() -> int:
     return run([sys.executable, "-m", "src.models.run", *sys.argv[2:]])
 
 
+def gen() -> int:
+    """Generators (piece 5): python tasks.py gen pamap2 | followup --from RUN_ID."""
+    return run([sys.executable, "-m", "src.gen.run", *sys.argv[2:]])
+
+
+def pipeline() -> int:
+    """Edge-fog-cloud tiers benchmark (piece 6)."""
+    return run([sys.executable, "-m", "src.pipeline.bench", *sys.argv[2:]])
+
+
+def train() -> int:
+    """Fused model on the 5 development rounds (piece 7)."""
+    return run([sys.executable, "-m", "src.models.fused", *sys.argv[2:]])
+
+
 def splits() -> int:
     """Person-level splits (piece 2): written once to data/splits/, never overwritten.
     --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
@@ -92,9 +107,9 @@ TASKS = {
     "splits": splits,
     "hooks": hooks,
     "baselines": baselines,
-    "gen": not_implemented("piece 5"),
-    "pipeline": not_implemented("piece 6"),
-    "train": not_implemented("piece 7"),
+    "gen": gen,
+    "pipeline": pipeline,
+    "train": train,
     "explain": not_implemented("piece 8"),
     "demo": not_implemented("piece 9"),
     "paper-figures": not_implemented("piece 10"),

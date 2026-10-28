@@ -221,3 +221,32 @@ def test_mean_over_seeds():
     out = evaluate.mean_over_seeds([{**base, "pr_auc": 0.2, "roc_auc": 0.6},
                                     {**base, "pr_auc": 0.4, "roc_auc": None}])
     assert out["pr_auc"] == pytest.approx(0.3) and out["roc_auc"] is None and out["alert"] is None
+
+
+# ---------------------------------------------------------------- fused model (piece 7)
+
+def test_oof_predictions_never_score_a_row_with_a_model_that_trained_on_it():
+    from src.models import fused
+    person = np.repeat(np.arange(10), 4)
+    X = np.arange(40, dtype=np.float32).reshape(40, 1)
+    r = data.Round(0, "week", data.Part(X, np.tile([0, 1], 20), person),
+                   data.Part(X[:2], np.array([0, 1]), np.array([99, 99])),
+                   data.Part(X[:2], np.array([0, 1]), np.array([98, 98])), ["x"],
+                   np.zeros(1), np.ones(1))
+    seen = []
+
+    def fit(sub, setting, seed):
+        trained = set(sub.train.person.tolist())
+        seen.append(trained)
+        # the "prediction" says whether the scored row's runner was in this model's training
+        return lambda Xq: np.isin(person[Xq[:, 0].astype(int)], list(trained)).astype(float)
+
+    oof = fused.oof_predictions(fit, r, {}, 0)
+    assert len(seen) == 5 and not np.isnan(oof).any()
+    assert oof.sum() == 0  # no training row was scored by a model that saw its runner
+
+
+def test_risk_score_is_a_validation_percentile():
+    from src.models import fused
+    p_val = np.array([0.01, 0.02, 0.03, 0.04])
+    assert fused.risk_score(p_val, np.array([0.005, 0.025, 0.05])).tolist() == [0.0, 50.0, 100.0]

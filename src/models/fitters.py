@@ -37,11 +37,20 @@ def catboost(r: Round, s: dict, seed: int) -> Predict:
     return lambda X: model.predict_proba(X)[:, 1]
 
 
+def sequence(name: str) -> Callable[[Round, dict, int], Predict]:
+    """Injury sequence network (gru, lstm or tcn) on day sequences (7 days x 10 features)."""
+    return lambda r, s, seed: _sequence(name, r, s, seed)
+
+
 def gru(r: Round, s: dict, seed: int) -> Predict:
-    """Injury GRU on the day file (7 days x 10 features); early stopping on validation PR-AUC."""
+    """Injury GRU on the day file; early stopping on validation PR-AUC."""
+    return _sequence("gru", r, s, seed)
+
+
+def _sequence(name: str, r: Round, s: dict, seed: int) -> Predict:
     device = nets.pick_device()
     nets.seed_everything(seed)
-    model = nets.build_model("gru", r.train.X.shape[2], 1, s)
+    model = nets.build_model(name, r.train.X.shape[2], 1, s)
     res = nets.train_model(model, "binary", r.train.X, r.train.y, r.val.X, r.val.y, lr=s["lr"],
                            batch_size=s["batch_size"], max_epochs=s["max_epochs"],
                            patience=s["patience"], seed=seed, weight_decay=s["weight_decay"],
