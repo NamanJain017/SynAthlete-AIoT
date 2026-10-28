@@ -18,14 +18,23 @@ from src.models.data import Round
 Predict = Callable[[np.ndarray], np.ndarray]
 
 
-def random_forest(r: Round, s: dict, seed: int) -> Predict:
+def random_forest_model(r: Round, s: dict, seed: int) -> RandomForestClassifier:
     keys = ("n_estimators", "max_depth", "min_samples_leaf", "max_features", "class_weight")
     model = RandomForestClassifier(**{k: s[k] for k in keys}, n_jobs=-1, random_state=seed)
-    model.fit(r.train.X, r.train.y)
+    return model.fit(r.train.X, r.train.y)
+
+
+def random_forest(r: Round, s: dict, seed: int) -> Predict:
+    model = random_forest_model(r, s, seed)
     return lambda X: model.predict_proba(X)[:, 1]
 
 
 def catboost(r: Round, s: dict, seed: int) -> Predict:
+    model = catboost_model(r, s, seed)
+    return lambda X: model.predict_proba(X)[:, 1]
+
+
+def catboost_model(r: Round, s: dict, seed: int) -> CatBoostClassifier:
     model = CatBoostClassifier(iterations=s["iterations"], learning_rate=s["learning_rate"],
                                depth=s["depth"], l2_leaf_reg=s["l2_leaf_reg"],
                                auto_class_weights=s["auto_class_weights"],
@@ -34,7 +43,7 @@ def catboost(r: Round, s: dict, seed: int) -> Predict:
     # early stopping on this round's validation runners (D-021 allows it)
     model.fit(r.train.X, r.train.y, eval_set=(r.val.X, r.val.y),
               early_stopping_rounds=s["early_stopping_rounds"], use_best_model=True)
-    return lambda X: model.predict_proba(X)[:, 1]
+    return model
 
 
 def sequence(name: str) -> Callable[[Round, dict, int], Predict]:
@@ -48,6 +57,12 @@ def gru(r: Round, s: dict, seed: int) -> Predict:
 
 
 def _sequence(name: str, r: Round, s: dict, seed: int) -> Predict:
+    model, device = sequence_model(name, r, s, seed)
+    return lambda X: nets.predict_scores(model, X, device=device)
+
+
+def sequence_model(name: str, r: Round, s: dict, seed: int):
+    """The trained network (best epoch) and its device."""
     device = nets.pick_device()
     nets.seed_everything(seed)
     model = nets.build_model(name, r.train.X.shape[2], 1, s)
@@ -56,7 +71,7 @@ def _sequence(name: str, r: Round, s: dict, seed: int) -> Predict:
                            patience=s["patience"], seed=seed, weight_decay=s["weight_decay"],
                            pos_weight=nets.positive_weight(r.train.y, s["pos_weight"]),
                            device=device)
-    return lambda X: nets.predict_scores(res["model"], X, device=device)
+    return res["model"], device
 
 
 def lovdal_label_free(r: Round, s: dict, seed: int) -> Predict:
