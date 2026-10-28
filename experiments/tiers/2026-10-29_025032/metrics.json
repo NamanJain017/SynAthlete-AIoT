@@ -1,0 +1,72 @@
+{
+  "note": "simulated on one laptop; wearable person and runner are different people (systems demo, not injury evidence)",
+  "pamap2_person": "103",
+  "sportdb2_recording": "TRE/S3/CRD1",
+  "lovdal_runner_round0_test": 0,
+  "repeats": 3,
+  "send_interval_s": 0.1,
+  "streams": {
+    "pamap2": {
+      "tiered": {
+        "mode": "tiered",
+        "windows": 329,
+        "send_interval_s": 0.1,
+        "wall_s": 40.73848229995929,
+        "bytes_from_device": 38256,
+        "bytes_fog_to_cloud": 2932,
+        "bytes_into_cloud": 2932,
+        "decision_latency_ms_median": 4.248,
+        "decision_latency_ms_p95": 5.861519999999999,
+        "sessions": 28,
+        "alerts": 0,
+        "daily_days_scored": 310
+      },
+      "cloud_only": {
+        "mode": "cloud_only",
+        "windows": 329,
+        "send_interval_s": 0.1,
+        "wall_s": 41.019085700041614,
+        "bytes_from_device": 1739186,
+        "bytes_fog_to_cloud": 0,
+        "bytes_into_cloud": 1739186,
+        "decision_latency_ms_median": 2.7704,
+        "decision_latency_ms_p95": 4.37204,
+        "sessions": 28,
+        "alerts": 0,
+        "daily_days_scored": 310
+      },
+      "bytes_reduction_factor": 593.1739427012278
+    },
+    "sportdb2_hr": {
+      "tiered": {
+        "mode": "tiered",
+        "windows": 200,
+        "send_interval_s": 0.1,
+        "wall_s": 27.958728999947198,
+        "bytes_from_device": 19019,
+        "bytes_fog_to_cloud": 1600,
+        "bytes_into_cloud": 1600,
+        "decision_latency_ms_median": 0.77575,
+        "decision_latency_ms_p95": 1.20456,
+        "sessions": 17,
+        "alerts": 0,
+        "daily_days_scored": 310
+      },
+      "cloud_only": {
+        "mode": "cloud_only",
+        "windows": 200,
+        "send_interval_s": 0.1,
+        "wall_s": 28.09507899999153,
+        "bytes_from_device": 135619,
+        "bytes_fog_to_cloud": 0,
+        "bytes_into_cloud": 135619,
+        "decision_latency_ms_median": 1.00475,
+        "decision_latency_ms_p95": 1.553365,
+        "sessions": 17,
+        "alerts": 0,
+        "daily_days_scored": 310
+      },
+      "bytes_reduction_factor": 84.761875
+    }
+  }
+}

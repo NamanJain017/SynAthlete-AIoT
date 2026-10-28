@@ -1,0 +1,12 @@
+{
+  "git_commit": "e357b584818122c5816a8267320fa033d2d2008b",
+  "git_dirty": false,
+  "runtime_s": 492.0,
+  "data_fingerprints": {
+    "lovdal_source": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "lovdal_split": "bf5e4401d012ecb4cb652cde25721ebcf99169c5e5d46d08136c33852baed8cd",
+    "pamap2_source": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040",
+    "pamap2_split": "94f74ee6adea89f37ae6f6a4f0393d0ca9801a379b0977fbb4dc3f2be8200040"
+  },
+  "torch": "2.14.1+cu132"
+}
