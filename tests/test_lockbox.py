@@ -63,6 +63,15 @@ def test_lockbox_opens_at_the_freeze_and_logs_it(monkeypatch, locked):
     assert len((locked / "access.log").read_text(encoding="utf-8").splitlines()) == 2
 
 
+def test_check_can_open_neither_loads_nor_logs(monkeypatch, locked):
+    _state(monkeypatch)
+    assert lockbox.check_can_open("day")["git_commit"] == HEAD
+    assert not (locked / "access.log").exists()
+    _state(monkeypatch, git_dirty=True)
+    with pytest.raises(lockbox.LockboxSealed, match="check out"):
+        lockbox.check_can_open("week")
+
+
 def test_lockbox_opens_at_one_frozen_commit_only(monkeypatch, locked):
     _state(monkeypatch)
     lockbox.open_lockbox("day", "final evaluation")

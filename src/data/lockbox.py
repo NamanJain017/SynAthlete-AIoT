@@ -140,6 +140,18 @@ def open_lockbox(kind: str, reason: str) -> loaders.RunnerData:
     """Locked runners of the day or week file, for the one final evaluation."""
     if not reason.strip():
         raise ValueError("give a reason: it is written to the access log")
+    state = check_can_open(kind)
+    LOG.parent.mkdir(parents=True, exist_ok=True)
+    entry = {"utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "kind": kind,
+             "commit": state["git_commit"], "tag_object": state["tag_object"], "reason": reason}
+    with open(LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+    return loaders.load_runner_data(loaders.LOCKBOX_DIR, kind)
+
+
+def check_can_open(kind: str) -> dict:
+    """Every condition of open_lockbox, without loading or logging anything: a long run calls it
+    first, so a wrong state stops it before hours of training, not after. Returns the state."""
     state = freeze_state()
     if state["tag_commit"] in ("", "unavailable"):
         raise LockboxSealed(f"the lockbox opens only after the evaluation freeze: "
@@ -160,9 +172,4 @@ def open_lockbox(kind: str, reason: str) -> loaders.RunnerData:
     if (meta.get("source") or {}).get("fingerprint") != \
             loaders.lovdal_split()["meta"]["data_fingerprint"]:
         raise LockboxSealed("locked arrays are not the data version the splits were made from")
-    LOG.parent.mkdir(parents=True, exist_ok=True)
-    entry = {"utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "kind": kind,
-             "commit": state["git_commit"], "tag_object": state["tag_object"], "reason": reason}
-    with open(LOG, "a", encoding="utf-8") as f:
-        f.write(json.dumps(entry) + "\n")
-    return loaders.load_runner_data(loaders.LOCKBOX_DIR, kind)
+    return state

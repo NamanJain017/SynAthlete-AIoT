@@ -67,6 +67,33 @@ def _fit_round(kind, X_dev, y_dev, p_dev, fold, names) -> data.Round:
     return data.Round(FINAL_K, kind, part(masks["train"]), val, val, names, mean, std)
 
 
+def _check_openable() -> None:
+    for kind in ("day", "week"):
+        lockbox.check_can_open(kind)
+
+
+def _wait_until_openable(tries: int = 30, pause_s: int = 60) -> None:
+    """The tag check asks GitHub: a short network drop after the training must not end the run,
+    so re-check every minute for up to 30 minutes (opening the lockbox checks everything again)."""
+    for i in range(tries):
+        try:
+            _check_openable()
+            return
+        except lockbox.LockboxSealed as e:
+            if i == tries - 1:
+                raise
+            print(f"lockbox not openable yet ({e}); next check in {pause_s} s", flush=True)
+            time.sleep(pause_s)
+
+
+def _keep_awake() -> None:
+    """Ask Windows not to sleep while this process runs (nothing elsewhere)."""
+    if sys.platform == "win32":
+        import ctypes
+        es_continuous, es_system_required = 0x80000000, 0x00000001
+        ctypes.windll.kernel32.SetThreadExecutionState(es_continuous | es_system_required)
+
+
 def _write(folder: Path, facts: dict, raw: dict) -> None:
     (folder / "predictions").mkdir(exist_ok=True)  # git-ignored, like every run's predictions
     np.savez_compressed(folder / "predictions" / "predictions.npz", **raw)
@@ -101,6 +128,7 @@ def score_once(folder: Path, dry_run: bool, quick: bool) -> tuple[dict, dict]:
     print("final model trained; scoring the locked rows", flush=True)
 
     if not dry_run:  # every model is trained: only now are the locked rows loaded
+        _wait_until_openable()
         lock_day = lockbox.open_lockbox("day", REASON)
         lock_week = lockbox.open_lockbox("week", REASON)
     if data.input_names(lock_day) != names_seq or data.input_names(lock_week) != names_tab:
@@ -188,16 +216,19 @@ def summarise(facts: dict, raw: dict) -> dict:
                     **evaluate.mean_over_seeds(per_seed), "seeds": per_seed,
                     **_both(raw["shared_y"], [raw[f"fused_s{s}"] for s in seeds],
                             raw["shared_person"])}
-    out["arms_on_own_files"] = {
-        arm: {"role": SECONDARY, "file": file,
-              **_both(raw[f"{file}_y"], [raw[f"own_{arm}_{file}_s{s}"] for s in seeds],
-                      raw[f"{file}_person"])}
-        for arm, file in (("sequence", "day"), ("tabular", "week"))}
-    out["lovdal_label_free_paper_split"] = {
-        kind: {"role": SECONDARY + "; threshold-free only; trained on runners 0-63 with "
-                                   "training-rows scaling, so not the paper's own number",
-               **_both(raw[f"{kind}_y"], [raw[f"lovdal_{kind}_s{s}"] for s in seeds],
-                       raw[f"{kind}_person"])} for kind in ("day", "week")}
+    def secondary(role: str, file: str, prefix: str) -> dict:
+        keys = [f"{prefix}_s{s}" for s in seeds]
+        if not all(k in raw for k in keys):  # the run stopped before this one was scored
+            return {"role": role, "file": file, "not_available": "run stopped before scoring"}
+        return {"role": role, "file": file,
+                **_both(raw[f"{file}_y"], [raw[k] for k in keys], raw[f"{file}_person"])}
+
+    out["arms_on_own_files"] = {arm: secondary(SECONDARY, file, f"own_{arm}_{file}")
+                                for arm, file in (("sequence", "day"), ("tabular", "week"))}
+    lovdal_role = (SECONDARY + "; threshold-free only; trained on runners 0-63 with "
+                   "training-rows scaling, so not the paper's own number")
+    out["lovdal_label_free_paper_split"] = {kind: secondary(lovdal_role, kind, f"lovdal_{kind}")
+                                            for kind in ("day", "week")}
     out["not_a_comparison"] = ("fused (shared days) and the secondaries (own files) are scored on "
                                "different rows; no paired comparison is made here")
     f = out["fused"]
@@ -245,6 +276,10 @@ def main(argv: list[str] | None = None) -> int:
         with np.load(folder / "predictions" / "predictions.npz") as z:
             raw = {k: z[k] for k in z.files}
     else:
+        _keep_awake()
+        if not args.dry_run:  # a wrong freeze state stops the run now, not after the training
+            _check_openable()
+            print("freeze checks passed; training the final model", flush=True)
         info = _run_info(argv, args.dry_run, args.quick)  # before anything is trained or opened
         phase = "lockbox_dry_run" if args.dry_run else "lockbox"
         folder = OUT / phase / datetime.now().strftime("%Y-%m-%d_%H%M%S")
