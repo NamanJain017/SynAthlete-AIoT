@@ -188,9 +188,12 @@ def pamap2_round(k: int, folder: str) -> dict:
         for i, s in enumerate(settings, 1):  # choose on the REAL validation person only
             t0 = time.perf_counter()
             sampler = _retry(models.TRAINERS[name], r.train.X, y_idx, len(classes), s, 0, device)
-            val, _ = _retry(ge.cnn_macro_f1, _retry(sampler, y_idx), classes[y_idx], r, cnn, 0,
-                            device, score_test=False)
-            trials.append({"setting": s, "val_tstr_macro_f1": val})
+            syn = _retry(sampler, y_idx)
+            diverged = not np.isfinite(syn).all()  # blown-up setting: worst score, never chosen
+            val = float("-inf") if diverged else _retry(
+                ge.cnn_macro_f1, syn, classes[y_idx], r, cnn, 0, device, score_test=False)[0]
+            del syn
+            trials.append({"setting": s, "val_tstr_macro_f1": val, "diverged": diverged})
             _progress(f"round {k} {name} setting {i}/{len(settings)}", t0)
             scores = [t["val_tstr_macro_f1"] for t in trials]
             if scores.index(max(scores)) == len(trials) - 1:
