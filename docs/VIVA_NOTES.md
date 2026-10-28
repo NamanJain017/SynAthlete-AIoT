@@ -253,3 +253,54 @@ A: Not clearly. The fused model scores about the same as its two parts, and the 
 **Q: Did anything go wrong while running the experiments?**
 A: Yes, and we fixed it openly (D-029). The synthetic-data training first ran far too slowly (a strict reproducibility mode and too many jobs on one laptop GPU), then ran out of memory (old models were not freed), and once crashed because results were saved only at the end. Each fault was measured, fixed, tested and logged; the runs now save after every step and resume after a crash. None of this changes any result, it only cost time.
 
+
+## Results of the night of 28-29 Oct: generators, explanations, freeze and the locked test
+
+**Synthetic data, activity clips (PAMAP2, 4 rounds; `experiments/generators/2026-10-28_172535/metrics_pamap2.json`).** A real-vs-fake checker tells synthetic clips from real ones far too easily for every generator (accuracy TimeGAN 0.956, WGAN-GP 0.898, TimeVAE 0.936; the pass mark is within 0.15 of 0.5). Training only on synthetic clips (TSTR) comes close enough to real training for WGAN-GP, TimeVAE and classic augmentation, not for TimeGAN (macro-F1 0.270). Adding synthetic clips to real ones changes little (about 0.64 vs 0.632 real-only).
+
+**Same generators on WESAD (5 folds, settings copied from PAMAP2, no tuning on WESAD; `metrics_followup.json`).** No generator meets the realism criteria; only TimeGAN meets the privacy criterion.
+
+**Synthetic injury examples (Lövdal, 5 rounds, added to training rows only).** GRU ROC-AUC with TimeGAN examples 0.633 ± 0.006, with classic augmentation 0.617 ± 0.015, real-only 0.631 ± 0.009: no real gain.
+
+**Explanations (`experiments/explain/2026-10-28_205117/metrics.json`).** SHAP (tabular arm) and integrated gradients (sequence arm) pass all three checks in 5 of 5 rounds: deletion (removing the top inputs lowers the risk more than removing random ones), model randomisation (a random-weight model gives different explanations), stability (near-identical inputs give near-identical explanations). Grad-CAM on PAMAP2 also passes randomisation and deletion.
+
+**Q: Your generators fail most realism tests. Is that a failure of the project?**
+A: No. The pass marks were written before any run (D-027), and we report the results as they came out. A real-vs-fake checker beats every generator, so the synthetic clips are not realistic enough to stand in for real data. That is a useful, honest finding, and it is why synthetic data is never used as evidence about real athletes.
+
+**Q: Did synthetic injury examples improve injury prediction?**
+A: No. With TimeGAN examples the GRU scores 0.633 against 0.631 real-only, well inside the round-to-round spread; classic augmentation scores lower (0.617). We say "no measurable gain".
+
+**Q: What do the explanation checks prove?**
+A: That the explanations follow the model rather than noise: hiding the inputs an explanation calls important changes the prediction more than hiding random inputs; a model with random weights gets different explanations; tiny input changes do not reshuffle them. Attention weights are never shown alone (invariant 12).
+
+**The freeze and the locked test.** Before the 10 locked runners (64-73) were opened, an independent reviewer (eval-auditor) checked the final-test program. It found no leakage but two must-fix problems in how results were saved: raw scores were computed into numbers before being saved, and the run record was incomplete. Both were fixed (D-031), plus overnight safeguards (D-032): every lockbox condition is checked before training, the locked rows are loaded only after all training, raw scores are saved before any number is computed, a short network drop is retried, and the laptop is kept awake. A dry run on development runners gave exactly the same numbers as before the fixes, so the fixes changed no result. Then the code was frozen with an annotated `eval-freeze` tag (commit 7a710c0), pushed to GitHub, and the final model was trained and scored once.
+
+**Q: How do you know the locked-test result was not tuned on the test runners?**
+A: The model, its settings search and every threshold were fixed and written down (D-021, D-023, D-030) before the tag; the program can open the locked runners only at the tagged commit with no changes, and every opening is logged in `experiments/lockbox_access.log` with the commit. The training never sees the locked rows: they are loaded only after training ends.
+
+**Q: Why is the locked test reported next to the 5-round average and not instead of it?**
+A: Ten runners is a small group, so one number on them is noisy (its bootstrap interval even understates the uncertainty). The 5-round development average uses 64 runners and is the main result; the locked test is a final check on runners nobody looked at.
+
+**Locked final test result** (`experiments/lockbox/2026-10-29_010127/metrics.json`): on the 10 locked runners (2,994 shared days, 48 injuries, 7 injured runners) the declared fused model reached ROC-AUC 0.605 (95 % runner bootstrap 0.535-0.699) and PR-AUC 0.030 (0.016-0.056). The 5-round development average was 0.609 ± 0.024. Secondary results (scored once, never used to choose anything): the GRU arm on the day file 0.609, the CatBoost arm on the week file 0.567, and the Lövdal-style model without its label peek, trained on runners 0-63, 0.649 (day) and 0.602 (week).
+
+**Q: What does the locked test tell you?**
+A: That our development results were honest. A model that had been over-tuned would drop on runners nobody looked at; ours scored 0.605 against 0.609 in development. It also confirms the main finding: training logs give only a weak warning before an injury.
+
+**Q: The Lövdal-style model scored 0.649 on the final test, higher than your fused model's 0.605. Why not switch to it?**
+A: Because choosing the model after seeing test results is exactly the cheating the lockbox exists to stop: the fused model was declared before the freeze (D-021, D-023, D-030). The two numbers are also not a fair comparison: they were scored on different rows (day file vs shared days), trained on different runners (64 vs 51), and their intervals overlap heavily (0.56-0.75 vs 0.535-0.699). On the larger, fair test (5 development rounds, 64 runners) the fused model was higher (0.609 vs 0.584). So we say: no model is clearly best; 10 runners are too few to rank models.
+
+**Paired comparisons** (`experiments/comparisons/2026-10-29_020232`; runner bootstrap within the 5 rounds, 2,000 resamples). Against the Lövdal label-free variant on the same file, only logistic regression (day, ROC-AUC +0.042 [+0.008, +0.065]) and the GRU (day, +0.047 [+0.013, +0.071]) are clearly better; the others' intervals include zero. The fused model vs its day-sequence arm: ROC-AUC +0.005 [+0.00003, +0.009] (just above zero; PR-AUC no difference); vs its weekly arm: -0.003 [-0.022, +0.012].
+
+**Q: What does "clearly better" mean here?**
+A: We resample runners 2,000 times and recompute the difference; if the middle 95 % of those differences stays above zero, the gain is unlikely to be luck of which runners were tested. If the interval includes zero, we do not claim a difference.
+
+**Tiers benchmark** (`experiments/tiers/2026-10-29_025032`, idle laptop): tiered sends 2,932 bytes into the cloud vs 1,739,186 cloud-only for PAMAP2 (593x fewer) and 1,600 vs 135,619 for Sport DB 2.0 (85x fewer). Median decision time 4.25 ms vs 2.77 ms (PAMAP2) and 0.78 vs 1.00 ms (Sport DB).
+
+**Q: Why is the tiered decision slower than cloud-only for PAMAP2?**
+A: Everything runs on one laptop, so there is no network delay: cloud-only gets the raw window almost instantly. In a real deployment the raw stream would cross a network, which the edge tier avoids; the honest claim is the 593x data saving, not speed.
+
+**Q: You changed the latency measurement. Is that allowed?**
+A: Yes, it was fixed before the first official run and logged (D-034). The first trial showed about 3 seconds per window, which was not decision time but windows waiting while the other processes were still starting. Now every tier starts first, then windows arrive at a steady pace; a test proves the old method would report 1,181 ms of start-up wait where the real decision takes under 1 ms.
+
+**Q: One GitHub check is red. Why?**
+A: When the freeze tag was pushed, GitHub's checkout tool turned the annotated tag into a plain one on its test machine (a known bug, actions/checkout #290), so our freeze test correctly complained. We reproduced it, fixed the workflow (D-033), and did not move the tag; the real tag on GitHub is annotated.

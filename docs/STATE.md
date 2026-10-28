@@ -1,8 +1,19 @@
 # STATE (living status; update at the end of every session)
-Last updated: 2026-10-22 by Claude Code (Naman's laptop): piece 2 DONE (Naman: "Piece 2 is clear"); piece 3 plan in preparation
+Last updated: 2026-10-29 ~03:15 by Claude Code (Naman's laptop): every piece built and run on real data; evaluation frozen (tag eval-freeze, commit 7a710c0) and the locked test run once; paper, report and deck rebuilt from the results
 
 ## Current piece
-2 Loaders + person-level splits: DONE (Naman said "Piece 2 is clear" on 2026-10-22; evidence below). Now: 3 Real-data baselines (plan first, for Naman's approval).
+10 Paper + Review 2 deck: drafts rebuilt from the result files (commit 511738b); eval-auditor review of the results/slides running; dashboard data being prepared. Conference and author names: not decided (Naman, 2026-10-29), placeholders stay.
+
+## Done on 2026-10-28/29 (evidence)
+- Generators: PAMAP2 stage experiments/generators/2026-10-28_172535/metrics_pamap2.json (5ec7083); follow-up (WESAD, Sport DB 2.0, injury augmentation) metrics_followup.json (7a352ce). No generator meets the realism criteria; synthetic injury examples give no gain (GRU ROC-AUC 0.633 TimeGAN, 0.617 classic, 0.631 real-only).
+- Explanations: experiments/explain/2026-10-28_205117 (201e4db; resumed once, RESUME_NOTE.md): all three checks passed in 5 of 5 rounds for both arms.
+- GRU rerun for the comparisons: experiments/baselines/2026-10-28_224339, identical to 2026-10-26_022902 (12b7dcb).
+- Paired comparisons: experiments/comparisons/2026-10-29_020232 (35f5450): clearly better than the Lövdal label-free variant only LR (day) and GRU (day); fused vs its sequence arm ROC-AUC +0.005 (interval just above 0), vs its weekly arm no difference.
+- Final test: program + protocol D-030 (f484cb6); pre-freeze eval-auditor fixes D-031 (c50b734); overnight safeguards D-032 (2ed601f); dry run identical before/after the fixes (experiments/lockbox_dry_run/2026-10-29_003756); annotated tag eval-freeze pushed (tag object 74ec6f4, commit 7a710c0).
+- LOCKED TEST (eef65a3): experiments/lockbox/2026-10-29_010127, opened once (day + week, experiments/lockbox_access.log). Fused ROC-AUC 0.605 (0.535-0.699), PR-AUC 0.030, vs 5-round 0.609 ± 0.024. Secondary: GRU arm day 0.609, CatBoost arm week 0.567, Lövdal label-free (runners 0-63) day 0.649, week 0.602 (not a paired comparison; no model switching).
+- CI failure on the tag push explained and fixed (D-033, 0b7ee6b).
+- Tiers: latency method fixed before the first official run (D-034, e357b58); benchmark experiments/tiers/2026-10-29_025032 on an idle laptop (1669abe): 593x fewer bytes into the cloud (PAMAP2), 85x (Sport DB 2.0); median decision 4.25 vs 2.77 ms and 0.78 vs 1.00 ms.
+- python tasks.py check: 289 passed (2026-10-29).
 
 ## Done (with evidence)
 - Lean starter repo pushed to GitHub (rules, brief, dataset list, plan, task runner, guard hook).
@@ -29,7 +40,7 @@ Last updated: 2026-10-22 by Claude Code (Naman's laptop): piece 2 DONE (Naman: "
   - Fresh-clone reproducibility check (2026-10-22, `experiments/repro/2026-10-22_0731/`): a clone of commit 28dba97 plus copies of the 729 audited raw files ran the full audit, all builders and all tests; MANIFEST, audit facts and fingerprints, every processed file, the data cards and all 7 split files (rebuilt in memory from seed 0) were ALL IDENTICAL to the main copy; 103 tests passed in the clone; 144 s in total.
 
 ## In progress
-- Nothing running.
+- 2026-10-29 ~03:15: dashboard data preparation (`python tasks.py demo --prepare`) and the eval-auditor review of results, paper and slides. Remaining after that: fix any blocking review finding, rebuild paper/deck if needed, Naman reads the slides and paper draft.
 
 ## Blocked / needs human decision
 - Review 2 date and target conference (ask the guide). Scope risk: pieces 2-10 remain; follow the PLAN cut order if time is short.
