@@ -14,6 +14,7 @@ captum
 matplotlib
 pyyaml
 streamlit
+python-pptx
 pytest
 ruff
 # Added when the generator piece starts: synthcity (TimeGAN, TimeVAE)
