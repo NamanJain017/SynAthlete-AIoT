@@ -77,6 +77,11 @@ def train() -> int:
     return run([sys.executable, "-m", "src.models.fused", *sys.argv[2:]])
 
 
+def track_c() -> int:
+    """Track C exploratory runs (SoccerMon, PMData; D-018)."""
+    return run([sys.executable, "-m", "src.models.track_c", *sys.argv[2:]])
+
+
 def splits() -> int:
     """Person-level splits (piece 2): written once to data/splits/, never overwritten.
     --seal pins their hashes; --remake exists only for the logged one-time exception (D-020)."""
@@ -110,6 +115,7 @@ TASKS = {
     "gen": gen,
     "pipeline": pipeline,
     "train": train,
+    "track-c": track_c,
     "explain": not_implemented("piece 8"),
     "demo": not_implemented("piece 9"),
     "paper-figures": not_implemented("piece 10"),
