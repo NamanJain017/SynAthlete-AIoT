@@ -117,8 +117,26 @@ def numbers(b: dict) -> dict[str, str]:
     else:
         n["wesadSummary"] = n["augmentSummary"] = "n/a."
     lock = _runs("lockbox")
-    n["lockboxSummary"] =("Pending the evaluation freeze." if not lock else
-                           _tex(lock[-1][1].get("summary_sentence", NA)))
+    if lock:
+        m = lock[-1][1]
+        f = m["fused"]
+        r, p, a = f["roc_auc_ci"], f["pr_auc_ci"], f["alert"]
+        lov = m["lovdal_label_free_paper_split"]
+        n["lockboxSummary"] = _tex(
+            f"On the {len(m['test_runners'])} sealed runners ({f['events']:,} shared days, "
+            f"{f['injuries']} injuries in {f['runners_with_injury']} runners), opened once after "
+            f"the evaluation freeze, the declared fused model reached ROC-AUC "
+            f"{r['estimate']:.3f} ({r['low']:.3f}-{r['high']:.3f}) and PR-AUC {p['estimate']:.3f}"
+            f" ({p['low']:.3f}-{p['high']:.3f}; chance {f['test_injury_rate']:.3f}); its alert "
+            f"level caught {a['sensitivity']:.0%} of injuries with "
+            f"{a['false_alarms_per_caught_injury']:.0f} false alarms per caught injury. "
+            "Secondary results, scored once and not a comparison (other rows and more training "
+            f"runners): the label-free variant reached ROC-AUC "
+            f"{lov['day']['roc_auc_ci']['estimate']:.3f} (day) and "
+            f"{lov['week']['roc_auc_ci']['estimate']:.3f} (week); no model was switched. With so "
+            "few runners the intervals are wide and understate the uncertainty.")
+    else:
+        n["lockboxSummary"] = "Pending the evaluation freeze."
     return n
 
 
@@ -167,7 +185,8 @@ def table_generators() -> None:
         rows = []
         for name, m in g["pamap2_summary"].items():
             ok = sum(g["criteria"][name].values())
-            rows.append(f"{_tex(name)} & {m['discriminative_accuracy']['mean']:.3f} & "
+            label = "wgan_gp (untuned)" if name == "wgan_gp" else name
+            rows.append(f"{_tex(label)} & {m['discriminative_accuracy']['mean']:.3f} & "
                         f"{m['tstr_test_macro_f1']['mean']:.3f} & "
                         f"{m['real_plus_synthetic_test_macro_f1']['mean']:.3f} & "
                         f"{ok}/{len(g['criteria'][name])} \\\\")
@@ -204,7 +223,9 @@ def table_comparisons() -> None:
         rows = []
         for c in runs[-1][1]["comparisons"]:
             p, r = c["pr_auc"], c["roc_auc"]
-            rows.append(f"{_tex(c['comparison'])} & {p['estimate']:+.4f} [{p['low']:+.4f}, "
+            name = c["comparison"].replace(" - lovdal_label_free", " vs label-free")
+            name = name.replace("_", " ").replace(" - ", " vs ")
+            rows.append(f"{_tex(name)} & {p['estimate']:+.4f} [{p['low']:+.4f}, "
                         f"{p['high']:+.4f}] & {r['estimate']:+.3f} [{r['low']:+.3f}, "
                         f"{r['high']:+.3f}] " + r"\\")
         body = "\n".join(rows)

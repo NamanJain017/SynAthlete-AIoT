@@ -58,8 +58,8 @@ injury prediction, Internet of Things, synthetic data, wearable sensors
 \section{Introduction}
 \label{sec:introduction}
 \PARstart{C}{oaches} need to see injury risk building up over days, not in single snapshots.
-Recent AIoT designs for athlete health propose wearables with edge, fog and cloud processing but
-leave the prediction and explanation layers unimplemented~\cite{aiotframework2026}. Public data
+AIoT designs for athlete health propose wearables with edge, fog and cloud processing, but the
+prediction and explanation layers are often left unimplemented. Public data
 make the problem harder: no public dataset pairs high-frequency physiological streams with real
 injury outcomes. Daily training logs with real injuries do exist~\cite{lovdal2021,lovdal2021data},
 while wearable datasets with rich physiology have no injury labels~\cite{reiss2012,schmidt2018}.
@@ -193,10 +193,14 @@ The exact copy of the published method passed its pre-registered sanity check (d
 \reproDayAuc{}); the label-free variant reaches ROC-AUC \labelFreeAuc{}. The two were scored on
 different runners, so the effect of the label-reading step was not measured head-to-head.
 
-\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt){injury_auc.png}
-{ROC-AUC of every injury model on runners never seen in training (mean of five development
-rounds). The fused model is highlighted because it was declared in advance, not because it was
-best.\label{fig:injury}}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{injury_auc.png}
+\caption{ROC-AUC of every injury model on runners never seen in training (mean of five
+development rounds). The fused model is highlighted because it was declared in advance, not
+because it was best.}
+\label{fig:injury}
+\end{figure}
 
 \subsection{Sealed Final Test}
 \lockboxSummary{} The development and sealed-test results agree, which indicates that the
