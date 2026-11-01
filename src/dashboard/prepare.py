@@ -82,10 +82,15 @@ def results() -> None:
 
 def sensor_stream() -> None:
     """A PAMAP2 test person of round 0, replayed window by window (no overlap)."""
+    windows = loaders.PROCESSED / "pamap2" / "windows.npz"
+    window_meta = loaders.PROCESSED / "pamap2" / "windows_meta.json"
+    if not windows.is_file() or not window_meta.is_file():
+        print("sensor stream: skipped (processed PAMAP2 windows not found)", flush=True)
+        return
     from src.pipeline import bench
     raw, clf, person = bench.pamap2_stream()
     acts = clf(raw)
-    meta = json.loads((loaders.PROCESSED / "pamap2" / "windows_meta.json").read_text("utf-8"))
+    meta = json.loads(window_meta.read_text("utf-8"))
     hr = raw[:, :, meta["channels"].index("heart_rate")]
     acc = np.linalg.norm(raw[:, :, 7:10], axis=2)  # ankle accelerometer magnitude
     df = pd.DataFrame({"window": np.arange(len(raw)), "seconds": np.arange(len(raw)) * 5.12,
@@ -108,6 +113,9 @@ def synthetic_samples() -> None:
     """Real vs synthetic heart-rate clips (bpm) of the newest generator run, round 0."""
     runs = sorted((loaders.ROOT / "experiments" / "generators").glob("20*/samples"))
     if not runs:
+        return
+    if not (loaders.PROCESSED / "pamap2" / "windows.npz").is_file():
+        print("synthetic samples: skipped (processed PAMAP2 windows not found)", flush=True)
         return
     rows = []
     for f in sorted(runs[-1].glob("pamap2_*_r0.npz")):
@@ -135,7 +143,12 @@ def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     _save("datasets", [{"dataset": d, "origin": o, "role": r} for d, o, r in DATASETS])
-    _save("ziya07_demo", dd.ziya07_stream().head(60).astype(str))
+    ziya07_path = loaders.PROCESSED / "ziya07_wearable" / "table.parquet"
+    if ziya07_path.is_file():
+        _save("ziya07_demo", dd.ziya07_stream().head(60).astype(str))
+        print("ziya07 demo: done (unknown-origin demo data)", flush=True)
+    else:
+        print("ziya07 demo: skipped (optional processed data not found)", flush=True)
     results()
     print("results: done", flush=True)
     sensor_stream()
@@ -143,11 +156,13 @@ def main() -> int:
     synthetic_samples()
     print("synthetic samples: done (if a generator run exists)", flush=True)
     fused = dd.latest_run("fused")
-    if fused is not None:
+    lovdal_day = loaders.PROCESSED / "lovdal" / "day.npz"
+    if fused is not None and lovdal_day.is_file():
         coach(fused)
         print(f"coach view: done (fused run {fused.name})", flush=True)
     else:
-        print("coach view: skipped (no fused run yet)", flush=True)
+        reason = "no fused run yet" if fused is None else "processed Lövdal development data not found"
+        print(f"coach view: skipped ({reason})", flush=True)
     return 0
 
 
