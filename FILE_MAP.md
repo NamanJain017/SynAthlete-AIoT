@@ -110,6 +110,7 @@
 - `figures.py`: writes every paper number and table from the result files.
 - `deck.py`: builds the Review 2 slides (`slides/review2.pptx`) from the result files.
 - `compare.py`: the paired model comparisons (runner bootstrap).
+- `plots.py`: draws the 7 result graphs into `figures/` from the result files (`python -m src.paper.plots`).
 
 ## `tests/` (289 automated checks, `python tasks.py check`)
 - `test_audit.py`, `test_manifest.py`, `test_loaders.py`, `test_windows.py`, `test_daily.py`, `test_reference.py`, `test_splits.py`: the data code.
@@ -141,6 +142,9 @@
 - `slides/review2.pptx`: the Review 2 deck (generated).
 - `slides/PBL_1_AIOT.pdf`: the Review 1 slides.
 - `slides/img/`: chart images for the deck.
+
+## `figures/`
+- 7 PNG result graphs: injury models, the sealed final test, paired comparisons, generators, edge–fog–cloud, explanations and synthetic injury examples. Made by `src/paper/plots.py`.
 
 ## `backups/`
 - Placeholder folder for backups (empty in git).
