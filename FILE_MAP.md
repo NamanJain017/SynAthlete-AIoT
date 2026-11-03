@@ -110,7 +110,8 @@
 - `figures.py`: writes every paper number and table from the result files.
 - `deck.py`: builds the Review 2 slides (`slides/review2.pptx`) from the result files.
 - `compare.py`: the paired model comparisons (runner bootstrap).
-- `plots.py`: draws the 7 result graphs into `figures/` from the result files (`python -m src.paper.plots`).
+- `plots.py`: draws the 13 result graphs into `figures/` from the result files (`python -m src.paper.plots`).
+- `pamap2_confusion.py`: re-trains the recorded PAMAP2 activity CNN (round 0, seed 0) and saves its confusion matrix; checks it reproduces the recorded score.
 
 ## `tests/` (289 automated checks, `python tasks.py check`)
 - `test_audit.py`, `test_manifest.py`, `test_loaders.py`, `test_windows.py`, `test_daily.py`, `test_reference.py`, `test_splits.py`: the data code.
@@ -133,6 +134,7 @@
 - `lockbox_dry_run/`: final-test rehearsal on development runners.
 - `lockbox/`: the one locked test.
 - `lockbox_access.log`: the record of every lockbox opening.
+- `pamap2_confusion/`: the activity confusion-matrix re-run (reproduces the recorded score).
 
 ## `paper/` and `slides/`
 - `paper/main.tex`: the IEEE paper draft.
@@ -144,7 +146,10 @@
 - `slides/img/`: chart images for the deck.
 
 ## `figures/`
-- 7 PNG result graphs: injury models, the sealed final test, paired comparisons, generators, edge–fog–cloud, explanations and synthetic injury examples. Made by `src/paper/plots.py`.
+- 13 PNG result graphs, made by `src/paper/plots.py`:
+  - 1–7: injury models, the sealed final test, paired comparisons, generators, edge–fog–cloud, explanations, synthetic injury examples;
+  - 8–13: ROC and precision–recall curves, injury confusion matrices (alert level from validation), calibration and risk-score distribution, per-round scores, fused vs its arms, activity confusion matrix.
+- Graphs 8–12 read the saved per-row predictions, which stay on the laptop (git-ignored), so only this laptop can redraw them.
 
 ## `backups/`
 - Placeholder folder for backups (empty in git).
