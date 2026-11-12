@@ -83,7 +83,21 @@ def numbers(b: dict) -> dict[str, str]:
     tiers = _runs("tiers")
     factor = tiers[-1][1]["streams"]["pamap2"]["bytes_reduction_factor"] if tiers else None
     n["tiersReduction"] = f"{factor:.0f}$\\times$" if factor else NA
+    hr = tiers[-1][1]["streams"].get("sportdb2_hr", {}).get("bytes_reduction_factor") \
+        if tiers else None
+    n["tiersReductionHr"] = f"{hr:.0f}$\\times$" if hr else NA
     ex = _runs("explain")
+    agree: dict[str, list[int]] = {}
+    for rd in (ex[-1][1]["rounds"] if ex else []):
+        for arm in ("tabular", "sequence"):
+            for prior, v in rd[arm].get("prior_agreement", {}).items():
+                if isinstance(v, dict) and "share_in_expected_direction" in v:
+                    a = agree.setdefault(prior, [0, 0])
+                    a[0] += v["share_in_expected_direction"] >= 0.5
+                    a[1] += 1
+    n["explainPriors"] = ("; ".join(f"``{k.replace('_', ' ')}'' agreed in {x} of {t} "
+                                    "arm-rounds" for k, (x, t) in agree.items())
+                          if agree else NA)
     if ex:
         pc = ex[-1][1]["pass_counts"]
         n["explainSummary"] = ("Out of five rounds, the tabular-arm SHAP explanations passed the "
@@ -151,6 +165,12 @@ def table_datasets() -> None:
     (GEN / "table_datasets.tex").write_text(
         "\\begin{table}[t]\\centering\\caption{Datasets and their single role}\\label{tab:data}\n"
         "\\footnotesize\\begin{tabular}{p{2.6cm}p{1.2cm}p{3.6cm}}\\toprule\n"
+        "Dataset & Origin & Role \\\\\\midrule\n" + rows +
+        "\n\\bottomrule\\end{tabular}\\end{table}\n", "utf-8")
+    # single-column papers (final_paper.tex): the same rows with page-wide columns
+    (GEN / "table_datasets_wide.tex").write_text(
+        "\\begin{table}[htbp]\\centering\\caption{Datasets and their single role}"
+        "\\label{tab:data}\n\\small\\begin{tabular}{p{4.1cm}p{1.9cm}p{8.5cm}}\\toprule\n"
         "Dataset & Origin & Role \\\\\\midrule\n" + rows +
         "\n\\bottomrule\\end{tabular}\\end{table}\n", "utf-8")
 

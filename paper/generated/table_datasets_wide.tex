@@ -1,0 +1,12 @@
+\begin{table}[htbp]\centering\caption{Datasets and their single role}\label{tab:data}
+\small\begin{tabular}{p{4.1cm}p{1.9cm}p{8.5cm}}\toprule
+Dataset & Origin & Role \\\midrule
+Lövdal runners (74 runners, 7 years of daily logs) & real & the only injury evidence: baselines, combined model, explanations, coach view \\
+Kaggle 'Injury Prediction for Competitive Runners' & real (copy) & byte-identical copy of Lövdal: no separate role \\
+PAMAP2 (9 people, wearable sensors) & real & edge sensor stream, activity recognition, generator training and fidelity \\
+WESAD (15 people, wrist sensors) & real & second dataset for generator generalisation \\
+Sport DB 2.0 (55 heart-rate recordings) & real & heart-rate realism check and second edge stream \\
+SoccerMon, PMData & real & exploratory only (Track C), never main evidence \\
+SIRP-600 & unknown origin & demo only: shows the SHAP code runs \\
+ziya07 wearable & unknown origin & demo only: dashboard demo stream \\
+\bottomrule\end{tabular}\end{table}
