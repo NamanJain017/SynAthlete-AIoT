@@ -15,6 +15,7 @@ matplotlib
 pyyaml
 streamlit
 python-pptx
+python-docx  # project report (src/paper/report_docx.py)
 pytest
 ruff
 # Added when the generator piece starts: synthcity (TimeGAN, TimeVAE)

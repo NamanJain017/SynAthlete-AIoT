@@ -1,0 +1,2064 @@
+{
+ "kapoor2023": {
+  "title": "Leakage and the reproducibility crisis in machine-learning-based science",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0001-5695-280X",
+    "authenticated-orcid": false,
+    "given": "Sayash",
+    "family": "Kapoor",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Arvind",
+    "family": "Narayanan",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Patterns",
+  "publisher": "Elsevier BV",
+  "volume": "4",
+  "issue": "9",
+  "page": "100804",
+  "article-number": "100804",
+  "issued": {
+   "date-parts": [
+    [
+     2023,
+     9
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.patter.2023.100804",
+  "type": "journal-article"
+ },
+ "vancalster2016": {
+  "title": "A calibration hierarchy for risk models was defined: from utopia to empirical data",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0003-1613-7450",
+    "authenticated-orcid": false,
+    "given": "Ben",
+    "family": "Van Calster",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Daan",
+    "family": "Nieboer",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Yvonne",
+    "family": "Vergouwe",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0002-1310-6336",
+    "authenticated-orcid": false,
+    "given": "Bavo",
+    "family": "De Cock",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Michael J.",
+    "family": "Pencina",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Ewout W.",
+    "family": "Steyerberg",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Journal of Clinical Epidemiology",
+  "publisher": "Elsevier BV",
+  "volume": "74",
+  "issue": null,
+  "page": "167-176",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2016,
+     6
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.jclinepi.2015.12.005",
+  "type": "journal-article"
+ },
+ "arrieta2020": {
+  "title": "Explainable Artificial Intelligence (XAI): Concepts, taxonomies, opportunities and challenges toward responsible AI",
+  "author": [
+   {
+    "given": "Alejandro",
+    "family": "Barredo Arrieta",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Natalia",
+    "family": "Díaz-Rodríguez",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Javier",
+    "family": "Del Ser",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Adrien",
+    "family": "Bennetot",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Siham",
+    "family": "Tabik",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Alberto",
+    "family": "Barbado",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Salvador",
+    "family": "Garcia",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Sergio",
+    "family": "Gil-Lopez",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Daniel",
+    "family": "Molina",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Richard",
+    "family": "Benjamins",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Raja",
+    "family": "Chatila",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Francisco",
+    "family": "Herrera",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Information Fusion",
+  "publisher": "Elsevier BV",
+  "volume": "58",
+  "issue": null,
+  "page": "82-115",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2020,
+     6
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.inffus.2019.12.012",
+  "type": "journal-article"
+ },
+ "greff2017": {
+  "title": "LSTM: A Search Space Odyssey",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0001-6982-0937",
+    "authenticated-orcid": false,
+    "given": "Klaus",
+    "family": "Greff",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Rupesh K.",
+    "family": "Srivastava",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Jan",
+    "family": "Koutnik",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Bas R.",
+    "family": "Steunebrink",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Jurgen",
+    "family": "Schmidhuber",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Neural Networks and Learning Systems",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "28",
+  "issue": "10",
+  "page": "2222-2232",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2017,
+     10
+    ]
+   ]
+  },
+  "DOI": "10.1109/tnnls.2016.2582924",
+  "type": "journal-article"
+ },
+ "he2009": {
+  "title": "Learning from Imbalanced Data",
+  "author": [
+   {
+    "family": "Haibo He",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "E.A.",
+    "family": "Garcia",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Knowledge and Data Engineering",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "21",
+  "issue": "9",
+  "page": "1263-1284",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2009,
+     9
+    ]
+   ]
+  },
+  "DOI": "10.1109/tkde.2008.239",
+  "type": "journal-article"
+ },
+ "fawcett2006": {
+  "title": "An introduction to ROC analysis",
+  "author": [
+   {
+    "given": "Tom",
+    "family": "Fawcett",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Pattern Recognition Letters",
+  "publisher": "Elsevier BV",
+  "volume": "27",
+  "issue": "8",
+  "page": "861-874",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2006,
+     6
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.patrec.2005.10.010",
+  "type": "journal-article"
+ },
+ "shwartzziv2022": {
+  "title": "Tabular data: Deep learning is not all you need",
+  "author": [
+   {
+    "given": "Ravid",
+    "family": "Shwartz-Ziv",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Amitai",
+    "family": "Armon",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Information Fusion",
+  "publisher": "Elsevier BV",
+  "volume": "81",
+  "issue": null,
+  "page": "84-90",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2022,
+     5
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.inffus.2021.11.011",
+  "type": "journal-article"
+ },
+ "samek2017": {
+  "title": "Evaluating the Visualization of What a Deep Neural Network Has Learned",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0002-6283-3265",
+    "authenticated-orcid": false,
+    "given": "Wojciech",
+    "family": "Samek",
+    "sequence": "first",
+    "affiliation": [
+     {
+      "name": "Fraunhofer Heinrich Hertz Institute, Berlin, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Alexander",
+    "family": "Binder",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Information Systems Technology and Design Pillar, Singapore University of Technology and Design, Singapore"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Gregoire",
+    "family": "Montavon",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Technische Universität Berlin, Berlin, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Sebastian",
+    "family": "Lapuschkin",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Fraunhofer Heinrich Hertz Institute, Berlin, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Klaus-Robert",
+    "family": "Muller",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Technische Universität Berlin, Berlin, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Neural Networks and Learning Systems",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "28",
+  "issue": "11",
+  "page": "2660-2673",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2017,
+     11
+    ]
+   ]
+  },
+  "DOI": "10.1109/tnnls.2016.2599820",
+  "type": "journal-article"
+ },
+ "montavon2018": {
+  "title": "Methods for interpreting and understanding deep neural networks",
+  "author": [
+   {
+    "given": "Grégoire",
+    "family": "Montavon",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Wojciech",
+    "family": "Samek",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Klaus-Robert",
+    "family": "Müller",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Digital Signal Processing",
+  "publisher": "Elsevier BV",
+  "volume": "73",
+  "issue": null,
+  "page": "1-15",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2018,
+     2
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.dsp.2017.10.011",
+  "type": "journal-article"
+ },
+ "wang2019": {
+  "title": "Deep learning for sensor-based activity recognition: A survey",
+  "author": [
+   {
+    "given": "Jindong",
+    "family": "Wang",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Yiqiang",
+    "family": "Chen",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0003-3607-6317",
+    "authenticated-orcid": false,
+    "given": "Shuji",
+    "family": "Hao",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Xiaohui",
+    "family": "Peng",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Lisha",
+    "family": "Hu",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Pattern Recognition Letters",
+  "publisher": "Elsevier BV",
+  "volume": "119",
+  "issue": null,
+  "page": "3-11",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2019,
+     3
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.patrec.2018.02.010",
+  "type": "journal-article"
+ },
+ "ronao2016": {
+  "title": "Human activity recognition with smartphone sensors using deep learning neural networks",
+  "author": [
+   {
+    "given": "Charissa Ann",
+    "family": "Ronao",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Sung-Bae",
+    "family": "Cho",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Expert Systems with Applications",
+  "publisher": "Elsevier BV",
+  "volume": "59",
+  "issue": null,
+  "page": "235-244",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2016,
+     10
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.eswa.2016.04.032",
+  "type": "journal-article"
+ },
+ "wong2015": {
+  "title": "Performance evaluation of classification algorithms by k-fold and leave-one-out cross validation",
+  "author": [
+   {
+    "given": "Tzu-Tsung",
+    "family": "Wong",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Pattern Recognition",
+  "publisher": "Elsevier BV",
+  "volume": "48",
+  "issue": "9",
+  "page": "2839-2846",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2015,
+     9
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.patcog.2015.03.009",
+  "type": "journal-article"
+ },
+ "oliver2020": {
+  "title": "Using machine learning to improve our understanding of injury risk and prediction in elite male youth football players",
+  "author": [
+   {
+    "given": "Jon L.",
+    "family": "Oliver",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Francisco",
+    "family": "Ayala",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Mark B.A.",
+    "family": "De Ste Croix",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Rhodri S.",
+    "family": "Lloyd",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Greg D.",
+    "family": "Myer",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Paul J.",
+    "family": "Read",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Journal of Science and Medicine in Sport",
+  "publisher": "Elsevier BV",
+  "volume": "23",
+  "issue": "11",
+  "page": "1044-1048",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2020,
+     11
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.jsams.2020.04.021",
+  "type": "journal-article"
+ },
+ "hildebrandt2021": {
+  "title": "Training load characteristics and injury and illness risk identification in elite youth ski racing: A prospective study",
+  "author": [
+   {
+    "given": "Carolin",
+    "family": "Hildebrandt",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Renate",
+    "family": "Oberhoffer",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Christian",
+    "family": "Raschner",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Erich",
+    "family": "Müller",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Christian",
+    "family": "Fink",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Lisa",
+    "family": "Steidl-Müller",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Journal of Sport and Health Science",
+  "publisher": "Elsevier BV",
+  "volume": "10",
+  "issue": "2",
+  "page": "230-236",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2021,
+     3
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.jshs.2020.03.009",
+  "type": "journal-article"
+ },
+ "stern2020": {
+  "title": "Injury prediction as a non-linear system",
+  "author": [
+   {
+    "given": "Benjamin D.",
+    "family": "Stern",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "role": "author",
+      "vocabulary": "crossref"
+     }
+    ]
+   },
+   {
+    "given": "Eric J.",
+    "family": "Hegedus",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "role": "author",
+      "vocabulary": "crossref"
+     }
+    ]
+   },
+   {
+    "given": "Ying-Cheng",
+    "family": "Lai",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "role": "author",
+      "vocabulary": "crossref"
+     }
+    ]
+   }
+  ],
+  "container-title": "Physical Therapy in Sport",
+  "publisher": "Elsevier BV",
+  "volume": "41",
+  "issue": null,
+  "page": "43-48",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2020,
+     1
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.ptsp.2019.10.010",
+  "type": "journal-article"
+ },
+ "stern2021": {
+  "title": "State dependence: Does a prior injury predict a future injury?",
+  "author": [
+   {
+    "given": "Benjamin D.",
+    "family": "Stern",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "role": "author",
+      "vocabulary": "crossref"
+     }
+    ]
+   },
+   {
+    "given": "Eric J.",
+    "family": "Hegedus",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "role": "author",
+      "vocabulary": "crossref"
+     }
+    ]
+   },
+   {
+    "given": "Ying-Cheng",
+    "family": "Lai",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "role": "author",
+      "vocabulary": "crossref"
+     }
+    ]
+   }
+  ],
+  "container-title": "Physical Therapy in Sport",
+  "publisher": "Elsevier BV",
+  "volume": "49",
+  "issue": null,
+  "page": "8-14",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2021,
+     5
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.ptsp.2021.01.008",
+  "type": "journal-article"
+ },
+ "tysoe2020": {
+  "title": "Bowling loads and injury risk in male first class county cricket: Is ‘differential load’ an alternative to the acute-to-chronic workload ratio?",
+  "author": [
+   {
+    "given": "Alexander",
+    "family": "Tysoe",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Isabel S.",
+    "family": "Moore",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Craig",
+    "family": "Ranson",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Steve",
+    "family": "McCaig",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Sean",
+    "family": "Williams",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Journal of Science and Medicine in Sport",
+  "publisher": "Elsevier BV",
+  "volume": "23",
+  "issue": "6",
+  "page": "569-573",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2020,
+     6
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.jsams.2020.01.004",
+  "type": "journal-article"
+ },
+ "gui2023": {
+  "title": "A Review on Generative Adversarial Networks: Algorithms, Theory, and Applications",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0002-9450-1759",
+    "authenticated-orcid": false,
+    "given": "Jie",
+    "family": "Gui",
+    "sequence": "first",
+    "affiliation": [
+     {
+      "name": "School of Cyber Science and Engineering, Southeast University, Nanjing, Jiangsu, China"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0003-4029-9935",
+    "authenticated-orcid": false,
+    "given": "Zhenan",
+    "family": "Sun",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Center for Research on Intelligent Perception and Computing, Chinese Academy of Sciences, Beijing, China"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0002-2751-5114",
+    "authenticated-orcid": false,
+    "given": "Yonggang",
+    "family": "Wen",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "School of Computer Science and Engineering, Nanyang Technological University, Singapore"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0001-7225-5449",
+    "authenticated-orcid": false,
+    "given": "Dacheng",
+    "family": "Tao",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "JD Explore Academy, China"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Jieping",
+    "family": "Ye",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Beike, Beijing, China"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Knowledge and Data Engineering",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "35",
+  "issue": "4",
+  "page": "3313-3332",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2023,
+     4,
+     1
+    ]
+   ]
+  },
+  "DOI": "10.1109/tkde.2021.3130191",
+  "type": "journal-article"
+ },
+ "guo2019": {
+  "title": "A data imputation method for multivariate time series based on generative adversarial network",
+  "author": [
+   {
+    "given": "Zijian",
+    "family": "Guo",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Yiming",
+    "family": "Wan",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Hao",
+    "family": "Ye",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Neurocomputing",
+  "publisher": "Elsevier BV",
+  "volume": "360",
+  "issue": null,
+  "page": "185-197",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2019,
+     9
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.neucom.2019.06.007",
+  "type": "journal-article"
+ },
+ "cao2021": {
+  "title": "A Survey on Edge and Edge-Cloud Computing Assisted Cyber-Physical Systems",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0003-4872-4908",
+    "authenticated-orcid": false,
+    "given": "Kun",
+    "family": "Cao",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0003-2512-0634",
+    "authenticated-orcid": false,
+    "given": "Shiyan",
+    "family": "Hu",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0003-1337-5322",
+    "authenticated-orcid": false,
+    "given": "Yang",
+    "family": "Shi",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0003-1431-7589",
+    "authenticated-orcid": false,
+    "given": "Armando",
+    "family": "Colombo",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0003-3519-8232",
+    "authenticated-orcid": false,
+    "given": "Stamatis",
+    "family": "Karnouskos",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0002-4510-2436",
+    "authenticated-orcid": false,
+    "given": "Xin",
+    "family": "Li",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Industrial Informatics",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "17",
+  "issue": "11",
+  "page": "7806-7819",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2021,
+     11
+    ]
+   ]
+  },
+  "DOI": "10.1109/tii.2021.3073066",
+  "type": "journal-article"
+ },
+ "aazam2018": {
+  "title": "Deploying Fog Computing in Industrial Internet of Things and Industry 4.0",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0002-5473-6684",
+    "authenticated-orcid": false,
+    "given": "Mohammad",
+    "family": "Aazam",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0002-5982-8190",
+    "authenticated-orcid": false,
+    "given": "Sherali",
+    "family": "Zeadally",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Khaled A.",
+    "family": "Harras",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Industrial Informatics",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "14",
+  "issue": "10",
+  "page": "4674-4682",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2018,
+     10
+    ]
+   ]
+  },
+  "DOI": "10.1109/tii.2018.2855198",
+  "type": "journal-article"
+ },
+ "caviedes2020": {
+  "title": "Wearable Sensor Array Design for Spine Posture Monitoring During Exercise Incorporating Biofeedback",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0000-0003-0102-6782",
+    "authenticated-orcid": false,
+    "given": "Jorge E.",
+    "family": "Caviedes",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Baoxin",
+    "family": "Li",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0002-1249-8534",
+    "authenticated-orcid": false,
+    "given": "Varun C.",
+    "family": "Jammula",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "IEEE Transactions on Biomedical Engineering",
+  "publisher": "Institute of Electrical and Electronics Engineers (IEEE)",
+  "volume": "67",
+  "issue": "10",
+  "page": "2828-2838",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2020,
+     10
+    ]
+   ]
+  },
+  "DOI": "10.1109/tbme.2020.2971907",
+  "type": "journal-article"
+ },
+ "abdalalim2024": {
+  "title": "A machine-learning approach for stress detection using wearable sensors in free-living environments",
+  "author": [
+   {
+    "given": "Mohamed",
+    "family": "Abd Al-Alim",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Roaa",
+    "family": "Mubarak",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Nancy",
+    "family": "M. Salem",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0001-8932-8229",
+    "authenticated-orcid": false,
+    "given": "Ibrahim",
+    "family": "Sadek",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Computers in Biology and Medicine",
+  "publisher": "Elsevier BV",
+  "volume": "179",
+  "issue": null,
+  "page": "108918",
+  "article-number": "108918",
+  "issued": {
+   "date-parts": [
+    [
+     2024,
+     9
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.compbiomed.2024.108918",
+  "type": "journal-article"
+ },
+ "liu2024": {
+  "title": "SimMix: Local similarity-aware data augmentation for time series",
+  "author": [
+   {
+    "ORCID": "https://orcid.org/0009-0009-8056-2671",
+    "authenticated-orcid": false,
+    "given": "Pin",
+    "family": "Liu",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Yuxuan",
+    "family": "Guo",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0002-3326-1229",
+    "authenticated-orcid": false,
+    "given": "Pengpeng",
+    "family": "Chen",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Zhijun",
+    "family": "Chen",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0009-0004-5900-605X",
+    "authenticated-orcid": false,
+    "given": "Rui",
+    "family": "Wang",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Yuzhu",
+    "family": "Wang",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "ORCID": "https://orcid.org/0000-0001-8272-9361",
+    "authenticated-orcid": false,
+    "given": "Bin",
+    "family": "Shi",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Expert Systems with Applications",
+  "publisher": "Elsevier BV",
+  "volume": "255",
+  "issue": null,
+  "page": "124793",
+  "article-number": "124793",
+  "issued": {
+   "date-parts": [
+    [
+     2024,
+     12
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.eswa.2024.124793",
+  "type": "journal-article"
+ },
+ "an2025": {
+  "title": "Artificial intelligence in health and sport sciences: Promise, progress, and prudence",
+  "author": [
+   {
+    "given": "Ruopeng",
+    "family": "An",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Journal of Sport and Health Science",
+  "publisher": "Elsevier BV",
+  "volume": "14",
+  "issue": null,
+  "page": "101054",
+  "article-number": "101054",
+  "issued": {
+   "date-parts": [
+    [
+     2025,
+     12
+    ]
+   ]
+  },
+  "DOI": "10.1016/j.jshs.2025.101054",
+  "type": "journal-article"
+ },
+ "lovdal2021": {
+  "title": "Injury Prediction in Competitive Runners With Machine Learning",
+  "author": [
+   {
+    "given": "S. Sofie",
+    "family": "Lövdal",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Ruud J.R.",
+    "family": "Den Hartigh",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "George",
+    "family": "Azzopardi",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "International Journal of Sports Physiology and Performance",
+  "publisher": "Human Kinetics",
+  "volume": "16",
+  "issue": "10",
+  "page": "1522-1531",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2021
+    ]
+   ]
+  },
+  "DOI": "10.1123/ijspp.2020-0518",
+  "type": "journal-article"
+ },
+ "lovdal2021data": {
+  "title": "Replication Data for: Injury Prediction In Competitive Runners With Machine Learning",
+  "author": [
+   {
+    "family": "Lovdal",
+    "given": "Sofie"
+   },
+   {
+    "family": "den Hartigh",
+    "given": "Ruud"
+   },
+   {
+    "family": "Azzopardi",
+    "given": "George"
+   }
+  ],
+  "container-title": null,
+  "publisher": "DataverseNL",
+  "volume": null,
+  "issue": null,
+  "page": null,
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2021
+    ]
+   ]
+  },
+  "DOI": "10.34894/UWU9PV",
+  "type": "dataset"
+ },
+ "reiss2012": {
+  "title": "Introducing a New Benchmarked Dataset for Activity Monitoring",
+  "author": [
+   {
+    "given": "Attila",
+    "family": "Reiss",
+    "sequence": "first",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Didier",
+    "family": "Stricker",
+    "sequence": "additional",
+    "affiliation": [],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "2012 16th International Symposium on Wearable Computers",
+  "publisher": "IEEE",
+  "volume": null,
+  "issue": null,
+  "page": "108-109",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2012,
+     6
+    ]
+   ]
+  },
+  "DOI": "10.1109/iswc.2012.13",
+  "type": "proceedings-article"
+ },
+ "schmidt2018": {
+  "title": "Introducing WESAD, a Multimodal Dataset for Wearable Stress and Affect Detection",
+  "author": [
+   {
+    "given": "Philip",
+    "family": "Schmidt",
+    "sequence": "first",
+    "affiliation": [
+     {
+      "name": "University of Siegen, Renningen, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Attila",
+    "family": "Reiss",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Robert Bosch GmbH, Renningen, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Robert",
+    "family": "Duerichen",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Robert Bosch GmbH, Renningen, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Claus",
+    "family": "Marberger",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "Robert Bosch GmbH, Renningen, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   },
+   {
+    "given": "Kristof",
+    "family": "Van Laerhoven",
+    "sequence": "additional",
+    "affiliation": [
+     {
+      "name": "University of Siegen, Siegen, Germany"
+     }
+    ],
+    "role": [
+     {
+      "vocabulary": "crossref",
+      "role": "author"
+     }
+    ]
+   }
+  ],
+  "container-title": "Proceedings of the 20th ACM International Conference on Multimodal Interaction",
+  "publisher": "ACM",
+  "volume": null,
+  "issue": null,
+  "page": "400-408",
+  "article-number": null,
+  "issued": {
+   "date-parts": [
+    [
+     2018,
+     10,
+     2
+    ]
+   ]
+  },
+  "DOI": "10.1145/3242969.3242985",
+  "type": "proceedings-article"
+ }
+}

@@ -53,6 +53,7 @@ DATASETS = {
 }
 BIB = loaders.ROOT / "paper" / "refs_final.bib"
 TABLE = loaders.ROOT / "docs" / "REFERENCES_VERIFIED.md"
+JSONF = loaders.ROOT / "paper" / "refs_final.json"  # the same records, for the Word report
 
 
 def _fetch(doi: str, accept: str) -> str:
@@ -78,11 +79,15 @@ def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     today = date.today().isoformat()
-    entries, rows = [], []
+    entries, rows, records = [], [], {}
     for group, refs in (("journal", JOURNAL), ("dataset", DATASETS)):
         for key, (doi, venue) in refs.items():
             entries.append(_bibtex(key, doi))
             meta = json.loads(_fetch(doi, "application/vnd.citationstyles.csl+json"))
+            records[key] = {k: meta.get(k) for k in ("title", "author", "container-title",
+                                                      "publisher", "volume", "issue", "page",
+                                                      "article-number", "issued", "DOI",
+                                                      "type")}
             title = meta.get("title", "")
             where = meta.get("container-title") or meta.get("publisher", "")
             year = (meta.get("issued", {}).get("date-parts") or [[""]])[0][0]
@@ -99,7 +104,8 @@ def main() -> int:
         "entry was fetched from its DOI record on the date shown.\n\n"
         "| Key | Title | Journal / source | Year | Venue type | DOI | Checked |\n"
         "|---|---|---|---|---|---|---|\n" + "\n".join(rows) + "\n", "utf-8")
-    print(f"wrote {BIB} and {TABLE}")
+    JSONF.write_text(json.dumps(records, indent=1, ensure_ascii=False), "utf-8")
+    print(f"wrote {BIB}, {JSONF.name} and {TABLE}")
     return 0
 
 
